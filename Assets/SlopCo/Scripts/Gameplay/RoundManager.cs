@@ -52,6 +52,12 @@ namespace SlopCo.Gameplay
                 StartGame();
         }
 
+        /// <summary>SERVER. End the run immediately — e.g. the bomb cargo detonated in your arms.</summary>
+        public void EndRunNow()
+        {
+            if (IsServer) SetPhase(RoundPhase.GameOver, 0f);
+        }
+
         private void Update()
         {
             if (!IsServer) return;
