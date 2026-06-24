@@ -484,7 +484,7 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: SlopCo::SlopCo.Player.PlayerAnimator
   ShowTopMostFoldoutHeaderGroup: 1
-  animator: {fileID: 0}
+  animator: {fileID: 6674899665006129817}
   carry: {fileID: 4998148268161820321}
 --- !u!1 &6033343428871254481
 GameObject:
@@ -495,6 +495,7 @@ GameObject:
   serializedVersion: 6
   m_Component:
   - component: {fileID: 5408406721287484}
+  - component: {fileID: 6674899665006129817}
   m_Layer: 0
   m_Name: Visual
   m_TagString: Untagged
@@ -520,6 +521,28 @@ Transform:
   - {fileID: 3575751605849966504}
   m_Father: {fileID: 5380859818901825549}
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
+--- !u!95 &6674899665006129817
+Animator:
+  serializedVersion: 7
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 6033343428871254481}
+  m_Enabled: 1
+  m_Avatar: {fileID: 0}
+  m_Controller: {fileID: 9100000, guid: f509bdb73c0731a458c4782fa788c4b0, type: 2}
+  m_CullingMode: 0
+  m_UpdateMode: 0
+  m_ApplyRootMotion: 0
+  m_LinearVelocityBlending: 0
+  m_StabilizeFeet: 0
+  m_AnimatePhysics: 0
+  m_WarningMessage: 
+  m_HasTransformHierarchy: 1
+  m_AllowConstantClipSamplingOptimization: 1
+  m_KeepAnimatorStateOnDisable: 0
+  m_WriteDefaultValuesOnDisable: 0
 --- !u!1 &6286936317026995210
 GameObject:
   m_ObjectHideFlags: 0
