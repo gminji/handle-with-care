@@ -53,7 +53,7 @@ namespace SlopCo.UI
                               || rm.Phase.Value == RoundPhase.Lobby
                               || rm.Phase.Value == RoundPhase.GameOver;
 
-            if (lobbyPanel != null) lobbyPanel.SetActive(lobbyPhase);
+            // Panel visibility is owned by UIManager now; LobbyUI only drives its own controls.
             if (hostButton != null) hostButton.interactable = !connected;
             if (joinButton != null) joinButton.interactable = !connected;
             if (leaveButton != null) leaveButton.interactable = connected;
