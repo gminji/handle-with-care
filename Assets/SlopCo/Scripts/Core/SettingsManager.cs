@@ -41,6 +41,7 @@ namespace SlopCo.Core
             ResHeight = PlayerPrefs.GetInt(K_ResH, Screen.height);
 
             ApplyAll();
+            Localization.Load();
         }
 
         public static void SetMaster(float v)

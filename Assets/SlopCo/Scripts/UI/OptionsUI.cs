@@ -25,6 +25,7 @@ namespace SlopCo.UI
         [SerializeField] private Text vsyncValue;
         [SerializeField] private Text qualityValue;
         [SerializeField] private Text resolutionValue;
+        [SerializeField] private Text languageValue;
 
         private List<Vector2Int> _resolutions;
         private int _resIndex;
@@ -84,7 +85,12 @@ namespace SlopCo.UI
                 var r = _resolutions[Mathf.Clamp(_resIndex, 0, _resolutions.Count - 1)];
                 resolutionValue.text = $"{r.x} x {r.y}";
             }
+            if (languageValue != null)
+                languageValue.text = Localization.LanguageNames[(int)Localization.Current];
         }
+
+        public void LanguagePrev() { Localization.Cycle(-1); Sync(); }
+        public void LanguageNext() { Localization.Cycle(1); Sync(); }
 
         private static void SetLabel(Text t, float v01) { if (t != null) t.text = Mathf.RoundToInt(v01 * 100f) + "%"; }
 

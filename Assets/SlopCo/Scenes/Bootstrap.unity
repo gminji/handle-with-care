@@ -612,6 +612,7 @@ GameObject:
   - component: {fileID: 71807986}
   - component: {fileID: 71807988}
   - component: {fileID: 71807987}
+  - component: {fileID: 71807989}
   m_Layer: 0
   m_Name: Text
   m_TagString: Untagged
@@ -680,6 +681,19 @@ CanvasRenderer:
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 71807985}
   m_CullTransparentMesh: 1
+--- !u!114 &71807989
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 71807985}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: e217f02a1e740254d96d647994aad00f, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: SlopCo::SlopCo.UI.LocalizedText
+  key: pause.leave
 --- !u!1 &79259277
 GameObject:
   m_ObjectHideFlags: 0
@@ -1057,6 +1071,7 @@ GameObject:
   - component: {fileID: 132926982}
   - component: {fileID: 132926984}
   - component: {fileID: 132926983}
+  - component: {fileID: 132926985}
   m_Layer: 0
   m_Name: Text
   m_TagString: Untagged
@@ -1125,6 +1140,19 @@ CanvasRenderer:
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 132926981}
   m_CullTransparentMesh: 1
+--- !u!114 &132926985
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 132926981}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: e217f02a1e740254d96d647994aad00f, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: SlopCo::SlopCo.UI.LocalizedText
+  key: lobby.host
 --- !u!1 &147550921
 GameObject:
   m_ObjectHideFlags: 0
@@ -1929,6 +1957,7 @@ GameObject:
   - component: {fileID: 267528114}
   - component: {fileID: 267528116}
   - component: {fileID: 267528115}
+  - component: {fileID: 267528117}
   m_Layer: 0
   m_Name: QL
   m_TagString: Untagged
@@ -1997,6 +2026,19 @@ CanvasRenderer:
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 267528113}
   m_CullTransparentMesh: 1
+--- !u!114 &267528117
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 267528113}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: e217f02a1e740254d96d647994aad00f, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: SlopCo::SlopCo.UI.LocalizedText
+  key: opt.quality
 --- !u!1 &278429812
 GameObject:
   m_ObjectHideFlags: 0
@@ -2158,6 +2200,7 @@ GameObject:
   - component: {fileID: 298105896}
   - component: {fileID: 298105898}
   - component: {fileID: 298105897}
+  - component: {fileID: 298105899}
   m_Layer: 0
   m_Name: Sub
   m_TagString: Untagged
@@ -2226,6 +2269,19 @@ CanvasRenderer:
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 298105895}
   m_CullTransparentMesh: 1
+--- !u!114 &298105899
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 298105895}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: e217f02a1e740254d96d647994aad00f, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: SlopCo::SlopCo.UI.LocalizedText
+  key: menu.subtitle
 --- !u!1 &337013520
 GameObject:
   m_ObjectHideFlags: 0
@@ -2237,6 +2293,7 @@ GameObject:
   - component: {fileID: 337013521}
   - component: {fileID: 337013523}
   - component: {fileID: 337013522}
+  - component: {fileID: 337013524}
   m_Layer: 0
   m_Name: Text
   m_TagString: Untagged
@@ -2305,6 +2362,19 @@ CanvasRenderer:
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 337013520}
   m_CullTransparentMesh: 1
+--- !u!114 &337013524
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 337013520}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: e217f02a1e740254d96d647994aad00f, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: SlopCo::SlopCo.UI.LocalizedText
+  key: opt.back
 --- !u!1 &341396548
 GameObject:
   m_ObjectHideFlags: 0
@@ -2316,6 +2386,7 @@ GameObject:
   - component: {fileID: 341396549}
   - component: {fileID: 341396551}
   - component: {fileID: 341396550}
+  - component: {fileID: 341396552}
   m_Layer: 0
   m_Name: OTitle
   m_TagString: Untagged
@@ -2384,6 +2455,19 @@ CanvasRenderer:
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 341396548}
   m_CullTransparentMesh: 1
+--- !u!114 &341396552
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 341396548}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: e217f02a1e740254d96d647994aad00f, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: SlopCo::SlopCo.UI.LocalizedText
+  key: opt.title
 --- !u!1 &362102539
 GameObject:
   m_ObjectHideFlags: 0
@@ -2426,6 +2510,7 @@ GameObject:
   - component: {fileID: 365613739}
   - component: {fileID: 365613741}
   - component: {fileID: 365613740}
+  - component: {fileID: 365613742}
   m_Layer: 0
   m_Name: Text
   m_TagString: Untagged
@@ -2494,6 +2579,19 @@ CanvasRenderer:
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 365613738}
   m_CullTransparentMesh: 1
+--- !u!114 &365613742
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 365613738}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: e217f02a1e740254d96d647994aad00f, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: SlopCo::SlopCo.UI.LocalizedText
+  key: opt.back
 --- !u!1 &374499017
 GameObject:
   m_ObjectHideFlags: 0
@@ -2580,6 +2678,7 @@ GameObject:
   - component: {fileID: 418064991}
   - component: {fileID: 418064993}
   - component: {fileID: 418064992}
+  - component: {fileID: 418064994}
   m_Layer: 0
   m_Name: MasterL
   m_TagString: Untagged
@@ -2648,6 +2747,19 @@ CanvasRenderer:
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 418064990}
   m_CullTransparentMesh: 1
+--- !u!114 &418064994
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 418064990}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: e217f02a1e740254d96d647994aad00f, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: SlopCo::SlopCo.UI.LocalizedText
+  key: opt.master
 --- !u!1 &444511859
 GameObject:
   m_ObjectHideFlags: 0
@@ -2982,6 +3094,7 @@ GameObject:
   - component: {fileID: 469077786}
   - component: {fileID: 469077788}
   - component: {fileID: 469077787}
+  - component: {fileID: 469077789}
   m_Layer: 0
   m_Name: RL
   m_TagString: Untagged
@@ -3050,6 +3163,19 @@ CanvasRenderer:
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 469077785}
   m_CullTransparentMesh: 1
+--- !u!114 &469077789
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 469077785}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: e217f02a1e740254d96d647994aad00f, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: SlopCo::SlopCo.UI.LocalizedText
+  key: opt.resolution
 --- !u!1 &496098513
 GameObject:
   m_ObjectHideFlags: 0
@@ -3707,6 +3833,7 @@ GameObject:
   - component: {fileID: 543169203}
   - component: {fileID: 543169205}
   - component: {fileID: 543169204}
+  - component: {fileID: 543169206}
   m_Layer: 0
   m_Name: Text
   m_TagString: Untagged
@@ -3775,6 +3902,19 @@ CanvasRenderer:
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 543169202}
   m_CullTransparentMesh: 1
+--- !u!114 &543169206
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 543169202}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: e217f02a1e740254d96d647994aad00f, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: SlopCo::SlopCo.UI.LocalizedText
+  key: lobby.join
 --- !u!1 &556053232
 GameObject:
   m_ObjectHideFlags: 0
@@ -3913,6 +4053,7 @@ GameObject:
   - component: {fileID: 584632791}
   - component: {fileID: 584632793}
   - component: {fileID: 584632792}
+  - component: {fileID: 584632794}
   m_Layer: 0
   m_Name: PTitle
   m_TagString: Untagged
@@ -3981,6 +4122,19 @@ CanvasRenderer:
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 584632790}
   m_CullTransparentMesh: 1
+--- !u!114 &584632794
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 584632790}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: e217f02a1e740254d96d647994aad00f, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: SlopCo::SlopCo.UI.LocalizedText
+  key: pause.title
 --- !u!1 &603144579
 GameObject:
   m_ObjectHideFlags: 0
@@ -4342,6 +4496,7 @@ GameObject:
   - component: {fileID: 672714233}
   - component: {fileID: 672714235}
   - component: {fileID: 672714234}
+  - component: {fileID: 672714236}
   m_Layer: 0
   m_Name: DispHdr
   m_TagString: Untagged
@@ -4410,6 +4565,19 @@ CanvasRenderer:
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 672714232}
   m_CullTransparentMesh: 1
+--- !u!114 &672714236
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 672714232}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: e217f02a1e740254d96d647994aad00f, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: SlopCo::SlopCo.UI.LocalizedText
+  key: opt.display
 --- !u!1 &678847002
 GameObject:
   m_ObjectHideFlags: 0
@@ -4662,6 +4830,7 @@ GameObject:
   - component: {fileID: 682643193}
   - component: {fileID: 682643195}
   - component: {fileID: 682643194}
+  - component: {fileID: 682643196}
   m_Layer: 0
   m_Name: FsL
   m_TagString: Untagged
@@ -4730,6 +4899,19 @@ CanvasRenderer:
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 682643192}
   m_CullTransparentMesh: 1
+--- !u!114 &682643196
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 682643192}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: e217f02a1e740254d96d647994aad00f, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: SlopCo::SlopCo.UI.LocalizedText
+  key: opt.fullscreen
 --- !u!1 &687378555
 GameObject:
   m_ObjectHideFlags: 0
@@ -4951,6 +5133,7 @@ GameObject:
   - component: {fileID: 702118046}
   - component: {fileID: 702118048}
   - component: {fileID: 702118047}
+  - component: {fileID: 702118049}
   m_Layer: 0
   m_Name: Text
   m_TagString: Untagged
@@ -5019,6 +5202,19 @@ CanvasRenderer:
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 702118045}
   m_CullTransparentMesh: 1
+--- !u!114 &702118049
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 702118045}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: e217f02a1e740254d96d647994aad00f, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: SlopCo::SlopCo.UI.LocalizedText
+  key: lobby.start
 --- !u!1 &705017834
 GameObject:
   m_ObjectHideFlags: 0
@@ -5560,6 +5756,139 @@ CanvasRenderer:
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 752462735}
   m_CullTransparentMesh: 1
+--- !u!1 &756266586
+GameObject:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  serializedVersion: 6
+  m_Component:
+  - component: {fileID: 756266587}
+  - component: {fileID: 756266590}
+  - component: {fileID: 756266589}
+  - component: {fileID: 756266588}
+  m_Layer: 0
+  m_Name: LangNext
+  m_TagString: Untagged
+  m_Icon: {fileID: 0}
+  m_NavMeshLayer: 0
+  m_StaticEditorFlags: 0
+  m_IsActive: 1
+--- !u!224 &756266587
+RectTransform:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 756266586}
+  m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
+  m_LocalPosition: {x: 0, y: 0, z: 0}
+  m_LocalScale: {x: 1, y: 1, z: 1}
+  m_ConstrainProportionsScale: 0
+  m_Children:
+  - {fileID: 1083714417}
+  m_Father: {fileID: 1700416219}
+  m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
+  m_AnchorMin: {x: 0.5, y: 0.5}
+  m_AnchorMax: {x: 0.5, y: 0.5}
+  m_AnchoredPosition: {x: 520, y: -285}
+  m_SizeDelta: {x: 54, y: 50}
+  m_Pivot: {x: 0.5, y: 0.5}
+--- !u!114 &756266588
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 756266586}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 4e29b1a8efbd4b44bb3f3716e73f07ff, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: UnityEngine.UI::UnityEngine.UI.Button
+  m_Navigation:
+    m_Mode: 3
+    m_WrapAround: 0
+    m_SelectOnUp: {fileID: 0}
+    m_SelectOnDown: {fileID: 0}
+    m_SelectOnLeft: {fileID: 0}
+    m_SelectOnRight: {fileID: 0}
+  m_Transition: 1
+  m_Colors:
+    m_NormalColor: {r: 1, g: 1, b: 1, a: 1}
+    m_HighlightedColor: {r: 0.9607843, g: 0.9607843, b: 0.9607843, a: 1}
+    m_PressedColor: {r: 0.78431374, g: 0.78431374, b: 0.78431374, a: 1}
+    m_SelectedColor: {r: 0.9607843, g: 0.9607843, b: 0.9607843, a: 1}
+    m_DisabledColor: {r: 0.78431374, g: 0.78431374, b: 0.78431374, a: 0.5019608}
+    m_ColorMultiplier: 1
+    m_FadeDuration: 0.1
+  m_SpriteState:
+    m_HighlightedSprite: {fileID: 0}
+    m_PressedSprite: {fileID: 0}
+    m_SelectedSprite: {fileID: 0}
+    m_DisabledSprite: {fileID: 0}
+  m_AnimationTriggers:
+    m_NormalTrigger: Normal
+    m_HighlightedTrigger: Highlighted
+    m_PressedTrigger: Pressed
+    m_SelectedTrigger: Selected
+    m_DisabledTrigger: Disabled
+  m_Interactable: 1
+  m_TargetGraphic: {fileID: 756266589}
+  m_OnClick:
+    m_PersistentCalls:
+      m_Calls:
+      - m_Target: {fileID: 1700416220}
+        m_TargetAssemblyTypeName: SlopCo.UI.OptionsUI, SlopCo
+        m_MethodName: LanguageNext
+        m_Mode: 0
+        m_Arguments:
+          m_ObjectArgument: {fileID: 0}
+          m_ObjectArgumentAssemblyTypeName: 
+          m_IntArgument: 0
+          m_FloatArgument: 0
+          m_StringArgument: 
+          m_BoolArgument: 0
+        m_CallState: 2
+--- !u!114 &756266589
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 756266586}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: fe87c0e1cc204ed48ad3b37840f39efc, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: UnityEngine.UI::UnityEngine.UI.Image
+  m_Material: {fileID: 0}
+  m_Color: {r: 0.3, g: 0.33, b: 0.38, a: 1}
+  m_RaycastTarget: 1
+  m_RaycastPadding: {x: 0, y: 0, z: 0, w: 0}
+  m_Maskable: 1
+  m_OnCullStateChanged:
+    m_PersistentCalls:
+      m_Calls: []
+  m_Sprite: {fileID: 0}
+  m_Type: 0
+  m_PreserveAspect: 0
+  m_FillCenter: 1
+  m_FillMethod: 4
+  m_FillAmount: 1
+  m_FillClockwise: 1
+  m_FillOrigin: 0
+  m_UseSpriteMesh: 0
+  m_PixelsPerUnitMultiplier: 1
+--- !u!222 &756266590
+CanvasRenderer:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 756266586}
+  m_CullTransparentMesh: 1
 --- !u!1 &778797750
 GameObject:
   m_ObjectHideFlags: 0
@@ -5936,6 +6265,7 @@ GameObject:
   - component: {fileID: 839279977}
   - component: {fileID: 839279979}
   - component: {fileID: 839279978}
+  - component: {fileID: 839279980}
   m_Layer: 0
   m_Name: MusicL
   m_TagString: Untagged
@@ -6004,6 +6334,19 @@ CanvasRenderer:
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 839279976}
   m_CullTransparentMesh: 1
+--- !u!114 &839279980
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 839279976}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: e217f02a1e740254d96d647994aad00f, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: SlopCo::SlopCo.UI.LocalizedText
+  key: opt.music
 --- !u!1 &846198138
 GameObject:
   m_ObjectHideFlags: 0
@@ -6253,6 +6596,7 @@ GameObject:
   - component: {fileID: 868966624}
   - component: {fileID: 868966626}
   - component: {fileID: 868966625}
+  - component: {fileID: 868966627}
   m_Layer: 0
   m_Name: Text
   m_TagString: Untagged
@@ -6321,6 +6665,19 @@ CanvasRenderer:
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 868966623}
   m_CullTransparentMesh: 1
+--- !u!114 &868966627
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 868966623}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: e217f02a1e740254d96d647994aad00f, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: SlopCo::SlopCo.UI.LocalizedText
+  key: lobby.menu
 --- !u!1 &912339911
 GameObject:
   m_ObjectHideFlags: 0
@@ -6703,6 +7060,7 @@ GameObject:
   - component: {fileID: 1031271908}
   - component: {fileID: 1031271910}
   - component: {fileID: 1031271909}
+  - component: {fileID: 1031271911}
   m_Layer: 0
   m_Name: Text
   m_TagString: Untagged
@@ -6771,6 +7129,19 @@ CanvasRenderer:
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 1031271907}
   m_CullTransparentMesh: 1
+--- !u!114 &1031271911
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1031271907}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: e217f02a1e740254d96d647994aad00f, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: SlopCo::SlopCo.UI.LocalizedText
+  key: menu.controls
 --- !u!1 &1039925727
 GameObject:
   m_ObjectHideFlags: 0
@@ -6861,6 +7232,7 @@ GameObject:
   - component: {fileID: 1044687302}
   - component: {fileID: 1044687304}
   - component: {fileID: 1044687303}
+  - component: {fileID: 1044687305}
   m_Layer: 0
   m_Name: Text
   m_TagString: Untagged
@@ -6929,6 +7301,19 @@ CanvasRenderer:
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 1044687301}
   m_CullTransparentMesh: 1
+--- !u!114 &1044687305
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1044687301}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: e217f02a1e740254d96d647994aad00f, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: SlopCo::SlopCo.UI.LocalizedText
+  key: menu.tutorial
 --- !u!1 &1046957700
 GameObject:
   m_ObjectHideFlags: 0
@@ -6940,6 +7325,7 @@ GameObject:
   - component: {fileID: 1046957701}
   - component: {fileID: 1046957703}
   - component: {fileID: 1046957702}
+  - component: {fileID: 1046957704}
   m_Layer: 0
   m_Name: Ver
   m_TagString: Untagged
@@ -7008,6 +7394,19 @@ CanvasRenderer:
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 1046957700}
   m_CullTransparentMesh: 1
+--- !u!114 &1046957704
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1046957700}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: e217f02a1e740254d96d647994aad00f, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: SlopCo::SlopCo.UI.LocalizedText
+  key: menu.footer
 --- !u!1 &1047500802
 GameObject:
   m_ObjectHideFlags: 0
@@ -7422,6 +7821,7 @@ GameObject:
   - component: {fileID: 1061318379}
   - component: {fileID: 1061318381}
   - component: {fileID: 1061318380}
+  - component: {fileID: 1061318382}
   m_Layer: 0
   m_Name: HintText
   m_TagString: Untagged
@@ -7491,6 +7891,19 @@ CanvasRenderer:
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 1061318378}
   m_CullTransparentMesh: 1
+--- !u!114 &1061318382
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1061318378}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: e217f02a1e740254d96d647994aad00f, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: SlopCo::SlopCo.UI.LocalizedText
+  key: hint.line
 --- !u!1 &1076130451
 GameObject:
   m_ObjectHideFlags: 0
@@ -7565,6 +7978,85 @@ CanvasRenderer:
   m_PrefabInstance: {fileID: 0}
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 1076130451}
+  m_CullTransparentMesh: 1
+--- !u!1 &1083714416
+GameObject:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  serializedVersion: 6
+  m_Component:
+  - component: {fileID: 1083714417}
+  - component: {fileID: 1083714419}
+  - component: {fileID: 1083714418}
+  m_Layer: 0
+  m_Name: Text
+  m_TagString: Untagged
+  m_Icon: {fileID: 0}
+  m_NavMeshLayer: 0
+  m_StaticEditorFlags: 0
+  m_IsActive: 1
+--- !u!224 &1083714417
+RectTransform:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1083714416}
+  m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
+  m_LocalPosition: {x: 0, y: 0, z: 0}
+  m_LocalScale: {x: 1, y: 1, z: 1}
+  m_ConstrainProportionsScale: 0
+  m_Children: []
+  m_Father: {fileID: 756266587}
+  m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
+  m_AnchorMin: {x: 0, y: 0}
+  m_AnchorMax: {x: 1, y: 1}
+  m_AnchoredPosition: {x: 0, y: 0}
+  m_SizeDelta: {x: 0, y: 0}
+  m_Pivot: {x: 0.5, y: 0.5}
+--- !u!114 &1083714418
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1083714416}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 5f7201a12d95ffc409449d95f23cf332, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: UnityEngine.UI::UnityEngine.UI.Text
+  m_Material: {fileID: 0}
+  m_Color: {r: 1, g: 1, b: 1, a: 1}
+  m_RaycastTarget: 1
+  m_RaycastPadding: {x: 0, y: 0, z: 0, w: 0}
+  m_Maskable: 1
+  m_OnCullStateChanged:
+    m_PersistentCalls:
+      m_Calls: []
+  m_FontData:
+    m_Font: {fileID: 10102, guid: 0000000000000000e000000000000000, type: 0}
+    m_FontSize: 26
+    m_FontStyle: 0
+    m_BestFit: 0
+    m_MinSize: 10
+    m_MaxSize: 40
+    m_Alignment: 4
+    m_AlignByGeometry: 0
+    m_RichText: 1
+    m_HorizontalOverflow: 0
+    m_VerticalOverflow: 0
+    m_LineSpacing: 1
+  m_Text: "\u25B6"
+--- !u!222 &1083714419
+CanvasRenderer:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1083714416}
   m_CullTransparentMesh: 1
 --- !u!1 &1099924898
 GameObject:
@@ -8206,6 +8698,85 @@ RectTransform:
   m_AnchoredPosition: {x: 0, y: 0}
   m_SizeDelta: {x: 400, y: 60}
   m_Pivot: {x: 0.5, y: 0.5}
+--- !u!1 &1186959503
+GameObject:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  serializedVersion: 6
+  m_Component:
+  - component: {fileID: 1186959504}
+  - component: {fileID: 1186959506}
+  - component: {fileID: 1186959505}
+  m_Layer: 0
+  m_Name: Text
+  m_TagString: Untagged
+  m_Icon: {fileID: 0}
+  m_NavMeshLayer: 0
+  m_StaticEditorFlags: 0
+  m_IsActive: 1
+--- !u!224 &1186959504
+RectTransform:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1186959503}
+  m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
+  m_LocalPosition: {x: 0, y: 0, z: 0}
+  m_LocalScale: {x: 1, y: 1, z: 1}
+  m_ConstrainProportionsScale: 0
+  m_Children: []
+  m_Father: {fileID: 1342784414}
+  m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
+  m_AnchorMin: {x: 0, y: 0}
+  m_AnchorMax: {x: 1, y: 1}
+  m_AnchoredPosition: {x: 0, y: 0}
+  m_SizeDelta: {x: 0, y: 0}
+  m_Pivot: {x: 0.5, y: 0.5}
+--- !u!114 &1186959505
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1186959503}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 5f7201a12d95ffc409449d95f23cf332, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: UnityEngine.UI::UnityEngine.UI.Text
+  m_Material: {fileID: 0}
+  m_Color: {r: 1, g: 1, b: 1, a: 1}
+  m_RaycastTarget: 1
+  m_RaycastPadding: {x: 0, y: 0, z: 0, w: 0}
+  m_Maskable: 1
+  m_OnCullStateChanged:
+    m_PersistentCalls:
+      m_Calls: []
+  m_FontData:
+    m_Font: {fileID: 10102, guid: 0000000000000000e000000000000000, type: 0}
+    m_FontSize: 26
+    m_FontStyle: 0
+    m_BestFit: 0
+    m_MinSize: 10
+    m_MaxSize: 40
+    m_Alignment: 4
+    m_AlignByGeometry: 0
+    m_RichText: 1
+    m_HorizontalOverflow: 0
+    m_VerticalOverflow: 0
+    m_LineSpacing: 1
+  m_Text: "\u25C0"
+--- !u!222 &1186959506
+CanvasRenderer:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1186959503}
+  m_CullTransparentMesh: 1
 --- !u!1 &1209133703
 GameObject:
   m_ObjectHideFlags: 0
@@ -8562,6 +9133,7 @@ GameObject:
   - component: {fileID: 1226992429}
   - component: {fileID: 1226992431}
   - component: {fileID: 1226992430}
+  - component: {fileID: 1226992432}
   m_Layer: 0
   m_Name: Text
   m_TagString: Untagged
@@ -8630,6 +9202,19 @@ CanvasRenderer:
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 1226992428}
   m_CullTransparentMesh: 1
+--- !u!114 &1226992432
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1226992428}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: e217f02a1e740254d96d647994aad00f, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: SlopCo::SlopCo.UI.LocalizedText
+  key: lobby.leave
 --- !u!1 &1228129719
 GameObject:
   m_ObjectHideFlags: 0
@@ -8672,6 +9257,7 @@ GameObject:
   - component: {fileID: 1237950549}
   - component: {fileID: 1237950551}
   - component: {fileID: 1237950550}
+  - component: {fileID: 1237950552}
   m_Layer: 0
   m_Name: VsL
   m_TagString: Untagged
@@ -8740,6 +9326,19 @@ CanvasRenderer:
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 1237950548}
   m_CullTransparentMesh: 1
+--- !u!114 &1237950552
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1237950548}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: e217f02a1e740254d96d647994aad00f, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: SlopCo::SlopCo.UI.LocalizedText
+  key: opt.vsync
 --- !u!1 &1252977551
 GameObject:
   m_ObjectHideFlags: 0
@@ -9468,6 +10067,139 @@ MeshFilter:
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 1340542322}
   m_Mesh: {fileID: -7543623636664196183, guid: 38f8f061ee92fde4d9cda9e22b82aa4b, type: 3}
+--- !u!1 &1342784413
+GameObject:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  serializedVersion: 6
+  m_Component:
+  - component: {fileID: 1342784414}
+  - component: {fileID: 1342784417}
+  - component: {fileID: 1342784416}
+  - component: {fileID: 1342784415}
+  m_Layer: 0
+  m_Name: LangPrev
+  m_TagString: Untagged
+  m_Icon: {fileID: 0}
+  m_NavMeshLayer: 0
+  m_StaticEditorFlags: 0
+  m_IsActive: 1
+--- !u!224 &1342784414
+RectTransform:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1342784413}
+  m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
+  m_LocalPosition: {x: 0, y: 0, z: 0}
+  m_LocalScale: {x: 1, y: 1, z: 1}
+  m_ConstrainProportionsScale: 0
+  m_Children:
+  - {fileID: 1186959504}
+  m_Father: {fileID: 1700416219}
+  m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
+  m_AnchorMin: {x: 0.5, y: 0.5}
+  m_AnchorMax: {x: 0.5, y: 0.5}
+  m_AnchoredPosition: {x: 140, y: -285}
+  m_SizeDelta: {x: 54, y: 50}
+  m_Pivot: {x: 0.5, y: 0.5}
+--- !u!114 &1342784415
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1342784413}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 4e29b1a8efbd4b44bb3f3716e73f07ff, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: UnityEngine.UI::UnityEngine.UI.Button
+  m_Navigation:
+    m_Mode: 3
+    m_WrapAround: 0
+    m_SelectOnUp: {fileID: 0}
+    m_SelectOnDown: {fileID: 0}
+    m_SelectOnLeft: {fileID: 0}
+    m_SelectOnRight: {fileID: 0}
+  m_Transition: 1
+  m_Colors:
+    m_NormalColor: {r: 1, g: 1, b: 1, a: 1}
+    m_HighlightedColor: {r: 0.9607843, g: 0.9607843, b: 0.9607843, a: 1}
+    m_PressedColor: {r: 0.78431374, g: 0.78431374, b: 0.78431374, a: 1}
+    m_SelectedColor: {r: 0.9607843, g: 0.9607843, b: 0.9607843, a: 1}
+    m_DisabledColor: {r: 0.78431374, g: 0.78431374, b: 0.78431374, a: 0.5019608}
+    m_ColorMultiplier: 1
+    m_FadeDuration: 0.1
+  m_SpriteState:
+    m_HighlightedSprite: {fileID: 0}
+    m_PressedSprite: {fileID: 0}
+    m_SelectedSprite: {fileID: 0}
+    m_DisabledSprite: {fileID: 0}
+  m_AnimationTriggers:
+    m_NormalTrigger: Normal
+    m_HighlightedTrigger: Highlighted
+    m_PressedTrigger: Pressed
+    m_SelectedTrigger: Selected
+    m_DisabledTrigger: Disabled
+  m_Interactable: 1
+  m_TargetGraphic: {fileID: 1342784416}
+  m_OnClick:
+    m_PersistentCalls:
+      m_Calls:
+      - m_Target: {fileID: 1700416220}
+        m_TargetAssemblyTypeName: SlopCo.UI.OptionsUI, SlopCo
+        m_MethodName: LanguagePrev
+        m_Mode: 0
+        m_Arguments:
+          m_ObjectArgument: {fileID: 0}
+          m_ObjectArgumentAssemblyTypeName: 
+          m_IntArgument: 0
+          m_FloatArgument: 0
+          m_StringArgument: 
+          m_BoolArgument: 0
+        m_CallState: 2
+--- !u!114 &1342784416
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1342784413}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: fe87c0e1cc204ed48ad3b37840f39efc, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: UnityEngine.UI::UnityEngine.UI.Image
+  m_Material: {fileID: 0}
+  m_Color: {r: 0.3, g: 0.33, b: 0.38, a: 1}
+  m_RaycastTarget: 1
+  m_RaycastPadding: {x: 0, y: 0, z: 0, w: 0}
+  m_Maskable: 1
+  m_OnCullStateChanged:
+    m_PersistentCalls:
+      m_Calls: []
+  m_Sprite: {fileID: 0}
+  m_Type: 0
+  m_PreserveAspect: 0
+  m_FillCenter: 1
+  m_FillMethod: 4
+  m_FillAmount: 1
+  m_FillClockwise: 1
+  m_FillOrigin: 0
+  m_UseSpriteMesh: 0
+  m_PixelsPerUnitMultiplier: 1
+--- !u!222 &1342784417
+CanvasRenderer:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1342784413}
+  m_CullTransparentMesh: 1
 --- !u!1 &1352569057
 GameObject:
   m_ObjectHideFlags: 0
@@ -9542,6 +10274,99 @@ CanvasRenderer:
   m_PrefabInstance: {fileID: 0}
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 1352569057}
+  m_CullTransparentMesh: 1
+--- !u!1 &1372270919
+GameObject:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  serializedVersion: 6
+  m_Component:
+  - component: {fileID: 1372270920}
+  - component: {fileID: 1372270923}
+  - component: {fileID: 1372270922}
+  - component: {fileID: 1372270921}
+  m_Layer: 0
+  m_Name: LangL
+  m_TagString: Untagged
+  m_Icon: {fileID: 0}
+  m_NavMeshLayer: 0
+  m_StaticEditorFlags: 0
+  m_IsActive: 1
+--- !u!224 &1372270920
+RectTransform:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1372270919}
+  m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
+  m_LocalPosition: {x: 0, y: 0, z: 0}
+  m_LocalScale: {x: 1, y: 1, z: 1}
+  m_ConstrainProportionsScale: 0
+  m_Children: []
+  m_Father: {fileID: 1700416219}
+  m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
+  m_AnchorMin: {x: 0.5, y: 0.5}
+  m_AnchorMax: {x: 0.5, y: 0.5}
+  m_AnchoredPosition: {x: -430, y: -285}
+  m_SizeDelta: {x: 300, y: 40}
+  m_Pivot: {x: 0.5, y: 0.5}
+--- !u!114 &1372270921
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1372270919}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: e217f02a1e740254d96d647994aad00f, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: SlopCo::SlopCo.UI.LocalizedText
+  key: opt.language
+--- !u!114 &1372270922
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1372270919}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 5f7201a12d95ffc409449d95f23cf332, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: UnityEngine.UI::UnityEngine.UI.Text
+  m_Material: {fileID: 0}
+  m_Color: {r: 1, g: 1, b: 1, a: 1}
+  m_RaycastTarget: 1
+  m_RaycastPadding: {x: 0, y: 0, z: 0, w: 0}
+  m_Maskable: 1
+  m_OnCullStateChanged:
+    m_PersistentCalls:
+      m_Calls: []
+  m_FontData:
+    m_Font: {fileID: 10102, guid: 0000000000000000e000000000000000, type: 0}
+    m_FontSize: 26
+    m_FontStyle: 0
+    m_BestFit: 0
+    m_MinSize: 10
+    m_MaxSize: 40
+    m_Alignment: 3
+    m_AlignByGeometry: 0
+    m_RichText: 1
+    m_HorizontalOverflow: 0
+    m_VerticalOverflow: 0
+    m_LineSpacing: 1
+  m_Text: Language
+--- !u!222 &1372270923
+CanvasRenderer:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1372270919}
   m_CullTransparentMesh: 1
 --- !u!1 &1380612344
 GameObject:
@@ -10100,6 +10925,7 @@ GameObject:
   - component: {fileID: 1455561744}
   - component: {fileID: 1455561746}
   - component: {fileID: 1455561745}
+  - component: {fileID: 1455561747}
   m_Layer: 0
   m_Name: Text
   m_TagString: Untagged
@@ -10168,6 +10994,19 @@ CanvasRenderer:
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 1455561743}
   m_CullTransparentMesh: 1
+--- !u!114 &1455561747
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1455561743}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: e217f02a1e740254d96d647994aad00f, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: SlopCo::SlopCo.UI.LocalizedText
+  key: menu.quit
 --- !u!1 &1461821286
 GameObject:
   m_ObjectHideFlags: 0
@@ -10836,6 +11675,7 @@ GameObject:
   - component: {fileID: 1542923388}
   - component: {fileID: 1542923390}
   - component: {fileID: 1542923389}
+  - component: {fileID: 1542923391}
   m_Layer: 0
   m_Name: Text
   m_TagString: Untagged
@@ -10904,6 +11744,19 @@ CanvasRenderer:
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 1542923387}
   m_CullTransparentMesh: 1
+--- !u!114 &1542923391
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1542923387}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: e217f02a1e740254d96d647994aad00f, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: SlopCo::SlopCo.UI.LocalizedText
+  key: menu.quit
 --- !u!1 &1553729533
 GameObject:
   m_ObjectHideFlags: 0
@@ -12228,6 +13081,10 @@ RectTransform:
   - {fileID: 1102390781}
   - {fileID: 2141212442}
   - {fileID: 699614766}
+  - {fileID: 1372270920}
+  - {fileID: 1342784414}
+  - {fileID: 2122128305}
+  - {fileID: 756266587}
   m_Father: {fileID: 724505262}
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
   m_AnchorMin: {x: 0, y: 0}
@@ -12257,6 +13114,7 @@ MonoBehaviour:
   vsyncValue: {fileID: 1666196137}
   qualityValue: {fileID: 1649165414}
   resolutionValue: {fileID: 1102390779}
+  languageValue: {fileID: 2122128303}
 --- !u!1 &1703073719
 GameObject:
   m_ObjectHideFlags: 0
@@ -12785,6 +13643,7 @@ GameObject:
   - component: {fileID: 1796478422}
   - component: {fileID: 1796478424}
   - component: {fileID: 1796478423}
+  - component: {fileID: 1796478425}
   m_Layer: 0
   m_Name: Text
   m_TagString: Untagged
@@ -12853,6 +13712,19 @@ CanvasRenderer:
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 1796478421}
   m_CullTransparentMesh: 1
+--- !u!114 &1796478425
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1796478421}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: e217f02a1e740254d96d647994aad00f, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: SlopCo::SlopCo.UI.LocalizedText
+  key: menu.options
 --- !u!1 &1805081978
 GameObject:
   m_ObjectHideFlags: 0
@@ -13560,6 +14432,7 @@ GameObject:
   - component: {fileID: 1903165520}
   - component: {fileID: 1903165522}
   - component: {fileID: 1903165521}
+  - component: {fileID: 1903165523}
   m_Layer: 0
   m_Name: Text
   m_TagString: Untagged
@@ -13628,6 +14501,19 @@ CanvasRenderer:
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 1903165519}
   m_CullTransparentMesh: 1
+--- !u!114 &1903165523
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1903165519}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: e217f02a1e740254d96d647994aad00f, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: SlopCo::SlopCo.UI.LocalizedText
+  key: pause.resume
 --- !u!1 &1905822700
 GameObject:
   m_ObjectHideFlags: 0
@@ -14157,6 +15043,7 @@ GameObject:
   - component: {fileID: 1934320810}
   - component: {fileID: 1934320812}
   - component: {fileID: 1934320811}
+  - component: {fileID: 1934320813}
   m_Layer: 0
   m_Name: CTitle
   m_TagString: Untagged
@@ -14225,6 +15112,19 @@ CanvasRenderer:
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 1934320809}
   m_CullTransparentMesh: 1
+--- !u!114 &1934320813
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1934320809}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: e217f02a1e740254d96d647994aad00f, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: SlopCo::SlopCo.UI.LocalizedText
+  key: controls.title
 --- !u!1 &1976478909
 GameObject:
   m_ObjectHideFlags: 0
@@ -14236,6 +15136,7 @@ GameObject:
   - component: {fileID: 1976478910}
   - component: {fileID: 1976478912}
   - component: {fileID: 1976478911}
+  - component: {fileID: 1976478913}
   m_Layer: 0
   m_Name: Text
   m_TagString: Untagged
@@ -14304,6 +15205,19 @@ CanvasRenderer:
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 1976478909}
   m_CullTransparentMesh: 1
+--- !u!114 &1976478913
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1976478909}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: e217f02a1e740254d96d647994aad00f, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: SlopCo::SlopCo.UI.LocalizedText
+  key: menu.online
 --- !u!1 &1987204022
 GameObject:
   m_ObjectHideFlags: 0
@@ -14315,6 +15229,7 @@ GameObject:
   - component: {fileID: 1987204023}
   - component: {fileID: 1987204025}
   - component: {fileID: 1987204024}
+  - component: {fileID: 1987204026}
   m_Layer: 0
   m_Name: AudioHdr
   m_TagString: Untagged
@@ -14383,6 +15298,19 @@ CanvasRenderer:
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 1987204022}
   m_CullTransparentMesh: 1
+--- !u!114 &1987204026
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1987204022}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: e217f02a1e740254d96d647994aad00f, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: SlopCo::SlopCo.UI.LocalizedText
+  key: opt.audio
 --- !u!1 &1997537851
 GameObject:
   m_ObjectHideFlags: 0
@@ -14394,6 +15322,7 @@ GameObject:
   - component: {fileID: 1997537852}
   - component: {fileID: 1997537854}
   - component: {fileID: 1997537853}
+  - component: {fileID: 1997537855}
   m_Layer: 0
   m_Name: CBody
   m_TagString: Untagged
@@ -14477,6 +15406,19 @@ CanvasRenderer:
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 1997537851}
   m_CullTransparentMesh: 1
+--- !u!114 &1997537855
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1997537851}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: e217f02a1e740254d96d647994aad00f, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: SlopCo::SlopCo.UI.LocalizedText
+  key: controls.body
 --- !u!1 &2000475837
 GameObject:
   m_ObjectHideFlags: 0
@@ -14797,6 +15739,7 @@ GameObject:
   - component: {fileID: 2046646739}
   - component: {fileID: 2046646741}
   - component: {fileID: 2046646740}
+  - component: {fileID: 2046646742}
   m_Layer: 0
   m_Name: Text
   m_TagString: Untagged
@@ -14865,6 +15808,19 @@ CanvasRenderer:
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 2046646738}
   m_CullTransparentMesh: 1
+--- !u!114 &2046646742
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 2046646738}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: e217f02a1e740254d96d647994aad00f, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: SlopCo::SlopCo.UI.LocalizedText
+  key: menu.solo
 --- !u!1 &2046763169
 GameObject:
   m_ObjectHideFlags: 0
@@ -15258,6 +16214,85 @@ RectTransform:
   m_AnchoredPosition: {x: -5, y: 0}
   m_SizeDelta: {x: -20, y: 0}
   m_Pivot: {x: 0.5, y: 0.5}
+--- !u!1 &2122128302
+GameObject:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  serializedVersion: 6
+  m_Component:
+  - component: {fileID: 2122128305}
+  - component: {fileID: 2122128304}
+  - component: {fileID: 2122128303}
+  m_Layer: 0
+  m_Name: LangV
+  m_TagString: Untagged
+  m_Icon: {fileID: 0}
+  m_NavMeshLayer: 0
+  m_StaticEditorFlags: 0
+  m_IsActive: 1
+--- !u!114 &2122128303
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 2122128302}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 5f7201a12d95ffc409449d95f23cf332, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: UnityEngine.UI::UnityEngine.UI.Text
+  m_Material: {fileID: 0}
+  m_Color: {r: 1, g: 1, b: 1, a: 1}
+  m_RaycastTarget: 1
+  m_RaycastPadding: {x: 0, y: 0, z: 0, w: 0}
+  m_Maskable: 1
+  m_OnCullStateChanged:
+    m_PersistentCalls:
+      m_Calls: []
+  m_FontData:
+    m_Font: {fileID: 10102, guid: 0000000000000000e000000000000000, type: 0}
+    m_FontSize: 24
+    m_FontStyle: 0
+    m_BestFit: 0
+    m_MinSize: 10
+    m_MaxSize: 40
+    m_Alignment: 4
+    m_AlignByGeometry: 0
+    m_RichText: 1
+    m_HorizontalOverflow: 0
+    m_VerticalOverflow: 0
+    m_LineSpacing: 1
+  m_Text: English
+--- !u!222 &2122128304
+CanvasRenderer:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 2122128302}
+  m_CullTransparentMesh: 1
+--- !u!224 &2122128305
+RectTransform:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 2122128302}
+  m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
+  m_LocalPosition: {x: 0, y: 0, z: 0}
+  m_LocalScale: {x: 1, y: 1, z: 1}
+  m_ConstrainProportionsScale: 0
+  m_Children: []
+  m_Father: {fileID: 1700416219}
+  m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
+  m_AnchorMin: {x: 0.5, y: 0.5}
+  m_AnchorMax: {x: 0.5, y: 0.5}
+  m_AnchoredPosition: {x: 330, y: -285}
+  m_SizeDelta: {x: 300, y: 40}
+  m_Pivot: {x: 0.5, y: 0.5}
 --- !u!1 &2131021536
 GameObject:
   m_ObjectHideFlags: 0
@@ -15269,6 +16304,7 @@ GameObject:
   - component: {fileID: 2131021537}
   - component: {fileID: 2131021539}
   - component: {fileID: 2131021538}
+  - component: {fileID: 2131021540}
   m_Layer: 0
   m_Name: Text
   m_TagString: Untagged
@@ -15337,6 +16373,19 @@ CanvasRenderer:
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 2131021536}
   m_CullTransparentMesh: 1
+--- !u!114 &2131021540
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 2131021536}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: e217f02a1e740254d96d647994aad00f, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: SlopCo::SlopCo.UI.LocalizedText
+  key: menu.options
 --- !u!1 &2141212441
 GameObject:
   m_ObjectHideFlags: 0

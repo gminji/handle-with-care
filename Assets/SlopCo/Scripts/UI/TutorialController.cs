@@ -43,7 +43,7 @@ namespace SlopCo.UI
             switch (_step)
             {
                 case Step.Move:
-                    SetStep("WASD / 왼쪽 스틱으로 움직여 보세요");
+                    SetStep(Localization.Get("tut.move"));
                     if (local != null)
                     {
                         if (!_haveStart) { _startPos = local.transform.position; _haveStart = true; }
@@ -52,23 +52,25 @@ namespace SlopCo.UI
                     break;
 
                 case Step.Grab:
-                    SetStep("빨간 폭탄 가까이 가서  E (꾹)  으로 집으세요");
+                    SetStep(Localization.Get("tut.grab"));
                     var carry = local != null ? local.GetComponent<PlayerCarryController>() : null;
                     if (carry != null && carry.IsCarrying) Advance();
                     break;
 
                 case Step.Deliver:
-                    SetStep("도화선이 다 타기 전에  노란 밴까지 옮겨 배달!");
+                    SetStep(Localization.Get("tut.deliver"));
                     if (_delivered) Advance();
                     break;
 
                 case Step.Done:
-                    SetStep("완료! 이제 진짜다 — 폭탄을 안전하게 배달하세요.");
+                    SetStep(Localization.Get("tut.done"));
                     break;
             }
 
             if (counterText != null)
-                counterText.text = _step == Step.Done ? "TUTORIAL  ✓" : $"STEP  {(int)_step + 1} / 3";
+                counterText.text = _step == Step.Done
+                    ? Localization.Get("tut.complete")
+                    : $"{Localization.Get("tut.step")}  {(int)_step + 1} / 3";
         }
 
         private void SetStep(string t) { if (stepText != null) stepText.text = t; }

@@ -98,11 +98,11 @@ namespace SlopCo.UI
 
         private static string PhaseLabel(RoundPhase phase) => phase switch
         {
-            RoundPhase.Lobby => "LOBBY",
-            RoundPhase.Briefing => "GET READY",
-            RoundPhase.Hauling => "HAUL!",
-            RoundPhase.Payout => "PAYOUT",
-            RoundPhase.GameOver => "FIRED.",
+            RoundPhase.Lobby => Localization.Get("phase.lobby"),
+            RoundPhase.Briefing => Localization.Get("phase.briefing"),
+            RoundPhase.Hauling => Localization.Get("phase.hauling"),
+            RoundPhase.Payout => Localization.Get("phase.payout"),
+            RoundPhase.GameOver => Localization.Get("phase.gameover"),
             _ => string.Empty,
         };
     }

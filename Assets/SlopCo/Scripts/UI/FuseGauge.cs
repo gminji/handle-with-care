@@ -45,7 +45,7 @@ namespace SlopCo.UI
                 }
                 fill.color = c;
             }
-            if (label != null) label.text = fuse < 0.3f ? "!! FUSE !!" : "FUSE";
+            if (label != null) label.text = SlopCo.Core.Localization.Get(fuse < 0.3f ? "fuse.critical" : "fuse.label");
         }
     }
 }

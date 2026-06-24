@@ -61,7 +61,7 @@ namespace SlopCo.UI
                 startButton.gameObject.SetActive(connected && nm.IsServer && lobbyPhase);
 
             if (statusText != null)
-                statusText.text = connected ? (nm.IsServer ? "HOSTING" : "CONNECTED") : "OFFLINE";
+                statusText.text = Localization.Get(connected ? (nm.IsServer ? "lobby.hosting" : "lobby.connected") : "lobby.offline");
             if (playerCountText != null)
                 playerCountText.text = connected
                     ? $"Players {nm.ConnectedClientsIds.Count}/{GameConstants.MaxPlayers}"
