@@ -4,6 +4,9 @@
 EditorBuildSettings:
   m_ObjectHideFlags: 0
   serializedVersion: 2
-  m_Scenes: []
+  m_Scenes:
+  - enabled: 1
+    path: Assets/SlopCo/Scenes/Bootstrap.unity
+    guid: 4f3214f152f2d484297e894d805d8531
   m_configObjects: {}
   m_UseUCBPForAssetBundles: 0

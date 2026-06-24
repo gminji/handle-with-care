@@ -4,6 +4,7 @@
   "references": [
     "Unity.Netcode.Runtime",
     "Unity.Netcode.Components",
+    "Unity.Networking.Transport",
     "Unity.InputSystem",
     "UnityEngine.UI"
   ],
