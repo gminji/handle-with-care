@@ -114,6 +114,11 @@ namespace SlopCo.Player
             Vector3 look = (t.position + Vector3.up * 2.2f) - _cam.transform.position;
             if (look.sqrMagnitude > 0.001f)
                 _cam.transform.rotation = Quaternion.Slerp(_cam.transform.rotation, Quaternion.LookRotation(look), k);
+
+            // Camera shake (smashes/deliveries add trauma; the owner camera samples + applies it).
+            ScreenShake.Sample(Time.deltaTime, out Vector2 shakeOff, out float roll);
+            _cam.transform.position += _cam.transform.right * shakeOff.x + _cam.transform.up * shakeOff.y;
+            _cam.transform.rotation *= Quaternion.Euler(0f, 0f, roll);
         }
 
         // Soft, owner-side bounds — avoids a server overwrite fight with the owner-auth transform.
