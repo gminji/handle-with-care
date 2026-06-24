@@ -14,16 +14,38 @@ namespace SlopCo.Gameplay
     {
         private static Material _particleMat;
 
+        private float _hitStop;
+
         private void OnEnable()
         {
             CargoCondition.OnDamageFx += HandleDamage;
             DeliveryZone.OnDelivered += HandleDeliver;
+            CargoBomb.OnDetonated += HandleDetonation;
         }
 
         private void OnDisable()
         {
             CargoCondition.OnDamageFx -= HandleDamage;
             DeliveryZone.OnDelivered -= HandleDeliver;
+            CargoBomb.OnDetonated -= HandleDetonation;
+            if (_hitStop > 0f) { _hitStop = 0f; Time.timeScale = 1f; } // restore on teardown
+        }
+
+        // The boom is the money shot: brief slow-mo + a heavy shake punch on any detonation.
+        private void HandleDetonation(Vector3 pos)
+        {
+            ScreenShake.Add(1.2f);
+            _hitStop = 0.35f;
+            Time.timeScale = 0.18f;
+        }
+
+        private void Update()
+        {
+            if (_hitStop > 0f)
+            {
+                _hitStop -= Time.unscaledDeltaTime;
+                if (_hitStop <= 0f) Time.timeScale = 1f;
+            }
         }
 
         private void HandleDamage(Vector3 pos, int valueLost, bool bigSmash)

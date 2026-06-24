@@ -24,6 +24,9 @@ namespace SlopCo.Cargo
         [SerializeField] private float blastRadius = 6f;
         [SerializeField] private float blastForce = 900f;
 
+        /// <summary>Raised on every client when a bomb detonates (worldPos) — drives hit-stop / shake juice.</summary>
+        public static event System.Action<Vector3> OnDetonated;
+
         private static readonly int EmissionId = Shader.PropertyToID("_EmissionColor");
         private CargoCondition _condition;
         private CargoItem _cargoItem;
@@ -83,6 +86,11 @@ namespace SlopCo.Cargo
                 var rb = col.attachedRigidbody;
                 if (rb != null && rb != _rb)
                     rb.AddExplosionForce(blastForce, transform.position, blastRadius, 1.5f, ForceMode.Impulse);
+
+                // CHAIN REACTION: a blast lights any nearby bomb's fuse → cascading detonations.
+                var other = col.GetComponentInParent<CargoBomb>();
+                if (other != null && other != this && !other._detonated && other._condition != null)
+                    other._condition.Condition.Value = 0f; // detonates on its next server tick
             }
 
             var rm = ServiceLocator.Get<RoundManager>();
@@ -97,6 +105,7 @@ namespace SlopCo.Cargo
         {
             ScreenShake.Add(1f);
             Boom(pos);
+            OnDetonated?.Invoke(pos); // hit-stop / extra juice listeners
         }
 
         private static void Boom(Vector3 pos)
