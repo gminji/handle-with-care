@@ -1,0 +1,48 @@
+# ── Unity ───────────────────────────────────────────────
+/[Ll]ibrary/
+/[Tt]emp/
+/[Oo]bj/
+/[Bb]uild/
+/[Bb]uilds/
+/[Ll]ogs/
+/[Uu]ser[Ss]ettings/
+/[Mm]emoryCaptures/
+/[Rr]ecordings/
+
+# Asset import / cache
+/[Aa]ssets/AssetStoreTools*
+/[Aa]ssets/Plugins/Editor/JetBrains*
+.consulo/
+*.csproj
+*.unityproj
+*.sln
+*.suo
+*.tmp
+*.user
+*.userprefs
+*.pidb
+*.booproj
+*.svd
+*.pdb
+*.mdb
+*.opendb
+*.VC.db
+sysinfo.txt
+*.apk
+*.aab
+*.unitypackage
+*.app
+
+# IDE
+/.vs/
+/.idea/
+/.vscode/
+
+# ── Project-specific ────────────────────────────────────
+# Kenney CC0 art is downloaded by the developer (see ASSET_MANIFEST.md), NOT committed.
+/[Aa]ssets/SlopCo/Art/
+/[Aa]ssets/SlopCo/Art.meta
+# Steam SDK / Facepunch.Steamworks DLLs are dev-supplied (see README "Enabling Steam").
+/[Aa]ssets/SlopCo/ThirdParty/
+/[Aa]ssets/SlopCo/ThirdParty.meta
+steam_appid.txt
