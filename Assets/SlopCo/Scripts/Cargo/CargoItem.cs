@@ -32,7 +32,9 @@ namespace SlopCo.Cargo
 
         private Rigidbody _rb;
         private CargoCondition _condition;
-        private int RequiredGrabbers => massClass == CargoMassClass.TwoPerson ? 2 : 1;
+        // Solo mode: one player can carry anything (incl. two-person items) at full strength —
+        // RequiredGrabbers drops to 1, so the under-crewed weak-drag branch in DriveCarry never trips.
+        private int RequiredGrabbers => SlopCo.Core.GameModeState.Solo ? 1 : (massClass == CargoMassClass.TwoPerson ? 2 : 1);
 
         // Server-only grab bookkeeping.
         private readonly Dictionary<int, Transform> _grabbers = new();      // handleId -> hand target

@@ -26,6 +26,7 @@ namespace SlopCo.UI
         private enum Screen { MainMenu, Lobby, InGame }
         private Screen _screen = Screen.MainMenu;
         private bool _options, _pause, _controls;
+        private bool _autoStartSolo;
 
         private void Start()
         {
@@ -35,7 +36,17 @@ namespace SlopCo.UI
         }
 
         // ── Button hooks ───────────────────────────────────────
-        public void OnPlay()        { _screen = Screen.Lobby; _options = _controls = false; Apply(); }
+        public void OnPlay()        { GameModeState.Solo = false; _screen = Screen.Lobby; _options = _controls = false; Apply(); }
+
+        /// <summary>Single-player: solo-tuned, host yourself and start immediately — no friend needed.</summary>
+        public void OnPlaySolo()
+        {
+            GameModeState.Solo = true;
+            _options = _controls = false;
+            _autoStartSolo = true;
+            ServiceLocator.Get<SlopCo.Networking.NetworkSessionManager>()?.HostGame();
+            Apply();
+        }
         public void OpenOptions()   { _options = true; Apply(); }
         public void CloseOptions()  { _options = false; SettingsManager.Save(); Apply(); }
         public void OpenControls()  { _controls = true; Apply(); }
@@ -46,6 +57,8 @@ namespace SlopCo.UI
         {
             var nm = NetworkManager.Singleton;
             if (nm != null && nm.IsListening) nm.Shutdown();
+            GameModeState.Solo = false;
+            _autoStartSolo = false;
             _screen = Screen.MainMenu;
             _pause = _options = _controls = false;
             Apply();
@@ -67,6 +80,13 @@ namespace SlopCo.UI
             bool connected = nm != null && nm.IsListening && (nm.IsClient || nm.IsServer);
             var rm = ServiceLocator.Get<RoundManager>();
             bool inRound = rm != null && rm.Phase.Value != RoundPhase.Lobby && rm.Phase.Value != RoundPhase.GameOver;
+
+            // Solo: once the self-host is up, kick the run off automatically (no lobby wait).
+            if (_autoStartSolo && connected && rm != null && rm.Phase.Value == RoundPhase.Lobby)
+            {
+                rm.RequestStartRpc();
+                _autoStartSolo = false;
+            }
 
             if (connected)
                 _screen = inRound ? Screen.InGame : Screen.Lobby;
