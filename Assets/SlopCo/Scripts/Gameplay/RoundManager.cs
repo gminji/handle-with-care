@@ -31,17 +31,31 @@ namespace SlopCo.Gameplay
 
         private float _phaseTimer;
         private bool _payoutMet;
+        private int _bombsToDeliver;
+        private int _bombsDelivered;
 
         public override void OnNetworkSpawn()
         {
             ServiceLocator.Register(this);
             if (quota == null) quota = GetComponent<QuotaSystem>();
             if (cargoSpawner == null) cargoSpawner = GetComponent<CargoSpawner>();
+            DeliveryZone.OnDelivered += HandleDelivered;
         }
 
         public override void OnNetworkDespawn()
         {
+            DeliveryZone.OnDelivered -= HandleDelivered;
             if (ServiceLocator.Get<RoundManager>() == this) ServiceLocator.Unregister<RoundManager>();
+        }
+
+        // Bomb mode: the day is won the instant every bomb is safely delivered (no need to burn the clock).
+        private void HandleDelivered(Vector3 worldPos, int payout)
+        {
+            if (!IsServer) return;
+            _bombsDelivered++;
+            if (cargoSpawner != null && cargoSpawner.BombMode
+                && Phase.Value == RoundPhase.Hauling && _bombsDelivered >= _bombsToDeliver)
+                BeginPayout();
         }
 
         /// <summary>Host/lobby → begin (or restart after GameOver) a run.</summary>
@@ -81,6 +95,9 @@ namespace SlopCo.Gameplay
         private void StartGame()
         {
             quota?.ResetForNewGame();
+            // Bomb mode is a survival loop, not a cash-quota grind — keep quota trivially met so the
+            // payout card reads "SURVIVED"; the only fail state is a detonation.
+            if (cargoSpawner != null && cargoSpawner.BombMode && quota != null) quota.Quota.Value = 1;
             RoundNumber.Value = 1;
             SetPhase(RoundPhase.Briefing, GameConstants.BriefingSeconds);
         }
@@ -88,13 +105,17 @@ namespace SlopCo.Gameplay
         private void BeginHauling()
         {
             cargoSpawner?.SpawnRoundCargo();
+            _bombsToDeliver = cargoSpawner != null ? cargoSpawner.LastSpawnCount : 0;
+            _bombsDelivered = 0;
             SetPhase(RoundPhase.Hauling, GameConstants.HaulSeconds);
         }
 
         private void BeginPayout()
         {
             cargoSpawner?.ClearRemainingCargo();
-            _payoutMet = quota != null && quota.EvaluateQuota();
+            _payoutMet = (cargoSpawner != null && cargoSpawner.BombMode)
+                ? _bombsDelivered >= _bombsToDeliver
+                : quota != null && quota.EvaluateQuota();
             SetPhase(RoundPhase.Payout, 4f);
         }
 
@@ -102,7 +123,7 @@ namespace SlopCo.Gameplay
         {
             if (_payoutMet)
             {
-                quota?.EscalateQuota();
+                if (cargoSpawner == null || !cargoSpawner.BombMode) quota?.EscalateQuota();
                 RoundNumber.Value += 1;
                 SetPhase(RoundPhase.Briefing, GameConstants.BriefingSeconds);
             }

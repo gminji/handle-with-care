@@ -26,6 +26,7 @@ namespace SlopCo.Cargo
 
         private static readonly int EmissionId = Shader.PropertyToID("_EmissionColor");
         private CargoCondition _condition;
+        private CargoItem _cargoItem;
         private Rigidbody _rb;
         private MaterialPropertyBlock _mpb;
         private bool _detonated;
@@ -34,9 +35,13 @@ namespace SlopCo.Cargo
         public override void OnNetworkSpawn()
         {
             _condition = GetComponent<CargoCondition>();
+            _cargoItem = GetComponent<CargoItem>();
             _rb = GetComponent<Rigidbody>();
             _mpb = new MaterialPropertyBlock();
         }
+
+        /// <summary>SERVER. Arm the fuse with a per-second burn rate (escalates each day).</summary>
+        public void Arm(float fuseDecay) => fuseDecayPerSecond = Mathf.Max(0f, fuseDecay);
 
         private void Update()
         {
@@ -59,6 +64,8 @@ namespace SlopCo.Cargo
                 }
 
             if (!IsServer) return;
+            // Delivered to the van = defused: never blows once it is safely dropped off.
+            if (_cargoItem != null && _cargoItem.State.Value == CarryState.Delivered) return;
             // Server burns the fuse over time; impacts already drop Condition via CargoCondition.ApplyImpact.
             if (!_detonated && fuse > 0f)
                 _condition.Condition.Value = Mathf.Max(0f, _condition.Condition.Value - fuseDecayPerSecond * Time.deltaTime);
