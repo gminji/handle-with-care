@@ -39,9 +39,8 @@ sysinfo.txt
 /.vscode/
 
 # ── Project-specific ────────────────────────────────────
-# Kenney CC0 art is downloaded by the developer (see ASSET_MANIFEST.md), NOT committed.
-/[Aa]ssets/SlopCo/Art/
-/[Aa]ssets/SlopCo/Art.meta
+# Kenney CC0 art IS committed: prefabs/scenes reference these meshes by GUID, and the
+# CC0 license permits redistribution, so the repo stays clone-and-play.
 # Steam SDK / Facepunch.Steamworks DLLs are dev-supplied (see README "Enabling Steam").
 /[Aa]ssets/SlopCo/ThirdParty/
 /[Aa]ssets/SlopCo/ThirdParty.meta

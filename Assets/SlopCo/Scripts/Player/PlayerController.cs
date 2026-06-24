@@ -107,10 +107,11 @@ namespace SlopCo.Player
         {
             if (!IsOwner || _cam == null) return;
             Transform t = cameraTarget != null ? cameraTarget : transform;
-            Vector3 desired = t.position + new Vector3(0f, 6f, -7f);
+            // Lower, pulled-back 3/4 view: shows the world + horizon instead of staring at the floor.
+            Vector3 desired = t.position + new Vector3(0f, 5f, -9f);
             float k = 1f - Mathf.Exp(-10f * Time.deltaTime);
             _cam.transform.position = Vector3.Lerp(_cam.transform.position, desired, k);
-            Vector3 look = (t.position + Vector3.up * 1.2f) - _cam.transform.position;
+            Vector3 look = (t.position + Vector3.up * 2.2f) - _cam.transform.position;
             if (look.sqrMagnitude > 0.001f)
                 _cam.transform.rotation = Quaternion.Slerp(_cam.transform.rotation, Quaternion.LookRotation(look), k);
         }
