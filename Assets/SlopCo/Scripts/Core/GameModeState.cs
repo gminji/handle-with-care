@@ -9,5 +9,7 @@ namespace SlopCo.Core
     public static class GameModeState
     {
         public static bool Solo;
+        /// <summary>Guided tutorial run (implies Solo): calm fuse + step-by-step coaching overlay.</summary>
+        public static bool Tutorial;
     }
 }

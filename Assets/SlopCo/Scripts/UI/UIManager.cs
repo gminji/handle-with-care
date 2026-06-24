@@ -36,12 +36,18 @@ namespace SlopCo.UI
         }
 
         // ── Button hooks ───────────────────────────────────────
-        public void OnPlay()        { GameModeState.Solo = false; _screen = Screen.Lobby; _options = _controls = false; Apply(); }
+        public void OnPlay()        { GameModeState.Solo = false; GameModeState.Tutorial = false; _screen = Screen.Lobby; _options = _controls = false; Apply(); }
 
         /// <summary>Single-player: solo-tuned, host yourself and start immediately — no friend needed.</summary>
-        public void OnPlaySolo()
+        public void OnPlaySolo() => StartSolo(false);
+
+        /// <summary>Guided tutorial: solo + calm fuse + step-by-step coaching.</summary>
+        public void OnPlayTutorial() => StartSolo(true);
+
+        private void StartSolo(bool tutorial)
         {
             GameModeState.Solo = true;
+            GameModeState.Tutorial = tutorial;
             _options = _controls = false;
             _autoStartSolo = true;
             ServiceLocator.Get<SlopCo.Networking.NetworkSessionManager>()?.HostGame();
@@ -58,6 +64,7 @@ namespace SlopCo.UI
             var nm = NetworkManager.Singleton;
             if (nm != null && nm.IsListening) nm.Shutdown();
             GameModeState.Solo = false;
+            GameModeState.Tutorial = false;
             _autoStartSolo = false;
             _screen = Screen.MainMenu;
             _pause = _options = _controls = false;
