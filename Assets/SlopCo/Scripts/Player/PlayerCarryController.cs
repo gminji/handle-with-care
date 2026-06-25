@@ -128,7 +128,9 @@ namespace SlopCo.Player
             if (cargo == null) return;
 
             Transform handTarget = handAnchor != null ? handAnchor : transform;
-            if (cargo.TryClaimHandle(handleId, OwnerClientId, handTarget))
+            // Carrier id = this player's NetworkObjectId (unique per human AND per server-owned bot),
+            // not OwnerClientId — bots share clientId 0 with the host.
+            if (cargo.TryClaimHandle(handleId, NetworkObjectId, handTarget))
                 HeldCargo.Value = cargoObj;
         }
 
@@ -138,7 +140,7 @@ namespace SlopCo.Player
             if (HeldCargo.Value.TryGet(out var cargoObj))
             {
                 var cargo = cargoObj.GetComponent<CargoItem>();
-                if (cargo != null) cargo.ReleaseHandle(OwnerClientId);
+                if (cargo != null) cargo.ReleaseHandle(NetworkObjectId);
             }
             HeldCargo.Value = default;
         }
@@ -149,7 +151,7 @@ namespace SlopCo.Player
             if (HeldCargo.Value.TryGet(out var cargoObj))
             {
                 var cargo = cargoObj.GetComponent<CargoItem>();
-                if (cargo != null) cargo.RequestThrow(OwnerClientId, dir, charge01);
+                if (cargo != null) cargo.RequestThrow(NetworkObjectId, dir, charge01);
             }
             HeldCargo.Value = default;
         }
@@ -160,7 +162,7 @@ namespace SlopCo.Player
             if (IsServer && HeldCargo.Value.TryGet(out var cargoObj))
             {
                 var cargo = cargoObj.GetComponent<CargoItem>();
-                if (cargo != null) cargo.ReleaseHandle(OwnerClientId);
+                if (cargo != null) cargo.ReleaseHandle(NetworkObjectId);
             }
         }
     }

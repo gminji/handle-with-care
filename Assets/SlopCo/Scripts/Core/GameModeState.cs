@@ -14,5 +14,10 @@ namespace SlopCo.Core
         /// <summary>Chosen map index, or -1 for random (the host rolls one at session start). Set from
         /// the menu's map picker; read host-side by <c>MapManager</c>. Reset to -1 on leaving.</summary>
         public static int SelectedMap = -1;
+        /// <summary>Co-op-with-AI run: the host spawns <see cref="BotCount"/> AI teammates. Set from the
+        /// menu; read host-side by <c>PlayerSpawner</c>. Reset on leaving.</summary>
+        public static bool WithAi;
+        /// <summary>How many AI teammates to spawn when <see cref="WithAi"/> is on.</summary>
+        public static int BotCount = 1;
     }
 }

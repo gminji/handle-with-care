@@ -36,9 +36,11 @@ namespace SlopCo.Cargo
         // RequiredGrabbers drops to 1, so the under-crewed weak-drag branch in DriveCarry never trips.
         private int RequiredGrabbers => SlopCo.Core.GameModeState.Solo ? 1 : (massClass == CargoMassClass.TwoPerson ? 2 : 1);
 
-        // Server-only grab bookkeeping.
+        // Server-only grab bookkeeping. CarrierId is the GRABBING PLAYER's NetworkObjectId (unique per
+        // player AND per AI bot) — NOT the clientId, because server-owned bots all share clientId 0 with
+        // the host and would otherwise collide on the "one handle per carrier" rule.
         private readonly Dictionary<int, Transform> _grabbers = new();      // handleId -> hand target
-        private readonly Dictionary<int, ulong> _grabberClients = new();    // handleId -> clientId
+        private readonly Dictionary<int, ulong> _grabberCarriers = new();   // handleId -> carrierId
 
         // Throw sequencing (applied in FixedUpdate, one frame after the request).
         private bool _pendingThrow;
@@ -56,36 +58,36 @@ namespace SlopCo.Cargo
 
         // ── SERVER grab API (invoked by PlayerCarryController's server RPCs) ──
 
-        public bool TryClaimHandle(int handleId, ulong clientId, Transform handTarget)
+        public bool TryClaimHandle(int handleId, ulong carrierId, Transform handTarget)
         {
             if (!IsServer) return false;
             if (State.Value == CarryState.Delivered || State.Value == CarryState.Throwing) return false;
             if (handleId < 0 || handleId >= handles.Count) return false;
-            if (_grabbers.ContainsKey(handleId)) return false;          // handle occupied
-            if (_grabberClients.ContainsValue(clientId)) return false;  // one handle per client
+            if (_grabbers.ContainsKey(handleId)) return false;            // handle occupied
+            if (_grabberCarriers.ContainsValue(carrierId)) return false;  // one handle per carrier
 
             _grabbers[handleId] = handTarget;
-            _grabberClients[handleId] = clientId;
+            _grabberCarriers[handleId] = carrierId;
             State.Value = CarryState.Held;
             return true;
         }
 
-        public void ReleaseHandle(ulong clientId)
+        public void ReleaseHandle(ulong carrierId)
         {
             if (!IsServer) return;
-            ReleaseHandleInternal(clientId);
+            ReleaseHandleInternal(carrierId);
             if (_grabbers.Count == 0 && State.Value == CarryState.Held)
                 State.Value = CarryState.Loose;
         }
 
-        public bool IsHeldBy(ulong clientId) => _grabberClients.ContainsValue(clientId);
+        public bool IsHeldBy(ulong carrierId) => _grabberCarriers.ContainsValue(carrierId);
 
-        public void RequestThrow(ulong clientId, Vector3 dir, float charge01)
+        public void RequestThrow(ulong carrierId, Vector3 dir, float charge01)
         {
             if (!IsServer) return;
-            if (!_grabberClients.ContainsValue(clientId)) return;
+            if (!_grabberCarriers.ContainsValue(carrierId)) return;
 
-            ReleaseHandleInternal(clientId);
+            ReleaseHandleInternal(carrierId);
 
             // Only actually launch if no one else is still holding it (don't yank a piano from a friend).
             if (_grabbers.Count == 0)
@@ -97,15 +99,15 @@ namespace SlopCo.Cargo
             }
         }
 
-        private void ReleaseHandleInternal(ulong clientId)
+        private void ReleaseHandleInternal(ulong carrierId)
         {
             int found = -1;
-            foreach (var kv in _grabberClients)
-                if (kv.Value == clientId) { found = kv.Key; break; }
+            foreach (var kv in _grabberCarriers)
+                if (kv.Value == carrierId) { found = kv.Key; break; }
             if (found >= 0)
             {
                 _grabbers.Remove(found);
-                _grabberClients.Remove(found);
+                _grabberCarriers.Remove(found);
             }
         }
 
@@ -166,14 +168,14 @@ namespace SlopCo.Cargo
         {
             if (!IsServer) return;
             _grabbers.Clear();
-            _grabberClients.Clear();
+            _grabberCarriers.Clear();
             State.Value = CarryState.Delivered;
         }
 
         public override void OnNetworkDespawn()
         {
             _grabbers.Clear();
-            _grabberClients.Clear();
+            _grabberCarriers.Clear();
         }
     }
 }

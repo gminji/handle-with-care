@@ -40,6 +40,31 @@ namespace SlopCo.Networking
             var nm = NetworkManager.Singleton;
             if (nm == null || !nm.IsServer) return; // only the server spawns players
             SpawnPlayer(clientId);
+
+            // Co-op-with-AI: once the host's own player is in, spawn the AI teammates alongside it.
+            if (clientId == NetworkManager.ServerClientId && GameModeState.WithAi)
+                SpawnBots(Mathf.Clamp(GameModeState.BotCount, 1, GameConstants.MaxPlayers - 1));
+        }
+
+        /// <summary>SERVER. Spawn AI teammates as server-owned player instances (not player-objects).</summary>
+        private void SpawnBots(int count)
+        {
+            if (registry == null || registry.playerPrefab == null) return;
+            for (int i = 0; i < count; i++)
+            {
+                (Vector3 pos, Quaternion rot) = NextSpawn();
+                GameObject go = Instantiate(registry.playerPrefab, pos, rot);
+
+                var pc = go.GetComponent<PlayerController>();
+                if (pc != null) pc.MarkAsBot(); // before Spawn so OnNetworkSpawn wires the AiBrain
+
+                var netObj = go.GetComponent<NetworkObject>();
+                if (netObj == null) { Destroy(go); continue; }
+                netObj.Spawn(); // server-owned (host owns + drives it); NOT a client player-object
+
+                if (pc != null) pc.ColorIndex.Value = _spawnCount % GameConstants.MaxPlayers;
+                _spawnCount++;
+            }
         }
 
         private void SpawnPlayer(ulong clientId)

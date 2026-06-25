@@ -44,6 +44,19 @@ namespace SlopCo.UI
         /// <summary>Guided tutorial: solo + calm fuse + step-by-step coaching.</summary>
         public void OnPlayTutorial() => StartSolo(true);
 
+        /// <summary>Co-op with AI teammates: host yourself, spawn bots, start immediately — no friend needed.</summary>
+        public void OnPlayWithAi()
+        {
+            GameModeState.Solo = false;       // co-op tuning (a bot can co-carry two-person items)
+            GameModeState.Tutorial = false;
+            GameModeState.WithAi = true;
+            GameModeState.BotCount = 1;
+            _options = _controls = false;
+            _autoStartSolo = true;            // reuse the solo self-host auto-start
+            ServiceLocator.Get<SlopCo.Networking.NetworkSessionManager>()?.HostGame();
+            Apply();
+        }
+
         private void StartSolo(bool tutorial)
         {
             GameModeState.Solo = true;
@@ -65,6 +78,7 @@ namespace SlopCo.UI
             if (nm != null && nm.IsListening) nm.Shutdown();
             GameModeState.Solo = false;
             GameModeState.Tutorial = false;
+            GameModeState.WithAi = false;
             _autoStartSolo = false;
             _screen = Screen.MainMenu;
             _pause = _options = _controls = false;

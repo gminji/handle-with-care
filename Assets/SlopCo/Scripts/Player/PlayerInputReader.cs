@@ -22,6 +22,13 @@ namespace SlopCo.Player
         private bool _enabled;
         private float _throwHeldTime;
 
+        // AI mode: an AiBrain drives this reader instead of physical devices (bots reuse the human pipeline).
+        private AiBrain _ai;
+        private bool _aiMode;
+
+        /// <summary>Switch this reader to AI-driven input (called by PlayerController for bots).</summary>
+        public void UseAi(AiBrain brain) { _ai = brain; _aiMode = true; }
+
         private void Awake()
         {
             _move = new InputAction("Move", InputActionType.Value);
@@ -68,6 +75,16 @@ namespace SlopCo.Player
 
         private void Update()
         {
+            // AI-driven (bot): pull intents from the brain, ignore physical devices entirely.
+            if (_aiMode)
+            {
+                Move = _ai != null ? _ai.Move : Vector2.zero;
+                JumpPressed = _ai != null && _ai.WantJump;
+                GrabHeld = _ai != null && _ai.GrabHeld;
+                ThrowReleasedThisFrame = false; ThrowCharge01 = 0f;
+                return;
+            }
+
             if (!_enabled)
             {
                 Move = Vector2.zero; JumpPressed = false; GrabHeld = false;

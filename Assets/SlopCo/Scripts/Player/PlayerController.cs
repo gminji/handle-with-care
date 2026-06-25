@@ -37,6 +37,11 @@ namespace SlopCo.Player
         private CharacterController _cc;
         private Camera _cam;
         private float _verticalVel;
+        private bool _isBot;
+
+        /// <summary>SERVER. Flag this instance as an AI bot BEFORE <c>NetworkObject.Spawn()</c> so
+        /// OnNetworkSpawn drives it with an <see cref="AiBrain"/> instead of physical input.</summary>
+        public void MarkAsBot() => _isBot = true;
 
         private void Awake()
         {
@@ -52,8 +57,18 @@ namespace SlopCo.Player
 
             if (IsOwner)
             {
-                input?.Enable();
-                _cam = Camera.main;
+                if (_isBot)
+                {
+                    // AI teammate: an AiBrain feeds input; no physical devices, no camera.
+                    var brain = GetComponent<AiBrain>();
+                    if (brain != null) brain.enabled = true;
+                    input?.UseAi(brain);
+                }
+                else
+                {
+                    input?.Enable();
+                    _cam = Camera.main;
+                }
             }
             else
             {

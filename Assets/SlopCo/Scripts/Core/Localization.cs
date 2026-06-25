@@ -57,6 +57,7 @@ namespace SlopCo.Core
             // ── Main menu ──
             { "menu.subtitle", new[]{ "co-op delivery chaos", "협동 배달 카오스", "協力配達カオス", "合作快递大乱斗" } },
             { "menu.solo",     new[]{ "PLAY SOLO", "솔로 플레이", "ソロプレイ", "单人游戏" } },
+            { "menu.withai",   new[]{ "PLAY WITH AI", "AI와 플레이", "AIとプレイ", "与AI游玩" } },
             { "menu.online",   new[]{ "PLAY ONLINE", "온라인 플레이", "オンライン", "在线游戏" } },
             { "menu.tutorial", new[]{ "TUTORIAL", "튜토리얼", "チュートリアル", "教程" } },
             { "menu.options",  new[]{ "OPTIONS", "옵션", "オプション", "选项" } },

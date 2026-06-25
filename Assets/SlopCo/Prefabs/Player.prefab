@@ -304,6 +304,7 @@ GameObject:
   - component: {fileID: 3084159529664421536}
   - component: {fileID: 4998148268161820321}
   - component: {fileID: 1845372022122161182}
+  - component: {fileID: 724870457208572513}
   m_Layer: 0
   m_Name: Player
   m_TagString: Untagged
@@ -486,6 +487,18 @@ MonoBehaviour:
   ShowTopMostFoldoutHeaderGroup: 1
   animator: {fileID: 6674899665006129817}
   carry: {fileID: 4998148268161820321}
+--- !u!114 &724870457208572513
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 5725589379602305267}
+  m_Enabled: 0
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 55db3566c98d003448e36472ed64c6ee, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: SlopCo::SlopCo.Player.AiBrain
 --- !u!1 &6033343428871254481
 GameObject:
   m_ObjectHideFlags: 0
