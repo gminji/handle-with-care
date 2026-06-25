@@ -23,11 +23,22 @@ namespace SlopCo.UI
         [Header("Game-over actions (shown only on FIRED)")]
         [SerializeField] private Button restartButton;  // host-only
         [SerializeField] private Button menuButton;      // return to title
+        [Header("Share (shown on every card)")]
+        [SerializeField] private Button shareButton;    // capture PNG + open folder
+        [SerializeField] private Button copyButton;     // copy brag text to clipboard
+        [SerializeField] private Text shareStatus;      // tiny "Saved ✓" / "Copied ✓" toast
+        [SerializeField] private ShareCapture shareCapture;
+
+        // Snapshot of the currently-shown card, captured at the end of Show() for the share/copy actions.
+        private string _shareSummary = "";
+        private string _gradeLetter = "";
 
         private void Awake()
         {
             if (restartButton != null) restartButton.onClick.AddListener(OnRestart);
             if (menuButton != null) menuButton.onClick.AddListener(OnReturnToTitle);
+            if (shareButton != null) shareButton.onClick.AddListener(OnShare);
+            if (copyButton != null) copyButton.onClick.AddListener(OnCopy);
         }
 
         private void OnEnable()
@@ -72,25 +83,31 @@ namespace SlopCo.UI
             {
                 if (phase == RoundPhase.GameOver)
                 {
-                    titleText.text = "FIRED.";
+                    titleText.text = Localization.Get("phase.gameover"); // "FIRED." — reuse existing key
                     titleText.color = new Color(1f, 0.4f, 0.35f);
                 }
                 else
                 {
-                    titleText.text = met ? $"DAY {day} — SURVIVED" : $"DAY {day} — SHORT!";
+                    titleText.text = Localization.Get(met ? "res.day.survived" : "res.day.short")
+                        .Replace("{day}", day.ToString());
                     titleText.color = met ? new Color(0.45f, 1f, 0.5f) : new Color(1f, 0.7f, 0.3f);
                 }
             }
 
             if (bodyText != null)
             {
-                string b = $"CASH  ${cash}      QUOTA  ${target}\n\n";
+                string b = Localization.Get("res.cashquota")
+                               .Replace("{cash}", cash.ToString())
+                               .Replace("{quota}", target.ToString()) + "\n\n";
                 if (stats != null)
                 {
-                    b += $"Deliveries:  {stats.DeliveryCount}   (+${stats.TotalDelivered})\n";
-                    b += $"Cargo destroyed:  ${stats.TotalDestroyed}\n";
-                    b += $"Biggest single smash:  -${stats.BiggestSmash}";
-                    if (stats.BestCombo >= 2) b += $"\nBest chain:  x{stats.BestCombo}";
+                    b += Localization.Get("res.deliveries")
+                             .Replace("{count}", stats.DeliveryCount.ToString())
+                             .Replace("{total}", stats.TotalDelivered.ToString()) + "\n";
+                    b += Localization.Get("res.destroyed").Replace("{val}", stats.TotalDestroyed.ToString()) + "\n";
+                    b += Localization.Get("res.smash").Replace("{val}", stats.BiggestSmash.ToString());
+                    if (stats.BestCombo >= 2)
+                        b += "\n" + Localization.Get("res.bestchain").Replace("{chain}", stats.BestCombo.ToString());
                 }
 
                 // --- Personal records: the cross-run "beat your best, one more run" hook ---
@@ -122,13 +139,15 @@ namespace SlopCo.UI
                 bool flourishGrade = newGrade && prevGrade != BestRecords.NoGrade;
                 bool flourish = flourishDay || flourishCash || flourishChain || flourishGrade;
 
-                b += "\n\n— RECORDS —";
-                b += $"\nBest day:  Day {BestRecords.BestDay}";
-                if (BestRecords.BestCash  > 0)  b += $"     Best cash:  ${BestRecords.BestCash}";
-                if (BestRecords.BestChain >= 2) b += $"     Best chain:  x{BestRecords.BestChain}";
+                b += "\n\n— " + Localization.Get("res.records") + " —";
+                b += "\n" + Localization.Get("res.best.day").Replace("{day}", BestRecords.BestDay.ToString());
+                if (BestRecords.BestCash  > 0)  b += "     " + Localization.Get("res.best.cash").Replace("{cash}", BestRecords.BestCash.ToString());
+                if (BestRecords.BestChain >= 2) b += "     " + Localization.Get("res.bestchain").Replace("{chain}", BestRecords.BestChain.ToString());
                 // Survived but didn't beat the record yet? Dangle the carrot to pull "one more run".
                 if (phase == RoundPhase.Payout && met && !newDay && prevDay > day)
-                    b += $"\nRecord is Day {prevDay} — {prevDay - day} to go!";
+                    b += "\n" + Localization.Get("res.record.togo")
+                             .Replace("{best}", prevDay.ToString())
+                             .Replace("{gap}", (prevDay - day).ToString());
 
                 // Chaos Rating block — the big screenshot badge + auto-generated punchline.
                 b += "\n\n— " + Localization.Get("grade.title") + " —";
@@ -136,17 +155,22 @@ namespace SlopCo.UI
 
                 if (flourish)
                 {
-                    string what = flourishGrade ? $"RANK {RunGrade.Letter(verdict.Grade)}"
-                                : flourishDay   ? $"DAY {day} SURVIVED"
-                                : flourishCash  ? $"${cash}"
-                                :                 $"x{chain} CHAIN";
-                    b += $"\n<color=#FFD24A><b>★ NEW RECORD!   {what}   ★</b></color>";
+                    string what = flourishGrade ? Localization.Get("res.what.rank").Replace("{letter}", RunGrade.Letter(verdict.Grade))
+                                : flourishDay   ? Localization.Get("res.what.day").Replace("{day}", day.ToString())
+                                : flourishCash  ? $"${cash}"   // pure number — no translation needed
+                                :                 Localization.Get("res.what.chain").Replace("{chain}", chain.ToString());
+                    b += $"\n<color=#FFD24A><b>{Localization.Get("res.newrecord").Replace("{what}", what)}</b></color>";
                     if (titleText != null) titleText.color = new Color(1f, 0.84f, 0.29f); // gold overrides the phase tint
                     ScreenShake.Add(0.5f);          // static global punch — no wiring needed
                     BestRecords.RaiseNewRecord();   // GameAudio plays the record stinger
                 }
 
                 bodyText.text = b;
+
+                // Snapshot for SHARE/COPY — plain-text brag (no rich tags) + the grade letter for the filename.
+                _gradeLetter = RunGrade.Letter(verdict.Grade);
+                _shareSummary = ShareText.Build(_gradeLetter, BuildHeadline(verdict.Flavor, stats, day),
+                    day, cash, stats != null ? stats.DeliveryCount : 0, BestRecords.BestDay, BestRecords.BestChain);
             }
 
             // Action buttons only make sense on the terminal FIRED card; Payout auto-advances to the next day.
@@ -155,6 +179,11 @@ namespace SlopCo.UI
             bool isHost = nm != null && nm.IsListening && nm.IsServer;
             if (restartButton != null) restartButton.gameObject.SetActive(gameOver && isHost);
             if (menuButton != null) menuButton.gameObject.SetActive(gameOver);
+
+            // SHARE/COPY make sense on every shown card (Payout + FIRED) — the screenshot moment is the point.
+            if (shareButton != null) shareButton.gameObject.SetActive(true);
+            if (copyButton != null) copyButton.gameObject.SetActive(true);
+            if (shareStatus != null) shareStatus.text = "";
         }
 
         // Grade → rich-text color (gold S → red D). The badge color carries the verdict at a glance.
@@ -195,6 +224,26 @@ namespace SlopCo.UI
         {
             if (restartButton != null) restartButton.gameObject.SetActive(on);
             if (menuButton != null) menuButton.gameObject.SetActive(on);
+            if (shareButton != null) shareButton.gameObject.SetActive(on);
+            if (copyButton != null) copyButton.gameObject.SetActive(on);
+        }
+
+        // SHARE — capture the card to a PNG and open the Clips folder; flash the result on the status label.
+        private void OnShare()
+        {
+            if (shareCapture == null) return;
+            if (shareStatus != null) shareStatus.text = "…";
+            shareCapture.CaptureAndOpen(_gradeLetter, ok =>
+            {
+                if (shareStatus != null) shareStatus.text = Localization.Get(ok ? "share.saved" : "share.failed");
+            });
+        }
+
+        // COPY — drop the plain-text brag onto the clipboard (no rich tags), then confirm on the status label.
+        private void OnCopy()
+        {
+            bool ok = ShareCapture.CopyToClipboard(_shareSummary);
+            if (shareStatus != null) shareStatus.text = Localization.Get(ok ? "share.copied" : "share.failed");
         }
 
         // Host-only path; RequestStartRpc is server-gated so a stray client click is a harmless no-op.

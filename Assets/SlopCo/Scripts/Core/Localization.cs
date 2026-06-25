@@ -121,6 +121,28 @@ namespace SlopCo.Core
             { "grade.flavor.hustle",  new[]{ "{deliveries} deliveries, ${delivered} earned.", "{deliveries}회 배달, ${delivered} 획득.", "{deliveries}回配達、${delivered}獲得。", "送达{deliveries}次，赚得${delivered}。" } },
             { "grade.flavor.rookie",  new[]{ "Rough day at SlopCo.", "SlopCo에서 험난한 하루.", "SlopCoでの厳しい一日。", "在SlopCo艰难的一天。" } },
 
+            // ── Results body (stats / records / share) — ResultsUI substitutes {tokens}; rich-text composed outside ──
+            { "res.cashquota",    new[]{ "CASH  ${cash}      QUOTA  ${quota}", "현금  ${cash}      쿼터  ${quota}", "現金  ${cash}      ノルマ  ${quota}", "现金  ${cash}      配额  ${quota}" } },
+            { "res.day.survived", new[]{ "DAY {day} — SURVIVED", "{day}일차 — 생존", "{day}日目 — 生還", "第{day}天 — 幸存" } },
+            { "res.day.short",    new[]{ "DAY {day} — SHORT!", "{day}일차 — 미달!", "{day}日目 — 未達！", "第{day}天 — 不足！" } },
+            { "res.deliveries",   new[]{ "Deliveries:  {count}   (+${total})", "배달:  {count}회   (+${total})", "配達:  {count}回   (+${total})", "送达:  {count}次   (+${total})" } },
+            { "res.destroyed",    new[]{ "Cargo destroyed:  ${val}", "파손 화물:  ${val}", "破壊した貨物:  ${val}", "损毁货物:  ${val}" } },
+            { "res.smash",        new[]{ "Biggest single smash:  -${val}", "최대 단일 파손:  -${val}", "最大の単発破壊:  -${val}", "最大单次损失:  -${val}" } },
+            { "res.bestchain",    new[]{ "Best chain:  x{chain}", "최고 연쇄:  x{chain}", "最高チェーン:  x{chain}", "最高连锁:  x{chain}" } },
+            { "res.records",      new[]{ "RECORDS", "기록", "記録", "记录" } },
+            { "res.best.day",     new[]{ "Best day:  Day {day}", "최고 기록:  {day}일차", "最高記録:  {day}日目", "最佳天数:  第{day}天" } },
+            { "res.best.cash",    new[]{ "Best cash:  ${cash}", "최고 현금:  ${cash}", "最高現金:  ${cash}", "最高现金:  ${cash}" } },
+            { "res.record.togo",  new[]{ "Record is Day {best} — {gap} to go!", "기록은 {best}일차 — {gap}일 남음!", "記録は{best}日目 — あと{gap}日！", "记录是第{best}天 — 还差{gap}天！" } },
+            { "res.newrecord",    new[]{ "★ NEW RECORD!   {what}   ★", "★ 신기록!   {what}   ★", "★ 新記録！   {what}   ★", "★ 新纪录！   {what}   ★" } },
+            { "res.what.rank",    new[]{ "RANK {letter}", "등급 {letter}", "ランク {letter}", "等级 {letter}" } },
+            { "res.what.day",     new[]{ "DAY {day} SURVIVED", "{day}일차 생존", "{day}日目 生還", "第{day}天 幸存" } },
+            { "res.what.chain",   new[]{ "x{chain} CHAIN", "x{chain} 연쇄", "x{chain} チェーン", "x{chain} 连锁" } },
+            { "share.button",     new[]{ "SHARE", "공유", "シェア", "分享" } },
+            { "share.copy",       new[]{ "COPY", "복사", "コピー", "复制" } },
+            { "share.saved",      new[]{ "Saved to Clips ✓", "Clips에 저장됨 ✓", "Clipsに保存 ✓", "已保存到 Clips ✓" } },
+            { "share.copied",     new[]{ "Copied! ✓", "복사됨! ✓", "コピーしました！ ✓", "已复制！ ✓" } },
+            { "share.failed",     new[]{ "Save failed", "저장 실패", "保存失敗", "保存失败" } },
+
             // ── Augments (roguelite shop) ──
             { "shop.title",      new[]{ "BUY AN AUGMENT", "증강 구매", "オーグメント購入", "购买增强" } },
             { "aug.light.name",  new[]{ "Lighter Load", "가벼운 짐", "軽い荷物", "轻装" } },
