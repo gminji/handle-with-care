@@ -45,3 +45,14 @@ sysinfo.txt
 /[Aa]ssets/SlopCo/ThirdParty/
 /[Aa]ssets/SlopCo/ThirdParty.meta
 steam_appid.txt
+
+# ── Editor tooling (not part of the game) ──────────────
+# Restored third-party binaries (~18MB) — not game-runtime code.
+/[Aa]ssets/Plugins/
+/[Aa]ssets/Plugins.meta
+
+# ── Unity scratch ───────────────────────────────────────
+# Crash auto-save snapshots — the real scene is Assets/SlopCo/Scenes/Bootstrap.unity
+/[Aa]ssets/_Recovery/
+/[Aa]ssets/_Recovery.meta
+crashlytics-build.properties
