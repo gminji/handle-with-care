@@ -32,6 +32,7 @@ namespace SlopCo.UI
         // Snapshot of the currently-shown card, captured at the end of Show() for the share/copy actions.
         private string _shareSummary = "";
         private string _gradeLetter = "";
+        private bool _crewAwarded;   // crew XP is banked once per run (on GameOver), reset when a new run starts
 
         private void Awake()
         {
@@ -63,6 +64,7 @@ namespace SlopCo.UI
             {
                 if (panel != null) panel.SetActive(false);
                 SetButtons(false);
+                _crewAwarded = false; // a new run is under way — allow the next GameOver to bank crew XP
             }
         }
 
@@ -163,6 +165,28 @@ namespace SlopCo.UI
                     if (titleText != null) titleText.color = new Color(1f, 0.84f, 0.29f); // gold overrides the phase tint
                     ScreenShake.Add(0.5f);          // static global punch — no wiring needed
                     BestRecords.RaiseNewRecord();   // GameAudio plays the record stinger
+                }
+
+                // --- Crew Rank: bank this run's score once (on the terminal FIRED card) + show the tier ---
+                if (phase == RoundPhase.GameOver)
+                {
+                    bool rankUp = false;
+                    if (!_crewAwarded) { _crewAwarded = true; rankUp = CrewRank.AddRun(verdict.Score); }
+                    int tier = CrewRank.Tier;
+                    int toNext = CrewRankMath.XpToNext(CrewRank.Xp);
+                    b += "\n\n— " + Localization.Get("crew.title") + " —";
+                    b += "\n" + Localization.Get("crew.line")
+                             .Replace("{rank}", (tier + 1).ToString())
+                             .Replace("{name}", Localization.Get("rank." + tier));
+                    b += "\n<size=18>" + (toNext > 0
+                            ? Localization.Get("crew.progress").Replace("{run}", verdict.Score.ToString()).Replace("{tonext}", toNext.ToString())
+                            : Localization.Get("crew.maxed").Replace("{run}", verdict.Score.ToString())) + "</size>";
+                    if (rankUp)
+                    {
+                        b += "\n<color=#FFD24A><b>" + Localization.Get("crew.rankup").Replace("{name}", Localization.Get("rank." + tier)) + "</b></color>";
+                        ScreenShake.Add(0.5f);
+                        BestRecords.RaiseNewRecord(); // reuse the record stinger for the rank-up moment
+                    }
                 }
 
                 bodyText.text = b;

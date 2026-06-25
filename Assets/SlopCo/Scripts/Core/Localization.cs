@@ -148,6 +148,18 @@ namespace SlopCo.Core
             { "mod.doubleload", new[]{ "DOUBLE LOAD — extra cargo!", "더블 로드 — 화물 추가!", "ダブルロード — 貨物追加！", "双倍装载 — 货物加倍！" } },
             { "mod.hazardpay",  new[]{ "HAZARD PAY — risky, richer!", "위험 수당 — 위험한 만큼 짭짤!", "危険手当 — ハイリスク高報酬！", "危险津贴 — 高风险高回报！" } },
 
+            // ── Crew rank (cumulative meta-progression, shown on the FIRED card) ──
+            { "crew.title",    new[]{ "CREW", "크루", "クルー", "队伍" } },
+            { "crew.line",     new[]{ "RANK {rank} — {name}", "랭크 {rank} — {name}", "ランク {rank} — {name}", "等级 {rank} — {name}" } },
+            { "crew.progress", new[]{ "+{run} this run · {tonext} to next", "이번 런 +{run} · 다음까지 {tonext}", "今回 +{run} · 次まで {tonext}", "本局 +{run} · 距下一级 {tonext}" } },
+            { "crew.maxed",    new[]{ "+{run} this run · MAX RANK", "이번 런 +{run} · 최고 등급", "今回 +{run} · 最高ランク", "本局 +{run} · 满级" } },
+            { "crew.rankup",   new[]{ "★ RANK UP!   {name}   ★", "★ 승급!   {name}   ★", "★ ランクアップ！   {name}   ★", "★ 升级！   {name}   ★" } },
+            { "rank.0", new[]{ "Intern", "인턴", "インターン", "实习生" } },
+            { "rank.1", new[]{ "Driver", "드라이버", "ドライバー", "司机" } },
+            { "rank.2", new[]{ "Hauler", "운반공", "運搬人", "搬运工" } },
+            { "rank.3", new[]{ "Veteran Hauler", "베테랑 운반공", "ベテラン運搬人", "资深搬运工" } },
+            { "rank.4", new[]{ "Slop Legend", "슬롭 전설", "スロップの伝説", "烂活传奇" } },
+
             // ── Augments (roguelite shop) ──
             { "shop.title",      new[]{ "BUY AN AUGMENT", "증강 구매", "オーグメント購入", "购买增强" } },
             { "aug.light.name",  new[]{ "Lighter Load", "가벼운 짐", "軽い荷物", "轻装" } },
