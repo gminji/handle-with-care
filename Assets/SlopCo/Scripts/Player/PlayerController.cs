@@ -1,6 +1,7 @@
 using Unity.Netcode;
 using UnityEngine;
 using SlopCo.Core;
+using SlopCo.Cargo;
 
 namespace SlopCo.Player
 {
@@ -38,6 +39,7 @@ namespace SlopCo.Player
         private Camera _cam;
         private float _verticalVel;
         private bool _isBot;
+        private Vector3 _shoveVel; // owner-local blast knockback (decays each frame), added on top of input
 
         /// <summary>SERVER. Flag this instance as an AI bot BEFORE <c>NetworkObject.Spawn()</c> so
         /// OnNetworkSpawn drives it with an <see cref="AiBrain"/> instead of physical input.</summary>
@@ -57,6 +59,9 @@ namespace SlopCo.Player
 
             if (IsOwner)
             {
+                // Owner-local knockback: only the owner shoves its own CC (NetworkTransform replicates the
+                // result). Bots are owned by the server, so they get flung too — intended comedy.
+                CargoBomb.OnDetonated += OnBlast;
                 if (_isBot)
                 {
                     // AI teammate: an AiBrain feeds input; no physical devices, no camera.
@@ -79,7 +84,23 @@ namespace SlopCo.Player
         public override void OnNetworkDespawn()
         {
             ColorIndex.OnValueChanged -= OnColorChanged;
-            if (IsOwner) input?.Disable();
+            if (IsOwner)
+            {
+                CargoBomb.OnDetonated -= OnBlast;
+                input?.Disable();
+            }
+        }
+
+        // A bomb went off — fling this body away from the blast (owner-local; horizontal falloff + a pop so
+        // it leaves the ground). No server RPC: the owner-authoritative transform would snap a server push back.
+        private void OnBlast(Vector3 pos)
+        {
+            if (!IsOwner) return;
+            Vector3 imp = ExplosionShove.Impulse(transform.position, pos,
+                              GameConstants.BlastKnockbackRadius, GameConstants.BlastKnockbackSpeed);
+            if (imp.sqrMagnitude <= 0.0001f) return;          // out of range — no pop, no shove
+            imp.y = GameConstants.BlastKnockbackPopUp;          // pop rides _shoveVel.y, NOT _verticalVel
+            _shoveVel += imp;
         }
 
         private void Update()
@@ -109,7 +130,9 @@ namespace SlopCo.Player
 
             Vector3 velocity = horizontal;
             velocity.y = _verticalVel;
-            _cc.Move(velocity * Time.deltaTime);
+            // Add the owner-local blast shove (horizontal + vertical pop), then bleed it off.
+            _cc.Move((velocity + _shoveVel) * Time.deltaTime);
+            _shoveVel = Vector3.MoveTowards(_shoveVel, Vector3.zero, GameConstants.BlastKnockbackDecay * Time.deltaTime);
             PlanarVelocity = new Vector3(horizontal.x, 0f, horizontal.z);
 
             if (horizontal.sqrMagnitude > 0.01f)

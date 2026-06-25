@@ -27,6 +27,14 @@ namespace SlopCo.Core
         public const float AnimWalkThreshold = 0.15f;
         public const float AnimRunThreshold = 3.2f;
 
+        // ── Player knockback (explosion game-feel) ──────────────
+        // Players are CharacterControllers, so AddExplosionForce can't fling them — the owner injects this
+        // shove locally on CargoBomb.OnDetonated (NetworkTransform replicates the result; no server RPC).
+        public const float BlastKnockbackSpeed  = 14f;  // peak horizontal shove at the blast center (units/sec)
+        public const float BlastKnockbackRadius = 9f;   // a bit wider than the bomb blast so near-misses stagger
+        public const float BlastKnockbackPopUp  = 4.5f; // vertical pop so bodies actually leave the ground
+        public const float BlastKnockbackDecay  = 22f;  // how fast the shove bleeds off (units/sec per sec)
+
         // ── Carry / co-carry (PD force controller, server-side) ──
         public const float CarryGrabRadius = 1.6f;        // generous server grab tolerance
         public const float CarryPD_Spring = 600f;         // kp
