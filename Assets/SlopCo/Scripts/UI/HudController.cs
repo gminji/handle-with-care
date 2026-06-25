@@ -22,9 +22,13 @@ namespace SlopCo.UI
         [SerializeField] private Text popupText;
         [Tooltip("Optional full-screen Image pulsed on a big smash.")]
         [SerializeField] private Image flashImage;
+        [Header("Combo")]
+        [SerializeField] private Text comboText;   // "x3 CHAIN!"
+        [SerializeField] private Image comboBar;    // window timer fill
 
         private float _popupTimer;
         private float _flashTimer;
+        private float _comboPunch;
         private const float PopupDuration = 1.1f;
         private const float FlashDuration = 0.18f;
 
@@ -32,13 +36,17 @@ namespace SlopCo.UI
         {
             CargoCondition.OnDamageFx += HandleDamage;
             DeliveryZone.OnDelivered += HandleDelivered;
+            ComboSystem.OnCombo += HandleCombo;
         }
 
         private void OnDisable()
         {
             CargoCondition.OnDamageFx -= HandleDamage;
             DeliveryZone.OnDelivered -= HandleDelivered;
+            ComboSystem.OnCombo -= HandleCombo;
         }
+
+        private void HandleCombo(int combo, Vector3 worldPos) => _comboPunch = 1f;
 
         private void Update()
         {
@@ -69,6 +77,27 @@ namespace SlopCo.UI
                 float a = Mathf.Clamp01(_flashTimer / FlashDuration) * 0.35f;
                 var c = flashImage.color; c.a = a; flashImage.color = c;
             }
+
+            // Combo meter — the chase. Multiplier text punches on each chain; the bar drains the window.
+            var combo = ServiceLocator.Get<ComboSystem>();
+            int chain = combo != null ? combo.Combo.Value : 0;
+            bool showCombo = chain >= 2;
+            if (comboText != null)
+            {
+                if (comboText.gameObject.activeSelf != showCombo) comboText.gameObject.SetActive(showCombo);
+                if (showCombo)
+                {
+                    comboText.text = $"x{chain}  CHAIN!";
+                    comboText.transform.localScale = Vector3.one * (1f + 0.35f * _comboPunch);
+                    comboText.color = Color.Lerp(new Color(1f, 0.85f, 0.2f), new Color(1f, 0.35f, 0.2f), Mathf.InverseLerp(2f, 8f, chain));
+                }
+            }
+            if (comboBar != null)
+            {
+                if (comboBar.gameObject.activeSelf != showCombo) comboBar.gameObject.SetActive(showCombo);
+                if (showCombo && combo != null) comboBar.fillAmount = Mathf.Clamp01(combo.WindowRemaining.Value / GameConstants.ComboWindowSeconds);
+            }
+            if (_comboPunch > 0f) _comboPunch = Mathf.Max(0f, _comboPunch - Time.deltaTime * 3f);
         }
 
         private void HandleDamage(Vector3 worldPos, int valueLost, bool bigSmash)

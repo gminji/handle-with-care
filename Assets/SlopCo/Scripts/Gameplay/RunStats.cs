@@ -16,6 +16,7 @@ namespace SlopCo.Gameplay
         public int BiggestSmash { get; private set; }
         public int TotalDelivered { get; private set; }
         public int DeliveryCount { get; private set; }
+        public int BestCombo { get; private set; }
 
         private void Awake() => ServiceLocator.Register(this);
 
@@ -29,6 +30,7 @@ namespace SlopCo.Gameplay
             CargoCondition.OnDamageFx += HandleDamage;
             DeliveryZone.OnDelivered += HandleDeliver;
             RoundManager.OnPhaseChanged += HandlePhase;
+            ComboSystem.OnCombo += HandleCombo;
         }
 
         private void OnDisable()
@@ -36,6 +38,12 @@ namespace SlopCo.Gameplay
             CargoCondition.OnDamageFx -= HandleDamage;
             DeliveryZone.OnDelivered -= HandleDeliver;
             RoundManager.OnPhaseChanged -= HandlePhase;
+            ComboSystem.OnCombo -= HandleCombo;
+        }
+
+        private void HandleCombo(int combo, Vector3 pos)
+        {
+            if (combo > BestCombo) BestCombo = combo;
         }
 
         private void HandleDamage(Vector3 pos, int valueLost, bool bigSmash)
@@ -59,7 +67,7 @@ namespace SlopCo.Gameplay
 
         public void ResetRun()
         {
-            TotalDestroyed = 0; BiggestSmash = 0; TotalDelivered = 0; DeliveryCount = 0;
+            TotalDestroyed = 0; BiggestSmash = 0; TotalDelivered = 0; DeliveryCount = 0; BestCombo = 0;
         }
     }
 }

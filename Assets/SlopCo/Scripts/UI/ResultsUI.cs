@@ -90,6 +90,7 @@ namespace SlopCo.UI
                     b += $"Deliveries:  {stats.DeliveryCount}   (+${stats.TotalDelivered})\n";
                     b += $"Cargo destroyed:  ${stats.TotalDestroyed}\n";
                     b += $"Biggest single smash:  -${stats.BiggestSmash}";
+                    if (stats.BestCombo >= 2) b += $"\nBest chain:  x{stats.BestCombo}";
                 }
                 bodyText.text = b;
             }

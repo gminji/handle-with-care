@@ -50,6 +50,7 @@ namespace SlopCo.Audio
             DeliveryZone.OnDelivered  += HandleDeliver;
             RoundManager.OnPhaseChanged += HandlePhase;
             PlayerCarryController.OnGrab += HandleGrab;
+            ComboSystem.OnCombo += HandleCombo;
         }
 
         private void OnDisable()
@@ -58,7 +59,12 @@ namespace SlopCo.Audio
             DeliveryZone.OnDelivered  -= HandleDeliver;
             RoundManager.OnPhaseChanged -= HandlePhase;
             PlayerCarryController.OnGrab -= HandleGrab;
+            ComboSystem.OnCombo -= HandleCombo;
         }
+
+        // Rising pitch as the chain climbs — the audible hype of "x4 CHAIN!".
+        private void HandleCombo(int combo, Vector3 worldPos) =>
+            PlayOneShot(deliver, SettingsManager.Sfx, Mathf.Min(1f + 0.08f * (combo - 1), 2f));
 
         private void HandleGrab(Vector3 worldPos) =>
             PlayOneShot(grab, SettingsManager.Sfx * 0.8f, Random.Range(0.95f, 1.05f));

@@ -62,5 +62,10 @@ namespace SlopCo.Core
         // ── Augments (roguelite shop) ───────────────────────────
         public const float PayoutWindowSeconds = 9f;  // extended Payout so the between-round shop is browsable
         public const int AugmentShopChoices = 3;       // cards offered each visit
+
+        // ── Delivery combo (the chase) ──────────────────────────
+        public const float ComboWindowSeconds = 6f;   // deliver again within this to keep the chain alive
+        public const float ComboPayoutStep = 0.25f;    // +25% payout per chain level above 1
+        public const float ComboMaxMult = 3f;          // payout multiplier ceiling
     }
 }
