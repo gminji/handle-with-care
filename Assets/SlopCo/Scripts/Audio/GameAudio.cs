@@ -51,6 +51,7 @@ namespace SlopCo.Audio
             RoundManager.OnPhaseChanged += HandlePhase;
             PlayerCarryController.OnGrab += HandleGrab;
             ComboSystem.OnCombo += HandleCombo;
+            BestRecords.OnNewRecord += HandleNewRecord;
         }
 
         private void OnDisable()
@@ -60,11 +61,17 @@ namespace SlopCo.Audio
             RoundManager.OnPhaseChanged -= HandlePhase;
             PlayerCarryController.OnGrab -= HandleGrab;
             ComboSystem.OnCombo -= HandleCombo;
+            BestRecords.OnNewRecord -= HandleNewRecord;
         }
 
         // Rising pitch as the chain climbs — the audible hype of "x4 CHAIN!".
         private void HandleCombo(int combo, Vector3 worldPos) =>
             PlayOneShot(deliver, SettingsManager.Sfx, Mathf.Min(1f + 0.08f * (combo - 1), 2f));
+
+        // A bright, pitched-up sparkle on a personal best — reuses the assigned delivery cue (no new
+        // serialized clip / scene wiring); distinct from the lower-pitched win jingle on the Payout phase.
+        private void HandleNewRecord() =>
+            PlayOneShot(deliver, SettingsManager.Sfx, 1.6f);
 
         private void HandleGrab(Vector3 worldPos) =>
             PlayOneShot(grab, SettingsManager.Sfx * 0.8f, Random.Range(0.95f, 1.05f));

@@ -92,6 +92,38 @@ namespace SlopCo.UI
                     b += $"Biggest single smash:  -${stats.BiggestSmash}";
                     if (stats.BestCombo >= 2) b += $"\nBest chain:  x{stats.BestCombo}";
                 }
+
+                // --- Personal records: the cross-run "beat your best, one more run" hook ---
+                int chain = stats != null ? stats.BestCombo : 0;
+                int prevDay = BestRecords.BestDay, prevCash = BestRecords.BestCash, prevChain = BestRecords.BestChain;
+                // A survived-day record only counts a day you actually cleared (Payout + quota met) —
+                // never the day a detonation/shortfall ended the run.
+                bool newDay   = (phase == RoundPhase.Payout && met) && BestRecords.SubmitDay(day);
+                bool newCash  = BestRecords.SubmitCash(cash);
+                bool newChain = chain >= 2 && BestRecords.SubmitChain(chain);
+                // First-ever run (no prior record) saves silently — no "NEW RECORD" spam when everything beats zero.
+                bool flourishDay   = newDay   && prevDay   > 0;
+                bool flourishCash  = newCash  && prevCash  > 0;
+                bool flourishChain = newChain && prevChain > 0;
+                bool flourish = flourishDay || flourishCash || flourishChain;
+
+                b += "\n\n— RECORDS —";
+                b += $"\nBest day:  Day {BestRecords.BestDay}";
+                if (BestRecords.BestCash  > 0)  b += $"     Best cash:  ${BestRecords.BestCash}";
+                if (BestRecords.BestChain >= 2) b += $"     Best chain:  x{BestRecords.BestChain}";
+                // Survived but didn't beat the record yet? Dangle the carrot to pull "one more run".
+                if (phase == RoundPhase.Payout && met && !newDay && prevDay > day)
+                    b += $"\nRecord is Day {prevDay} — {prevDay - day} to go!";
+
+                if (flourish)
+                {
+                    string what = flourishDay ? $"DAY {day} SURVIVED" : flourishCash ? $"${cash}" : $"x{chain} CHAIN";
+                    b += $"\n<color=#FFD24A><b>★ NEW RECORD!   {what}   ★</b></color>";
+                    if (titleText != null) titleText.color = new Color(1f, 0.84f, 0.29f); // gold overrides the phase tint
+                    ScreenShake.Add(0.5f);          // static global punch — no wiring needed
+                    BestRecords.RaiseNewRecord();   // GameAudio plays the record stinger
+                }
+
                 bodyText.text = b;
             }
 
