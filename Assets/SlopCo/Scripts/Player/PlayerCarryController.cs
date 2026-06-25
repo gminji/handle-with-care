@@ -24,6 +24,9 @@ namespace SlopCo.Player
         /// <summary>Null-safe: true only if the referenced cargo currently resolves on this client.</summary>
         public bool IsCarrying => HeldCargo.Value.TryGet(out _);
 
+        /// <summary>Raised on the OWNER when a grab succeeds (HeldCargo none→held) — a cue for SFX.</summary>
+        public static event System.Action<Vector3> OnGrab;
+
         private bool _grabLatched;
         private LineRenderer _aim;
 
@@ -156,8 +159,24 @@ namespace SlopCo.Player
             HeldCargo.Value = default;
         }
 
+        public override void OnNetworkSpawn()
+        {
+            HeldCargo.OnValueChanged += HandleHeldChanged;
+        }
+
+        // Owner-local grab cue: when our HeldCargo flips none→held, a grab just succeeded server-side.
+        private void HandleHeldChanged(NetworkObjectReference prev, NetworkObjectReference next)
+        {
+            if (!IsOwner) return;
+            bool wasHeld = prev.TryGet(out _);
+            bool nowHeld = next.TryGet(out _);
+            if (!wasHeld && nowHeld) OnGrab?.Invoke(transform.position);
+        }
+
         public override void OnNetworkDespawn()
         {
+            HeldCargo.OnValueChanged -= HandleHeldChanged;
+
             // If a carrier disconnects mid-haul, the server frees its handle (item drops / staggers).
             if (IsServer && HeldCargo.Value.TryGet(out var cargoObj))
             {

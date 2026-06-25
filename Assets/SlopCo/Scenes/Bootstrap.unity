@@ -2400,7 +2400,7 @@ MonoBehaviour:
     m_FontStyle: 0
     m_BestFit: 0
     m_MinSize: 10
-    m_MaxSize: 40
+    m_MaxSize: 48
     m_Alignment: 4
     m_AlignByGeometry: 0
     m_RichText: 1
@@ -4663,6 +4663,7 @@ GameObject:
   - component: {fileID: 506943499}
   - component: {fileID: 506943498}
   - component: {fileID: 506943497}
+  - component: {fileID: 506943500}
   m_Layer: 0
   m_Name: GameAudio
   m_TagString: Untagged
@@ -4686,16 +4687,21 @@ MonoBehaviour:
   - {fileID: 8300000, guid: 91441c247645fde4eb5da0774ab39848, type: 3}
   - {fileID: 8300000, guid: 9917101e1ee1dda499f77a4572e379db, type: 3}
   - {fileID: 8300000, guid: c2a04d86b2b800d4d89035a9adc2ee67, type: 3}
+  - {fileID: 8300000, guid: afeb83620d6267845a6bc3cfa1b3c00f, type: 3}
+  - {fileID: 8300000, guid: 063be91d6933ddf44a235b7f1751e1e6, type: 3}
   smashHeavy:
   - {fileID: 8300000, guid: 88351b5869073ca468665cb29f3b6da5, type: 3}
   - {fileID: 8300000, guid: 46eb9021a37942b488f3cd53e7e9099d, type: 3}
   - {fileID: 8300000, guid: 0a5fcdbda2aa74b40ab004c95c096fa7, type: 3}
+  - {fileID: 8300000, guid: 5b184e35e043c964690f8c4622118f4f, type: 3}
+  - {fileID: 8300000, guid: fc7cc928e593e15418ef16cbfe5c592d, type: 3}
   smashBig: {fileID: 8300000, guid: a2cff44862e962c429bba1a07ebece97, type: 3}
   deliver: {fileID: 8300000, guid: c79f4727e5baaba4097dbd1ac57609c9, type: 3}
   phaseHaul: {fileID: 8300000, guid: a8efe41cd4d67fa4e96a167ffd39feb7, type: 3}
   phaseWin: {fileID: 8300000, guid: e0e0bb299cc1c214393368de356fd7c9, type: 3}
   phaseFail: {fileID: 8300000, guid: 9713137a4b9a8714f919e0e152ad8519, type: 3}
-  uiClick: {fileID: 8300000, guid: f4b0c13879355a345b3b867669bb8a9c, type: 3}
+  grab: {fileID: 8300000, guid: ed959ad66c394ed4a9ea327742a3f1b1, type: 3}
+  uiClick: {fileID: 8300000, guid: 007a8491ab38706448f77ce6838a61bf, type: 3}
   sfxSource: {fileID: 506943498}
   musicSource: {fileID: 0}
 --- !u!82 &506943498
@@ -4810,6 +4816,18 @@ Transform:
   m_Children: []
   m_Father: {fileID: 0}
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
+--- !u!114 &506943500
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 506943496}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 811243fa788dbe44d920a03f0be6bed5, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: SlopCo::SlopCo.Audio.ButtonClickSfx
 --- !u!1 &514094984
 GameObject:
   m_ObjectHideFlags: 0

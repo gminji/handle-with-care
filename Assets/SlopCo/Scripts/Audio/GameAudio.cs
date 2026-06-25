@@ -2,6 +2,7 @@ using UnityEngine;
 using SlopCo.Core;
 using SlopCo.Cargo;
 using SlopCo.Gameplay;
+using SlopCo.Player;
 
 namespace SlopCo.Audio
 {
@@ -24,6 +25,8 @@ namespace SlopCo.Audio
         [SerializeField] private AudioClip phaseHaul;
         [SerializeField] private AudioClip phaseWin;
         [SerializeField] private AudioClip phaseFail;
+        [Header("Interaction")]
+        [SerializeField] private AudioClip grab;
         [Header("UI")]
         [SerializeField] private AudioClip uiClick;
         [Header("Sources")]
@@ -46,6 +49,7 @@ namespace SlopCo.Audio
             CargoCondition.OnDamageFx += HandleDamage;
             DeliveryZone.OnDelivered  += HandleDeliver;
             RoundManager.OnPhaseChanged += HandlePhase;
+            PlayerCarryController.OnGrab += HandleGrab;
         }
 
         private void OnDisable()
@@ -53,7 +57,11 @@ namespace SlopCo.Audio
             CargoCondition.OnDamageFx -= HandleDamage;
             DeliveryZone.OnDelivered  -= HandleDeliver;
             RoundManager.OnPhaseChanged -= HandlePhase;
+            PlayerCarryController.OnGrab -= HandleGrab;
         }
+
+        private void HandleGrab(Vector3 worldPos) =>
+            PlayOneShot(grab, SettingsManager.Sfx * 0.8f, Random.Range(0.95f, 1.05f));
 
         private void HandleDamage(Vector3 worldPos, int valueLost, bool bigSmash)
         {
