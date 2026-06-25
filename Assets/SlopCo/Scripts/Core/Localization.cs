@@ -133,10 +133,10 @@ namespace SlopCo.Core
 
             // ── Tutorial hint (in-round one-liner) ──
             { "hint.line", new[]{
-                "Hold  E  to grab   ·   carry BIG cargo WITH a friend   ·   deliver to the VAN before time!",
-                "E (꾹) 잡기   ·   큰 짐은 친구와 함께   ·   시간 내 밴까지 배달!",
-                "E長押しでつかむ   ·   大きい荷物は仲間と   ·   時間内にバンへ届けよう！",
-                "长按 E 抓取   ·   大件物品与队友合搬   ·   在时间内送到货车！" } },
+                "Grab the BOMB ( E )   ·   CARRY it to the yellow VAN before the fuse blows   ·   don't throw or drop it!",
+                "폭탄을 집어 ( E )   ·   도화선이 다 타기 전에 노란 밴까지 \"옮겨\" 배달   ·   던지거나 떨어뜨리지 마!",
+                "爆弾をつかむ ( E )   ·   導火線が燃え尽きる前に黄色いバンへ\"運ぶ\"   ·   投げたり落としたりしない！",
+                "抓起炸弹 ( E )   ·   在导火索烧完前\"搬\"到黄色货车   ·   不要投掷或摔落！" } },
         };
     }
 }

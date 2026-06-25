@@ -33,6 +33,7 @@ namespace SlopCo.Cargo
         private Rigidbody _rb;
         private MaterialPropertyBlock _mpb;
         private bool _detonated;
+        private float _armTimer; // server-side post-spawn grace: fuse can't burn/detonate while > 0
         private static Material _boomMat;
 
         public override void OnNetworkSpawn()
@@ -41,6 +42,7 @@ namespace SlopCo.Cargo
             _cargoItem = GetComponent<CargoItem>();
             _rb = GetComponent<Rigidbody>();
             _mpb = new MaterialPropertyBlock();
+            _armTimer = GameConstants.BombArmingSeconds; // never blow the instant it appears
         }
 
         /// <summary>SERVER. Arm the fuse with a per-second burn rate (escalates each day).</summary>
@@ -69,6 +71,11 @@ namespace SlopCo.Cargo
             if (!IsServer) return;
             // Delivered to the van = defused: never blows once it is safely dropped off.
             if (_cargoItem != null && _cargoItem.State.Value == CarryState.Delivered) return;
+
+            // Arming grace: a fair window right after spawn — fuse paused, can't detonate. A fresh bomb
+            // (or one thrown/dropped this instant) never explodes before the player can react.
+            if (_armTimer > 0f) { _armTimer -= Time.deltaTime; return; }
+
             // Server burns the fuse over time; impacts already drop Condition via CargoCondition.ApplyImpact.
             if (!_detonated && fuse > 0f)
                 _condition.Condition.Value = Mathf.Max(0f, _condition.Condition.Value - fuseDecayPerSecond * Time.deltaTime);

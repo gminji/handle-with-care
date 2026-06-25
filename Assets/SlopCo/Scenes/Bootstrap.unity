@@ -297,7 +297,7 @@ MonoBehaviour:
   cargoPerRound: 6
   bombMode: 1
   bombPrefab: {fileID: 5058681297574978956, guid: 28cfb8cff09496748b3f9671a87e91c1, type: 3}
-  baseFuseDecayPerSecond: 0.04
+  baseFuseDecayPerSecond: 0.03
 --- !u!114 &32739785
 MonoBehaviour:
   m_ObjectHideFlags: 0

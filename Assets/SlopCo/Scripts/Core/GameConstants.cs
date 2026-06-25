@@ -53,5 +53,10 @@ namespace SlopCo.Core
         public const int StartingQuota = 150;
         // NOTE: quota escalation constants live in QuotaMath (pure, unit-tested) — the single source.
         public const int CargoPerRound = 6;
+
+        // ── Bomb (the hook) ─────────────────────────────────────
+        // Post-spawn grace: the fuse is paused and the bomb cannot detonate for this long after it
+        // appears, so a fresh/thrown/dropped bomb never explodes before the player can react.
+        public const float BombArmingSeconds = 2.5f;
     }
 }
