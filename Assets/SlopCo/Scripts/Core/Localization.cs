@@ -108,6 +108,10 @@ namespace SlopCo.Core
             { "phase.payout",   new[]{ "PAYOUT", "정산", "精算", "结算" } },
             { "phase.gameover", new[]{ "FIRED.", "해고.", "クビ。", "被炒了。" } },
 
+            // ── Results (game-over actions) ──
+            { "results.restart", new[]{ "PLAY AGAIN", "다시 시작", "もう一度", "再玩一次" } },
+            { "results.menu",    new[]{ "MAIN MENU", "타이틀로", "タイトルへ", "返回标题" } },
+
             // ── Fuse ──
             { "fuse.label",    new[]{ "FUSE", "도화선", "導火線", "导火索" } },
             { "fuse.critical", new[]{ "!! FUSE !!", "!! 도화선 !!", "!! 導火線 !!", "!! 导火索 !!" } },

@@ -1,25 +1,40 @@
+using Unity.Netcode;
 using UnityEngine;
 using UnityEngine.UI;
 using SlopCo.Core;
 using SlopCo.Gameplay;
+using SlopCo.Networking;
 
 namespace SlopCo.UI
 {
     /// <summary>
     /// The end-of-run card — the screenshot streamers post and the natural clip end-point. Shows during
     /// Payout (DAY N SURVIVED / SHORT) and GameOver (FIRED), reading already-replicated cash/quota plus
-    /// the <see cref="RunStats"/> tally. Turns the previously dead "PAYOUT" beat into a shareable payoff.
+    /// the <see cref="RunStats"/> tally. On the terminal FIRED card it also surfaces two actions —
+    /// Restart (host-only) and Return-to-Title — wired to the existing engine paths
+    /// (<see cref="RoundManager.RequestStartRpc"/> / <see cref="Networking.NetworkSessionManager.Leave"/>),
+    /// so a fired player can play again or bail out without hunting for the lobby controls.
     /// </summary>
     public sealed class ResultsUI : MonoBehaviour
     {
         [SerializeField] private GameObject panel;
         [SerializeField] private Text titleText;
         [SerializeField] private Text bodyText;
+        [Header("Game-over actions (shown only on FIRED)")]
+        [SerializeField] private Button restartButton;  // host-only
+        [SerializeField] private Button menuButton;      // return to title
+
+        private void Awake()
+        {
+            if (restartButton != null) restartButton.onClick.AddListener(OnRestart);
+            if (menuButton != null) menuButton.onClick.AddListener(OnReturnToTitle);
+        }
 
         private void OnEnable()
         {
             RoundManager.OnPhaseChanged += HandlePhase;
             if (panel != null) panel.SetActive(false);
+            SetButtons(false);
         }
 
         private void OnDisable()
@@ -29,8 +44,15 @@ namespace SlopCo.UI
 
         private void HandlePhase(RoundPhase phase)
         {
-            if (phase == RoundPhase.Payout || phase == RoundPhase.GameOver) Show(phase);
-            else if (panel != null) panel.SetActive(false);
+            if (phase == RoundPhase.Payout || phase == RoundPhase.GameOver)
+            {
+                Show(phase);
+            }
+            else
+            {
+                if (panel != null) panel.SetActive(false);
+                SetButtons(false);
+            }
         }
 
         private void Show(RoundPhase phase)
@@ -71,6 +93,31 @@ namespace SlopCo.UI
                 }
                 bodyText.text = b;
             }
+
+            // Action buttons only make sense on the terminal FIRED card; Payout auto-advances to the next day.
+            bool gameOver = phase == RoundPhase.GameOver;
+            var nm = NetworkManager.Singleton;
+            bool isHost = nm != null && nm.IsListening && nm.IsServer;
+            if (restartButton != null) restartButton.gameObject.SetActive(gameOver && isHost);
+            if (menuButton != null) menuButton.gameObject.SetActive(gameOver);
+        }
+
+        private void SetButtons(bool on)
+        {
+            if (restartButton != null) restartButton.gameObject.SetActive(on);
+            if (menuButton != null) menuButton.gameObject.SetActive(on);
+        }
+
+        // Host-only path; RequestStartRpc is server-gated so a stray client click is a harmless no-op.
+        private void OnRestart() => ServiceLocator.Get<RoundManager>()?.RequestStartRpc();
+
+        // Leave() disconnects only this peer; UIManager.Update() then falls back to MainMenu. No
+        // OnPhaseChanged fires on shutdown, so hide the card explicitly to avoid a lingering panel.
+        private void OnReturnToTitle()
+        {
+            if (panel != null) panel.SetActive(false);
+            SetButtons(false);
+            ServiceLocator.Get<NetworkSessionManager>()?.Leave();
         }
     }
 }
