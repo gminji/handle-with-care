@@ -5,19 +5,17 @@ using SlopCo.Core;
 namespace SlopCo.UI
 {
     /// <summary>
-    /// Main-menu map picker. Buttons set <see cref="GameModeState.SelectedMap"/> (one per map; the
-    /// Random button = -1) and highlight the current pick. Pure state-setting — the existing
-    /// PLAY / PLAY SOLO buttons start the run using whatever is selected, so no play-flow changes are
-    /// needed. All references optional (null-checked) so a partial canvas still works.
+    /// Map picker shown after a mode (Solo / AI / Online) is chosen. Each button commits its map index
+    /// (Random = -1) via <see cref="UIManager.ChooseMap"/>, which launches the pending mode. Pick-and-go
+    /// — no persistent highlight, since choosing immediately transitions out of the panel. All refs
+    /// optional (null-checked).
     /// </summary>
     public sealed class MapSelectUI : MonoBehaviour
     {
+        [SerializeField] private UIManager manager;
         [Tooltip("One button per concrete map, in map-index order.")]
         [SerializeField] private Button[] mapButtons;
         [SerializeField] private Button randomButton;
-        [Tooltip("Tint applied to the currently-selected button.")]
-        [SerializeField] private Color selectedTint = new Color(0.45f, 1f, 0.5f);
-        [SerializeField] private Color normalTint = Color.white;
 
         private void Awake()
         {
@@ -30,28 +28,10 @@ namespace SlopCo.UI
             if (randomButton != null) randomButton.onClick.AddListener(() => Pick(-1));
         }
 
-        private void OnEnable() => Refresh();
-
         private void Pick(int idx)
         {
-            GameModeState.SelectedMap = idx;
-            Refresh();
-        }
-
-        private void Refresh()
-        {
-            int sel = GameModeState.SelectedMap;
-            if (mapButtons != null)
-                for (int i = 0; i < mapButtons.Length; i++)
-                    Tint(mapButtons[i], i == sel);
-            Tint(randomButton, sel < 0);
-        }
-
-        private void Tint(Button b, bool on)
-        {
-            if (b == null) return;
-            var img = b.GetComponent<Image>();
-            if (img != null) img.color = on ? selectedTint : normalTint;
+            if (manager != null) manager.ChooseMap(idx);
+            else GameModeState.SelectedMap = idx; // standalone fallback
         }
     }
 }

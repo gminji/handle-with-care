@@ -18,14 +18,18 @@ namespace SlopCo.UI
         [SerializeField] private GameObject mainMenuPanel;
         [SerializeField] private GameObject lobbyPanel;
         [SerializeField] private GameObject hudRoot;
+        [SerializeField] private GameObject mapSelectPanel;
         [Header("Overlays")]
         [SerializeField] private GameObject optionsPanel;
         [SerializeField] private GameObject pausePanel;
         [SerializeField] private GameObject controlsPanel;
 
         private enum Screen { MainMenu, Lobby, InGame }
+        private enum PendingMode { None, Solo, Ai, Online }
         private Screen _screen = Screen.MainMenu;
         private bool _options, _pause, _controls;
+        private bool _mapSelect;
+        private PendingMode _pending;
         private bool _autoStartSolo;
 
         private void Start()
@@ -36,34 +40,68 @@ namespace SlopCo.UI
         }
 
         // ── Button hooks ───────────────────────────────────────
-        public void OnPlay()        { GameModeState.Solo = false; GameModeState.Tutorial = false; _screen = Screen.Lobby; _options = _controls = false; Apply(); }
+        // Mode buttons no longer start immediately: they record the intent and open the map picker.
+        // Choosing a map then launches the pending mode (see ChooseMap).
+        public void OnPlay()       { _pending = PendingMode.Online; ShowMapSelect(); }
 
-        /// <summary>Single-player: solo-tuned, host yourself and start immediately — no friend needed.</summary>
-        public void OnPlaySolo() => StartSolo(false);
+        /// <summary>Single-player: solo-tuned, host yourself — after picking a map.</summary>
+        public void OnPlaySolo()   { _pending = PendingMode.Solo;   ShowMapSelect(); }
 
-        /// <summary>Guided tutorial: solo + calm fuse + step-by-step coaching.</summary>
+        /// <summary>Co-op with AI teammates: host + bots — after picking a map.</summary>
+        public void OnPlayWithAi() { _pending = PendingMode.Ai;     ShowMapSelect(); }
+
+        /// <summary>Guided tutorial: solo + calm fuse — fixed flow, bypasses map select.</summary>
         public void OnPlayTutorial() => StartSolo(true);
 
-        /// <summary>Co-op with AI teammates: host yourself, spawn bots, start immediately — no friend needed.</summary>
-        public void OnPlayWithAi()
+        private void ShowMapSelect() { _options = _controls = false; _mapSelect = true; Apply(); }
+
+        /// <summary>Map button (or Random = -1) chosen → commit the map and launch the pending mode.</summary>
+        public void ChooseMap(int idx)
         {
-            GameModeState.Solo = false;       // co-op tuning (a bot can co-carry two-person items)
-            GameModeState.Tutorial = false;
-            GameModeState.WithAi = true;
-            GameModeState.BotCount = 1;
-            _options = _controls = false;
-            _autoStartSolo = true;            // reuse the solo self-host auto-start
-            ServiceLocator.Get<SlopCo.Networking.NetworkSessionManager>()?.HostGame();
-            Apply();
+            GameModeState.SelectedMap = idx;
+            _mapSelect = false;
+            switch (_pending)
+            {
+                case PendingMode.Solo:   StartSolo(false);   break;
+                case PendingMode.Ai:     StartWithAi();      break;
+                case PendingMode.Online: EnterOnlineLobby(); break;
+                default:                 Apply();            break;
+            }
+            _pending = PendingMode.None;
         }
+
+        public void OnBackFromMapSelect() { _mapSelect = false; _pending = PendingMode.None; Apply(); }
 
         private void StartSolo(bool tutorial)
         {
             GameModeState.Solo = true;
             GameModeState.Tutorial = tutorial;
-            _options = _controls = false;
+            GameModeState.WithAi = false;
+            _options = _controls = _mapSelect = false;
             _autoStartSolo = true;
             ServiceLocator.Get<SlopCo.Networking.NetworkSessionManager>()?.HostGame();
+            Apply();
+        }
+
+        private void StartWithAi()
+        {
+            GameModeState.Solo = false;       // co-op tuning (a bot can co-carry two-person items)
+            GameModeState.Tutorial = false;
+            GameModeState.WithAi = true;
+            GameModeState.BotCount = 1;
+            _options = _controls = _mapSelect = false;
+            _autoStartSolo = true;            // reuse the solo self-host auto-start
+            ServiceLocator.Get<SlopCo.Networking.NetworkSessionManager>()?.HostGame();
+            Apply();
+        }
+
+        private void EnterOnlineLobby()
+        {
+            GameModeState.Solo = false;
+            GameModeState.Tutorial = false;
+            GameModeState.WithAi = false;
+            _screen = Screen.Lobby;
+            _options = _controls = _mapSelect = false;
             Apply();
         }
         public void OpenOptions()   { _options = true; Apply(); }
@@ -81,7 +119,8 @@ namespace SlopCo.UI
             GameModeState.WithAi = false;
             _autoStartSolo = false;
             _screen = Screen.MainMenu;
-            _pause = _options = _controls = false;
+            _pause = _options = _controls = _mapSelect = false;
+            _pending = PendingMode.None;
             Apply();
         }
 
@@ -120,6 +159,7 @@ namespace SlopCo.UI
             {
                 if (_options) _options = false;
                 else if (_controls) _controls = false;
+                else if (_mapSelect) { _mapSelect = false; _pending = PendingMode.None; }
                 else if (connected) _pause = !_pause;
             }
             if (!connected) _pause = false; // never pause outside a session
@@ -129,7 +169,9 @@ namespace SlopCo.UI
 
         private void Apply()
         {
-            if (mainMenuPanel != null) mainMenuPanel.SetActive(_screen == Screen.MainMenu && !_options && !_controls);
+            bool mainMenu = _screen == Screen.MainMenu;
+            if (mainMenuPanel != null) mainMenuPanel.SetActive(mainMenu && !_options && !_controls && !_mapSelect);
+            if (mapSelectPanel != null) mapSelectPanel.SetActive(mainMenu && _mapSelect && !_options && !_controls);
             if (lobbyPanel != null)    lobbyPanel.SetActive(_screen == Screen.Lobby && !_options);
             if (hudRoot != null)       hudRoot.SetActive(_screen == Screen.InGame);
             if (optionsPanel != null)  optionsPanel.SetActive(_options);
