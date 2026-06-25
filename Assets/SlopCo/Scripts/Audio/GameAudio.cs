@@ -29,9 +29,19 @@ namespace SlopCo.Audio
         [SerializeField] private AudioClip grab;
         [Header("UI")]
         [SerializeField] private AudioClip uiClick;
+        [Header("Music (loops — assign CC0 tracks in the Bootstrap scene)")]
+        [SerializeField] private AudioClip musicCalm;   // menu / briefing / payout / fired
+        [SerializeField] private AudioClip musicHaul;   // the run — driving / urgent
+        [SerializeField, Range(0.05f, 5f)] private float musicFadeSpeed = 1.2f;
         [Header("Sources")]
         [SerializeField] private AudioSource sfxSource;
-        [SerializeField] private AudioSource musicSource;
+        [SerializeField] private AudioSource musicSource; // deprecated: kept for scene-ref compat; music now uses the runtime sources below
+
+        // Two looping sources cross-faded by volume (a single source can't blend two clips). Created at
+        // runtime so the only scene work is dropping in the two CC0 clips above.
+        private AudioSource _calmSrc, _haulSrc;
+        private float _calmMix = 1f;                 // 1 = calm fully up, 0 = haul fully up
+        private RoundPhase _phase = RoundPhase.Lobby;
 
         private void Awake()
         {
@@ -42,6 +52,36 @@ namespace SlopCo.Audio
                 sfxSource.playOnAwake = false;
                 sfxSource.spatialBlend = 0f; // 2D — the punchline must always be audible
             }
+            StartMusic();
+        }
+
+        private AudioSource MakeMusicSource(AudioClip clip)
+        {
+            var s = gameObject.AddComponent<AudioSource>();
+            s.clip = clip;
+            s.loop = true;
+            s.playOnAwake = false;
+            s.spatialBlend = 0f; // 2D music bed
+            s.volume = 0f;       // Update() fades it in to the live Music level
+            return s;
+        }
+
+        private void StartMusic()
+        {
+            // Null clips (not yet sourced) simply leave the build silent — no error, no spam.
+            if (musicCalm != null) { _calmSrc = MakeMusicSource(musicCalm); _calmSrc.Play(); }
+            if (musicHaul != null) { _haulSrc = MakeMusicSource(musicHaul); _haulSrc.Play(); }
+        }
+
+        // Cross-fade toward the current phase's track and keep both sources at the live Music volume.
+        // unscaledDeltaTime so Juice's timeScale hit-stops don't freeze the fade.
+        private void Update()
+        {
+            float target = MusicBus.CalmWeight(_phase);
+            _calmMix = Mathf.MoveTowards(_calmMix, target, musicFadeSpeed * Time.unscaledDeltaTime);
+            float music = SettingsManager.Music;
+            if (_calmSrc != null) _calmSrc.volume = music * _calmMix;
+            if (_haulSrc != null) _haulSrc.volume = music * (1f - _calmMix);
         }
 
         private void OnEnable()
@@ -91,6 +131,7 @@ namespace SlopCo.Audio
 
         private void HandlePhase(RoundPhase phase)
         {
+            _phase = phase; // drives the music cross-fade in Update()
             switch (phase)
             {
                 case RoundPhase.Hauling: PlayOneShot(phaseHaul, SettingsManager.Sfx * 0.9f, 1f); break;
