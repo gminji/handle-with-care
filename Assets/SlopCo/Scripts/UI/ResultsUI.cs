@@ -101,11 +101,26 @@ namespace SlopCo.UI
                 bool newDay   = (phase == RoundPhase.Payout && met) && BestRecords.SubmitDay(day);
                 bool newCash  = BestRecords.SubmitCash(cash);
                 bool newChain = chain >= 2 && BestRecords.SubmitChain(chain);
+
+                // --- Chaos Rating: fold the run into one shareable grade + auto-headline ---
+                // Show() fires every Payout, so this is a *running* grade (cumulative RunStats); the final
+                // FIRED card is the run's verdict = the screenshot. SubmitGrade is a monotonic raise.
+                bool survived = (phase == RoundPhase.Payout) && met;
+                var verdict = RunGrade.Evaluate(
+                    stats != null ? stats.DeliveryCount  : 0,
+                    stats != null ? stats.TotalDelivered : 0,
+                    stats != null ? stats.TotalDestroyed : 0,
+                    stats != null ? stats.BiggestSmash   : 0,
+                    chain, day, survived);
+                int prevGrade = BestRecords.BestGrade;                 // read before submit (records pattern)
+                bool newGrade = BestRecords.SubmitGrade((int)verdict.Grade);
+
                 // First-ever run (no prior record) saves silently — no "NEW RECORD" spam when everything beats zero.
                 bool flourishDay   = newDay   && prevDay   > 0;
                 bool flourishCash  = newCash  && prevCash  > 0;
                 bool flourishChain = newChain && prevChain > 0;
-                bool flourish = flourishDay || flourishCash || flourishChain;
+                bool flourishGrade = newGrade && prevGrade != BestRecords.NoGrade;
+                bool flourish = flourishDay || flourishCash || flourishChain || flourishGrade;
 
                 b += "\n\n— RECORDS —";
                 b += $"\nBest day:  Day {BestRecords.BestDay}";
@@ -115,9 +130,16 @@ namespace SlopCo.UI
                 if (phase == RoundPhase.Payout && met && !newDay && prevDay > day)
                     b += $"\nRecord is Day {prevDay} — {prevDay - day} to go!";
 
+                // Chaos Rating block — the big screenshot badge + auto-generated punchline.
+                b += "\n\n— " + Localization.Get("grade.title") + " —";
+                b += $"\n<size=46><color={GradeColorHex(verdict.Grade)}><b>{RunGrade.Letter(verdict.Grade)}</b></color></size>   {BuildHeadline(verdict.Flavor, stats, day)}";
+
                 if (flourish)
                 {
-                    string what = flourishDay ? $"DAY {day} SURVIVED" : flourishCash ? $"${cash}" : $"x{chain} CHAIN";
+                    string what = flourishGrade ? $"RANK {RunGrade.Letter(verdict.Grade)}"
+                                : flourishDay   ? $"DAY {day} SURVIVED"
+                                : flourishCash  ? $"${cash}"
+                                :                 $"x{chain} CHAIN";
                     b += $"\n<color=#FFD24A><b>★ NEW RECORD!   {what}   ★</b></color>";
                     if (titleText != null) titleText.color = new Color(1f, 0.84f, 0.29f); // gold overrides the phase tint
                     ScreenShake.Add(0.5f);          // static global punch — no wiring needed
@@ -133,6 +155,40 @@ namespace SlopCo.UI
             bool isHost = nm != null && nm.IsListening && nm.IsServer;
             if (restartButton != null) restartButton.gameObject.SetActive(gameOver && isHost);
             if (menuButton != null) menuButton.gameObject.SetActive(gameOver);
+        }
+
+        // Grade → rich-text color (gold S → red D). The badge color carries the verdict at a glance.
+        private static string GradeColorHex(Grade g) => g switch
+        {
+            Grade.S => "#FFD24A",   // gold
+            Grade.A => "#7CFF6B",   // green
+            Grade.B => "#6BD0FF",   // blue
+            Grade.C => "#FFB14A",   // orange
+            _       => "#FF6B6B",   // red (D)
+        };
+
+        // Flavor → localized headline template with {token} substitution. Missing key/token falls back
+        // safely (Localization.Get returns the key; absent tokens are simply not replaced).
+        private static string BuildHeadline(RunFlavor f, RunStats s, int day)
+        {
+            string key = f switch
+            {
+                RunFlavor.Chainmaster => "grade.flavor.chain",
+                RunFlavor.Demolisher  => "grade.flavor.demo",
+                RunFlavor.Survivor    => "grade.flavor.survive",
+                RunFlavor.Hustler     => "grade.flavor.hustle",
+                _                     => "grade.flavor.rookie",
+            };
+            string t = Localization.Get(key);
+            int deliveries = s != null ? s.DeliveryCount  : 0;
+            int delivered  = s != null ? s.TotalDelivered : 0;
+            int destroyed  = s != null ? s.TotalDestroyed : 0;
+            int chain      = s != null ? s.BestCombo      : 0;
+            return t.Replace("{day}", day.ToString())
+                    .Replace("{deliveries}", deliveries.ToString())
+                    .Replace("{delivered}", delivered.ToString())
+                    .Replace("{destroyed}", destroyed.ToString())
+                    .Replace("{chain}", chain.ToString());
         }
 
         private void SetButtons(bool on)

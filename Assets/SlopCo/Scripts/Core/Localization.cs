@@ -113,6 +113,14 @@ namespace SlopCo.Core
             { "results.restart", new[]{ "PLAY AGAIN", "다시 시작", "もう一度", "再玩一次" } },
             { "results.menu",    new[]{ "MAIN MENU", "타이틀로", "タイトルへ", "返回标题" } },
 
+            // ── Chaos Rating (shareable end-of-run grade + headline; ResultsUI substitutes {tokens}) ──
+            { "grade.title",          new[]{ "CHAOS RATING", "카오스 등급", "カオス評価", "混乱评级" } },
+            { "grade.flavor.chain",   new[]{ "x{chain} delivery chain — certified menace.", "x{chain} 배달 연쇄 — 공인 난동꾼.", "x{chain}連続配達 — 公認の暴れん坊。", "x{chain}连续送达 — 认证捣蛋鬼。" } },
+            { "grade.flavor.demo",    new[]{ "Demolished ${destroyed} of cargo.", "화물 ${destroyed}어치 박살.", "貨物${destroyed}分を破壊。", "砸毁了价值${destroyed}的货物。" } },
+            { "grade.flavor.survive", new[]{ "Survived {day} days of chaos.", "{day}일간 카오스 생존.", "{day}日間カオスを生き延びた。", "在混乱中存活了{day}天。" } },
+            { "grade.flavor.hustle",  new[]{ "{deliveries} deliveries, ${delivered} earned.", "{deliveries}회 배달, ${delivered} 획득.", "{deliveries}回配達、${delivered}獲得。", "送达{deliveries}次，赚得${delivered}。" } },
+            { "grade.flavor.rookie",  new[]{ "Rough day at SlopCo.", "SlopCo에서 험난한 하루.", "SlopCoでの厳しい一日。", "在SlopCo艰难的一天。" } },
+
             // ── Augments (roguelite shop) ──
             { "shop.title",      new[]{ "BUY AN AUGMENT", "증강 구매", "オーグメント購入", "购买增强" } },
             { "aug.light.name",  new[]{ "Lighter Load", "가벼운 짐", "軽い荷物", "轻装" } },
