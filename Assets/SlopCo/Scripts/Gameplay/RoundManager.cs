@@ -94,6 +94,9 @@ namespace SlopCo.Gameplay
 
         private void StartGame()
         {
+            // (Re)resolve the map first so this run — including a restart after GameOver — uses the
+            // selected map, or re-rolls when the player chose Random. Clients sync via ActiveMap.
+            ServiceLocator.Get<MapManager>()?.RollMap();
             quota?.ResetForNewGame();
             // Bomb mode is a survival loop, not a cash-quota grind — keep quota trivially met so the
             // payout card reads "SURVIVED"; the only fail state is a detonation.

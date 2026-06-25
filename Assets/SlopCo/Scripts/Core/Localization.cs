@@ -112,6 +112,12 @@ namespace SlopCo.Core
             { "results.restart", new[]{ "PLAY AGAIN", "다시 시작", "もう一度", "再玩一次" } },
             { "results.menu",    new[]{ "MAIN MENU", "타이틀로", "タイトルへ", "返回标题" } },
 
+            // ── Map select ──
+            { "map.select", new[]{ "MAP", "맵", "マップ", "地图" } },
+            { "map.random", new[]{ "RANDOM", "랜덤", "ランダム", "随机" } },
+            { "map.0",      new[]{ "DEPOT", "디포", "デポ", "仓库" } },
+            { "map.1",      new[]{ "YARD", "야드", "ヤード", "货场" } },
+
             // ── Fuse ──
             { "fuse.label",    new[]{ "FUSE", "도화선", "導火線", "导火索" } },
             { "fuse.critical", new[]{ "!! FUSE !!", "!! 도화선 !!", "!! 導火線 !!", "!! 导火索 !!" } },

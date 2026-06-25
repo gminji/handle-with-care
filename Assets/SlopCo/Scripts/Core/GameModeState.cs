@@ -11,5 +11,8 @@ namespace SlopCo.Core
         public static bool Solo;
         /// <summary>Guided tutorial run (implies Solo): calm fuse + step-by-step coaching overlay.</summary>
         public static bool Tutorial;
+        /// <summary>Chosen map index, or -1 for random (the host rolls one at session start). Set from
+        /// the menu's map picker; read host-side by <c>MapManager</c>. Reset to -1 on leaving.</summary>
+        public static int SelectedMap = -1;
     }
 }

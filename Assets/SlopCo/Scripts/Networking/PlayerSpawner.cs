@@ -19,6 +19,9 @@ namespace SlopCo.Networking
 
         private int _spawnCount;
 
+        /// <summary>MapManager. Rebind the player spawn anchors when the active map changes.</summary>
+        public void SetSpawnPoints(Transform[] points) => spawnPoints = points;
+
         private void Start()
         {
             var nm = NetworkManager.Singleton;

@@ -32,6 +32,9 @@ namespace SlopCo.Gameplay
         private readonly List<NetworkObject> _spawned = new();
         private readonly System.Random _rng = new System.Random(12345); // deterministic for repeatable tests
 
+        /// <summary>MapManager. Rebind the depot spawn anchors when the active map changes.</summary>
+        public void SetDepotSpawnPoints(Transform[] points) => depotSpawnPoints = points;
+
         /// <summary>SERVER. Spawn this round's deliverable(s) at the depot.</summary>
         public void SpawnRoundCargo()
         {
