@@ -47,6 +47,9 @@ namespace SlopCo.Gameplay
             float speedBonus = CargoMath.SpeedBonus(secondsLeft, GameConstants.HaulSeconds);
             int payout = CargoMath.Payout(condition.CurrentValue, speedBonus);
             payout = Mathf.RoundToInt(payout * (ServiceLocator.Get<AugmentSystem>()?.PayoutMult ?? 1f)); // augment scaling
+            // Today's modifier payout multiplier (Hazard Pay pays richer). Deterministic from the replicated day.
+            int dayNum = rm != null ? rm.RoundNumber.Value : 1;
+            payout = Mathf.RoundToInt(payout * DailyModifier.PayoutMult(DailyModifier.Roll(dayNum)));
             float comboMult = ServiceLocator.Get<ComboSystem>()?.RegisterDeliveryAndGetMult(transform.position) ?? 1f;
             payout = Mathf.RoundToInt(payout * comboMult); // delivery-streak combo
 

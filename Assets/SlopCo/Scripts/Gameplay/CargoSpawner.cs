@@ -81,6 +81,11 @@ namespace SlopCo.Gameplay
             int count = GameModeState.Solo ? 1 : 1 + (day - 1) / 3;          // +1 bomb every 3 days (co-op)
             float decay = baseFuseDecayPerSecond * (1f + 0.2f * (day - 1)); // fuse burns faster each day
             decay *= ServiceLocator.Get<AugmentSystem>()?.FuseMult ?? 1f;     // augments can speed the fuse
+            // Today's modifier (deterministic from the day — no extra netcode). Rush Hour shortens the fuse,
+            // Double Load adds a bomb (co-op only — solo has just two hands).
+            var dayMod = DailyModifier.Roll(day);
+            decay *= DailyModifier.FuseMult(dayMod);
+            if (!GameModeState.Solo) count += DailyModifier.CountBonus(dayMod);
             if (GameModeState.Tutorial) decay = 0f;                          // calm fuse while learning
 
             for (int i = 0; i < count; i++)

@@ -143,6 +143,11 @@ namespace SlopCo.Core
             { "share.copied",     new[]{ "Copied! ✓", "복사됨! ✓", "コピーしました！ ✓", "已复制！ ✓" } },
             { "share.failed",     new[]{ "Save failed", "저장 실패", "保存失敗", "保存失败" } },
 
+            // ── Daily cargo modifier (briefing banner) ──
+            { "mod.rushhour",   new[]{ "RUSH HOUR — short fuse!", "러시아워 — 짧은 도화선!", "ラッシュアワー — 短い導火線！", "高峰期 — 导火索更短！" } },
+            { "mod.doubleload", new[]{ "DOUBLE LOAD — extra cargo!", "더블 로드 — 화물 추가!", "ダブルロード — 貨物追加！", "双倍装载 — 货物加倍！" } },
+            { "mod.hazardpay",  new[]{ "HAZARD PAY — risky, richer!", "위험 수당 — 위험한 만큼 짭짤!", "危険手当 — ハイリスク高報酬！", "危险津贴 — 高风险高回报！" } },
+
             // ── Augments (roguelite shop) ──
             { "shop.title",      new[]{ "BUY AN AUGMENT", "증강 구매", "オーグメント購入", "购买增强" } },
             { "aug.light.name",  new[]{ "Lighter Load", "가벼운 짐", "軽い荷物", "轻装" } },
