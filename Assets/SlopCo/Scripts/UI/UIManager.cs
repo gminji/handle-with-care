@@ -31,6 +31,7 @@ namespace SlopCo.UI
         private bool _mapSelect;
         private PendingMode _pending;
         private bool _autoStartSolo;
+        private bool _lobbyIntent;   // online: keep the lobby visible while not yet connected (Host/Join here)
 
         private void Start()
         {
@@ -100,6 +101,7 @@ namespace SlopCo.UI
             GameModeState.Solo = false;
             GameModeState.Tutorial = false;
             GameModeState.WithAi = false;
+            _lobbyIntent = true;   // online hosts/joins from the lobby — keep it shown until connected
             _screen = Screen.Lobby;
             _options = _controls = _mapSelect = false;
             Apply();
@@ -118,6 +120,7 @@ namespace SlopCo.UI
             GameModeState.Tutorial = false;
             GameModeState.WithAi = false;
             _autoStartSolo = false;
+            _lobbyIntent = false;
             _screen = Screen.MainMenu;
             _pause = _options = _controls = _mapSelect = false;
             _pending = PendingMode.None;
@@ -149,9 +152,14 @@ namespace SlopCo.UI
             }
 
             if (connected)
+            {
+                _lobbyIntent = false;                                  // in a session now
                 _screen = inRound ? Screen.InGame : Screen.Lobby;
+            }
+            else if (_lobbyIntent)
+                _screen = Screen.Lobby;                               // online: stay in the lobby to Host/Join
             else if (_screen != Screen.MainMenu)
-                _screen = Screen.MainMenu; // dropped/left → back to menu
+                _screen = Screen.MainMenu;                            // dropped/left → back to menu
 
             // ESC: close an overlay, else toggle pause while connected.
             var kb = Keyboard.current;
@@ -160,6 +168,7 @@ namespace SlopCo.UI
                 if (_options) _options = false;
                 else if (_controls) _controls = false;
                 else if (_mapSelect) { _mapSelect = false; _pending = PendingMode.None; }
+                else if (_lobbyIntent) { _lobbyIntent = false; _screen = Screen.MainMenu; } // back out of online lobby
                 else if (connected) _pause = !_pause;
             }
             if (!connected) _pause = false; // never pause outside a session
