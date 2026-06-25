@@ -113,6 +113,17 @@ namespace SlopCo.Core
             { "results.restart", new[]{ "PLAY AGAIN", "다시 시작", "もう一度", "再玩一次" } },
             { "results.menu",    new[]{ "MAIN MENU", "타이틀로", "タイトルへ", "返回标题" } },
 
+            // ── Augments (roguelite shop) ──
+            { "shop.title",      new[]{ "BUY AN AUGMENT", "증강 구매", "オーグメント購入", "购买增强" } },
+            { "aug.light.name",  new[]{ "Lighter Load", "가벼운 짐", "軽い荷物", "轻装" } },
+            { "aug.light.desc",  new[]{ "Carry 35% faster — but RATS chase you!", "운반 35% 빠름 — 대신 쥐가 쫓아옴!", "運搬35%速く — ただしネズミが追う！", "搬运快35% — 但老鼠会追你！" } },
+            { "aug.adr.name",    new[]{ "Adrenaline", "아드레날린", "アドレナリン", "肾上腺素" } },
+            { "aug.adr.desc",    new[]{ "Move 20% faster — fuse burns faster", "이동 20% 빠름 — 도화선이 빨리 탐", "移動20%速く — 導火線が早く燃える", "移动快20% — 导火索烧得更快" } },
+            { "aug.hands.name",  new[]{ "Big Hands", "큰손", "ビッグハンド", "大手" } },
+            { "aug.hands.desc",  new[]{ "+25% delivery pay — carry a bit slower", "배달 보수 +25% — 운반이 조금 느림", "配達報酬+25% — 運搬が少し遅い", "送货报酬+25% — 搬运略慢" } },
+            { "aug.sprint.name", new[]{ "Sprinter", "스프린터", "スプリンター", "短跑者" } },
+            { "aug.sprint.desc", new[]{ "Move 15% faster — slightly less pay", "이동 15% 빠름 — 보수 약간 감소", "移動15%速く — 報酬がやや減少", "移动快15% — 报酬略减" } },
+
             // ── Map select ──
             { "map.select", new[]{ "MAP", "맵", "マップ", "地图" } },
             { "map.random", new[]{ "RANDOM", "랜덤", "ランダム", "随机" } },

@@ -90,8 +90,11 @@ namespace SlopCo.Player
             Vector3 dir = new Vector3(m.x, 0f, m.y);
             if (dir.sqrMagnitude > 1f) dir.Normalize();
 
-            float speed = GameConstants.PlayerMoveSpeed *
-                          (carry != null && carry.IsCarrying ? GameConstants.PlayerCarrySpeedMultiplier : 1f);
+            var aug = ServiceLocator.Get<SlopCo.Gameplay.AugmentSystem>();
+            float speed = GameConstants.PlayerMoveSpeed * (aug != null ? aug.MoveSpeedMult : 1f) *
+                          (carry != null && carry.IsCarrying
+                              ? GameConstants.PlayerCarrySpeedMultiplier * (aug != null ? aug.CarrySpeedMult : 1f)
+                              : 1f);
             Vector3 horizontal = dir * speed;
 
             if (_cc.isGrounded)

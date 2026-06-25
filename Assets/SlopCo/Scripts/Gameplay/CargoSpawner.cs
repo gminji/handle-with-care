@@ -80,6 +80,7 @@ namespace SlopCo.Gameplay
             // Solo: never more than one bomb (you only have two hands) — only the fuse escalates.
             int count = GameModeState.Solo ? 1 : 1 + (day - 1) / 3;          // +1 bomb every 3 days (co-op)
             float decay = baseFuseDecayPerSecond * (1f + 0.2f * (day - 1)); // fuse burns faster each day
+            decay *= ServiceLocator.Get<AugmentSystem>()?.FuseMult ?? 1f;     // augments can speed the fuse
             if (GameModeState.Tutorial) decay = 0f;                          // calm fuse while learning
 
             for (int i = 0; i < count; i++)

@@ -46,6 +46,7 @@ namespace SlopCo.Gameplay
             float secondsLeft = rm != null ? rm.TimeRemaining.Value : 0f;
             float speedBonus = CargoMath.SpeedBonus(secondsLeft, GameConstants.HaulSeconds);
             int payout = CargoMath.Payout(condition.CurrentValue, speedBonus);
+            payout = Mathf.RoundToInt(payout * (ServiceLocator.Get<AugmentSystem>()?.PayoutMult ?? 1f)); // augment scaling
 
             cargo.MarkDelivered();
             quota?.AddDelivery(payout);

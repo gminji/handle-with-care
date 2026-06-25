@@ -108,6 +108,7 @@ namespace SlopCo.Gameplay
         private void BeginHauling()
         {
             cargoSpawner?.SpawnRoundCargo();
+            ServiceLocator.Get<AugmentSystem>()?.SpawnRatsIfNeeded(); // augment hazard, this round
             _bombsToDeliver = cargoSpawner != null ? cargoSpawner.LastSpawnCount : 0;
             _bombsDelivered = 0;
             SetPhase(RoundPhase.Hauling, GameConstants.HaulSeconds);
@@ -116,10 +117,11 @@ namespace SlopCo.Gameplay
         private void BeginPayout()
         {
             cargoSpawner?.ClearRemainingCargo();
+            ServiceLocator.Get<AugmentSystem>()?.ClearRats(); // hazards gone during the shop beat
             _payoutMet = (cargoSpawner != null && cargoSpawner.BombMode)
                 ? _bombsDelivered >= _bombsToDeliver
                 : quota != null && quota.EvaluateQuota();
-            SetPhase(RoundPhase.Payout, 4f);
+            SetPhase(RoundPhase.Payout, GameConstants.PayoutWindowSeconds);
         }
 
         private void EndPayout()

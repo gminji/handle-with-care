@@ -58,5 +58,9 @@ namespace SlopCo.Core
         // Post-spawn grace: the fuse is paused and the bomb cannot detonate for this long after it
         // appears, so a fresh/thrown/dropped bomb never explodes before the player can react.
         public const float BombArmingSeconds = 2.5f;
+
+        // ── Augments (roguelite shop) ───────────────────────────
+        public const float PayoutWindowSeconds = 9f;  // extended Payout so the between-round shop is browsable
+        public const int AugmentShopChoices = 3;       // cards offered each visit
     }
 }

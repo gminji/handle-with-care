@@ -137,6 +137,18 @@ namespace SlopCo.Player
                 HeldCargo.Value = cargoObj;
         }
 
+        /// <summary>SERVER. Force this carrier to drop what it holds (e.g. a rat tripped them).</summary>
+        public void ForceDrop()
+        {
+            if (!IsServer) return;
+            if (HeldCargo.Value.TryGet(out var cargoObj))
+            {
+                var cargo = cargoObj.GetComponent<CargoItem>();
+                if (cargo != null) cargo.ReleaseHandle(NetworkObjectId);
+            }
+            HeldCargo.Value = default;
+        }
+
         [Rpc(SendTo.Server)]
         private void RequestReleaseRpc()
         {
