@@ -30,6 +30,11 @@ namespace SlopCo.Player
                 .With("Down", "<Keyboard>/s")
                 .With("Left", "<Keyboard>/a")
                 .With("Right", "<Keyboard>/d");
+            _move.AddCompositeBinding("2DVector")   // arrow keys too
+                .With("Up", "<Keyboard>/upArrow")
+                .With("Down", "<Keyboard>/downArrow")
+                .With("Left", "<Keyboard>/leftArrow")
+                .With("Right", "<Keyboard>/rightArrow");
             _move.AddBinding("<Gamepad>/leftStick");
 
             _jump = new InputAction("Jump", InputActionType.Button, "<Keyboard>/space");

@@ -96,19 +96,26 @@ namespace SlopCo.Player
         private void TryGrabNearby()
         {
             // Owner-side detection (generous radius); the server re-validates handle availability.
+            // Cargo colliders sit on the ROOT while CarryHandles are child markers without colliders,
+            // so resolve the CargoItem from each hit and pick its nearest handle (not GetComponentInParent
+            // on the handle, which never matches the root collider).
             Collider[] hits = Physics.OverlapSphere(transform.position, GameConstants.CarryGrabRadius);
             CarryHandle best = null;
             float bestSqr = float.MaxValue;
 
             foreach (var col in hits)
             {
-                var handle = col.GetComponentInParent<CarryHandle>();
-                if (handle == null || handle.Owner == null) continue;
-                float d = (handle.AttachPoint.position - transform.position).sqrMagnitude;
-                if (d < bestSqr) { bestSqr = d; best = handle; }
+                var cargo = col.GetComponentInParent<CargoItem>();
+                if (cargo == null) continue;
+                foreach (var handle in cargo.Handles)
+                {
+                    if (handle == null || handle.AttachPoint == null) continue;
+                    float d = (handle.AttachPoint.position - transform.position).sqrMagnitude;
+                    if (d < bestSqr) { bestSqr = d; best = handle; }
+                }
             }
 
-            if (best == null) return;
+            if (best == null || best.Owner == null) return;
             var netObj = best.Owner.GetComponent<NetworkObject>();
             if (netObj != null) RequestGrabRpc(netObj, best.HandleId);
         }
