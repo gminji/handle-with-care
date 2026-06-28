@@ -13,10 +13,14 @@ namespace SlopCo.Core
         const string K_Master = "opt_master", K_Music = "opt_music", K_Sfx = "opt_sfx";
         const string K_Fullscreen = "opt_fullscreen", K_Quality = "opt_quality", K_VSync = "opt_vsync";
         const string K_ResW = "opt_resw", K_ResH = "opt_resh";
+        const string K_VoiceOn = "opt_voiceon", K_VoiceVol = "opt_voicevol";
 
         public static float Master { get; private set; } = 0.8f;
         public static float Music  { get; private set; } = 0.8f;
         public static float Sfx    { get; private set; } = 0.8f;
+        // Voice chat: mic open/closed + playback volume for incoming voice.
+        public static bool  VoiceEnabled { get; private set; } = true;
+        public static float VoiceVolume  { get; private set; } = 0.8f;
         public static bool  Fullscreen { get; private set; }
         public static int   QualityLevel { get; private set; }
         public static bool  VSync { get; private set; }
@@ -39,6 +43,8 @@ namespace SlopCo.Core
             VSync     = PlayerPrefs.GetInt(K_VSync, QualitySettings.vSyncCount > 0 ? 1 : 0) == 1;
             ResWidth  = PlayerPrefs.GetInt(K_ResW, Screen.width);
             ResHeight = PlayerPrefs.GetInt(K_ResH, Screen.height);
+            VoiceEnabled = PlayerPrefs.GetInt(K_VoiceOn, 1) == 1;
+            VoiceVolume  = PlayerPrefs.GetFloat(K_VoiceVol, 0.8f);
 
             ApplyAll();
             Localization.Load();
@@ -53,6 +59,9 @@ namespace SlopCo.Core
 
         public static void SetMusic(float v) { Music = Mathf.Clamp01(v); PlayerPrefs.SetFloat(K_Music, Music); }
         public static void SetSfx(float v)   { Sfx = Mathf.Clamp01(v);   PlayerPrefs.SetFloat(K_Sfx, Sfx); }
+
+        public static void SetVoiceEnabled(bool on) { VoiceEnabled = on; PlayerPrefs.SetInt(K_VoiceOn, on ? 1 : 0); }
+        public static void SetVoiceVolume(float v)  { VoiceVolume = Mathf.Clamp01(v); PlayerPrefs.SetFloat(K_VoiceVol, VoiceVolume); }
 
         public static void SetFullscreen(bool f)
         {

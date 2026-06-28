@@ -16,9 +16,12 @@ namespace SlopCo.UI
         [SerializeField] private Slider masterSlider;
         [SerializeField] private Slider musicSlider;
         [SerializeField] private Slider sfxSlider;
+        [SerializeField] private Slider voiceSlider;
         [SerializeField] private Text masterValue;
         [SerializeField] private Text musicValue;
         [SerializeField] private Text sfxValue;
+        [SerializeField] private Text voiceValue;
+        [SerializeField] private Text voiceEnabledValue; // ON/OFF toggle label for the mic
 
         [Header("Display")]
         [SerializeField] private Text fullscreenValue;
@@ -41,6 +44,7 @@ namespace SlopCo.UI
             if (masterSlider != null) masterSlider.onValueChanged.AddListener(v => { SettingsManager.SetMaster(v); SetLabel(masterValue, v); });
             if (musicSlider  != null) musicSlider.onValueChanged.AddListener(v => { SettingsManager.SetMusic(v);  SetLabel(musicValue, v); });
             if (sfxSlider    != null) sfxSlider.onValueChanged.AddListener(v => { SettingsManager.SetSfx(v);    SetLabel(sfxValue, v); });
+            if (voiceSlider  != null) voiceSlider.onValueChanged.AddListener(v => { SettingsManager.SetVoiceVolume(v); SetLabel(voiceValue, v); });
             BuildResolutionList();
         }
 
@@ -72,9 +76,12 @@ namespace SlopCo.UI
             if (masterSlider != null) masterSlider.SetValueWithoutNotify(SettingsManager.Master);
             if (musicSlider  != null) musicSlider.SetValueWithoutNotify(SettingsManager.Music);
             if (sfxSlider    != null) sfxSlider.SetValueWithoutNotify(SettingsManager.Sfx);
+            if (voiceSlider  != null) voiceSlider.SetValueWithoutNotify(SettingsManager.VoiceVolume);
             SetLabel(masterValue, SettingsManager.Master);
             SetLabel(musicValue, SettingsManager.Music);
             SetLabel(sfxValue, SettingsManager.Sfx);
+            SetLabel(voiceValue, SettingsManager.VoiceVolume);
+            if (voiceEnabledValue != null) voiceEnabledValue.text = SettingsManager.VoiceEnabled ? "ON" : "OFF";
 
             if (fullscreenValue != null) fullscreenValue.text = SettingsManager.Fullscreen ? "ON" : "OFF";
             if (vsyncValue != null)      vsyncValue.text = SettingsManager.VSync ? "ON" : "OFF";
@@ -97,6 +104,7 @@ namespace SlopCo.UI
         // ── Button hooks (◀▶ / toggles) ──
         public void ToggleFullscreen() { SettingsManager.SetFullscreen(!SettingsManager.Fullscreen); Sync(); }
         public void ToggleVSync()      { SettingsManager.SetVSync(!SettingsManager.VSync); Sync(); }
+        public void ToggleVoice()      { SettingsManager.SetVoiceEnabled(!SettingsManager.VoiceEnabled); Sync(); }
 
         public void QualityPrev() { SettingsManager.SetQuality(SettingsManager.QualityLevel - 1); Sync(); }
         public void QualityNext() { SettingsManager.SetQuality(SettingsManager.QualityLevel + 1); Sync(); }

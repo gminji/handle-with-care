@@ -11,6 +11,17 @@ namespace SlopCo.Core
         public const ushort DefaultPort = 7777;
         public const string DefaultJoinCode = "127.0.0.1";
 
+        // ── Voice chat (custom NGO proximity voice) ─────────────
+        // Fixed wire format: mono PCM16 @ 16 kHz. 20 ms frame = 320 samples = 640 bytes, which stays
+        // inside a single unreliable-RPC MTU (no fragmentation) — do NOT batch frames past this.
+        public const int   VoiceSampleRate    = 16000;          // Hz, fixed wire rate
+        public const int   VoiceFrameSamples  = 320;            // 20 ms @ 16 kHz
+        public const float VoiceActivityRms   = 0.012f;         // VAD gate — below this we send nothing
+        public const int   VoiceRingSeconds   = 1;              // playback ring buffer span per remote
+        public const float VoiceMaxDistance   = 25f;            // 3D AudioSource max audible range (proximity)
+        public const float VoiceMinDistance   = 2f;             // full-volume radius before rolloff begins
+        public const float VoiceDefaultVolume = 0.8f;           // default voice master (SettingsManager)
+
         // ── Tags / Layers (must match Project Settings) ─────────
         public const string Tag_DeliveryZone = "DeliveryZone";
         public const string Tag_Cargo = "Cargo";

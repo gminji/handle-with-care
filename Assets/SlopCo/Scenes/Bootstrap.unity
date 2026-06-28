@@ -11212,6 +11212,50 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: SlopCo::SlopCo.UI.LocalizedText
   key: menu.controls
+--- !u!1 &1035564614
+GameObject:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  serializedVersion: 6
+  m_Component:
+  - component: {fileID: 1035564616}
+  - component: {fileID: 1035564615}
+  m_Layer: 0
+  m_Name: VoiceSystem
+  m_TagString: Untagged
+  m_Icon: {fileID: 0}
+  m_NavMeshLayer: 0
+  m_StaticEditorFlags: 0
+  m_IsActive: 1
+--- !u!114 &1035564615
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1035564614}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 1de107424647d9b448e530066d84295c, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: SlopCo::SlopCo.Audio.VoiceSystem
+--- !u!4 &1035564616
+Transform:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1035564614}
+  serializedVersion: 2
+  m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
+  m_LocalPosition: {x: 0, y: 0, z: 0}
+  m_LocalScale: {x: 1, y: 1, z: 1}
+  m_ConstrainProportionsScale: 0
+  m_Children: []
+  m_Father: {fileID: 0}
+  m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
 --- !u!1 &1039925727
 GameObject:
   m_ObjectHideFlags: 0
@@ -19078,9 +19122,12 @@ MonoBehaviour:
   masterSlider: {fileID: 1721383752}
   musicSlider: {fileID: 855670765}
   sfxSlider: {fileID: 1767386153}
+  voiceSlider: {fileID: 0}
   masterValue: {fileID: 2026949070}
   musicValue: {fileID: 445315468}
   sfxValue: {fileID: 61366211}
+  voiceValue: {fileID: 0}
+  voiceEnabledValue: {fileID: 0}
   fullscreenValue: {fileID: 1642101517}
   vsyncValue: {fileID: 1666196137}
   qualityValue: {fileID: 1649165414}
@@ -23827,3 +23874,4 @@ SceneRoots:
   - {fileID: 506943499}
   - {fileID: 79259279}
   - {fileID: 1638355866}
+  - {fileID: 1035564616}

@@ -5,6 +5,7 @@
     "Unity.Netcode.Runtime",
     "Unity.Netcode.Components",
     "Unity.Networking.Transport",
+    "Unity.Collections",
     "Unity.InputSystem",
     "UnityEngine.UI"
   ],
