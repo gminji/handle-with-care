@@ -189,6 +189,25 @@ namespace SlopCo.UI
                     }
                 }
 
+                // --- Crew MVP: per-player glory/shame (co-op replay hook). Hidden below 2 participants
+                // so a solo run never shows a trivial self-award. Tinted with each winner's team color
+                // (matches their in-world tint + voice indicator) so "who" reads at a glance. ---
+                var board = ServiceLocator.Get<PlayerScoreboard>();
+                if (board != null)
+                {
+                    var tallies = board.Snapshot();
+                    if (MvpAward.ParticipantCount(tallies) >= 2)
+                    {
+                        ulong mvp = MvpAward.TopDeliverer(tallies);
+                        ulong butter = MvpAward.TopDestroyer(tallies);
+                        b += "\n\n— " + Localization.Get("mvp.title") + " —";
+                        if (mvp != 0)
+                            b += "\n" + ColorizeForPlayer(mvp, Localization.Get("mvp.hauler").Replace("{val}", board.DeliveredBy(mvp).ToString()));
+                        if (butter != 0)
+                            b += "\n" + ColorizeForPlayer(butter, Localization.Get("mvp.butter").Replace("{val}", board.DestroyedBy(butter).ToString()));
+                    }
+                }
+
                 bodyText.text = b;
 
                 // Snapshot for SHARE/COPY — plain-text brag (no rich tags) + the grade letter for the filename.
@@ -208,6 +227,22 @@ namespace SlopCo.UI
             if (shareButton != null) shareButton.gameObject.SetActive(true);
             if (copyButton != null) copyButton.gameObject.SetActive(true);
             if (shareStatus != null) shareStatus.text = "";
+        }
+
+        // carrierId (player NetworkObjectId) → rich-text line tinted with that player's team color, so the
+        // MVP/Butterfingers winner reads at a glance (same palette as the in-world tint + voice indicator).
+        // Falls back to white when the player object isn't currently spawned (despawn / late-join edge).
+        private static string ColorizeForPlayer(ulong carrierId, string text)
+        {
+            Color c = Color.white;
+            var nm = NetworkManager.Singleton;
+            if (nm != null && nm.SpawnManager != null &&
+                nm.SpawnManager.SpawnedObjects.TryGetValue(carrierId, out var obj) && obj != null)
+            {
+                var pc = obj.GetComponent<SlopCo.Player.PlayerController>();
+                if (pc != null) c = pc.CurrentColor;
+            }
+            return $"<color=#{ColorUtility.ToHtmlStringRGB(c)}><b>{text}</b></color>";
         }
 
         // Grade → rich-text color (gold S → red D). The badge color carries the verdict at a glance.

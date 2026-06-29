@@ -23,11 +23,19 @@ namespace SlopCo.Cargo
         /// <summary>Raised on all clients when cargo takes damage: (worldPos, valueLost, bigSmash).</summary>
         public static event Action<Vector3, int, bool> OnDamageFx;
 
+        /// <summary>Raised on all clients when a smash is attributed to a player: (carrierId, valueLost).
+        /// Additive companion to <see cref="OnDamageFx"/> so the existing FX subscribers stay untouched;
+        /// only <c>PlayerScoreboard</c> consumes this for the end-of-run MVP/Butterfingers callout.</summary>
+        public static event Action<ulong, int> OnSmashAttributed;
+
         public int BaseValue => baseValue;
         public int CurrentValue => CargoMath.Value(baseValue, Condition.Value);
 
-        /// <summary>SERVER ONLY. Apply a physics impact (magnitude = relative collision speed).</summary>
-        public void ApplyImpact(float impactMagnitude)
+        /// <summary>SERVER ONLY. Apply a physics impact (magnitude = relative collision speed).
+        /// <paramref name="carrierId"/> = the player (NetworkObjectId) responsible for this smash, for the
+        /// MVP callout; 0 = unattributed (cargo no one was carrying). Defaults to 0 for any non-attributing
+        /// caller — the only live caller is <c>CargoItem.OnCollisionEnter</c>.</summary>
+        public void ApplyImpact(float impactMagnitude, ulong carrierId = 0)
         {
             if (!IsServer) return;
 
@@ -43,6 +51,8 @@ namespace SlopCo.Cargo
             int valueLost = CargoMath.Value(baseValue, before) - CargoMath.Value(baseValue, after);
             bool bigSmash = impactMagnitude >= GameConstants.BigSmashImpulse;
             PlayDamageFxRpc(transform.position, valueLost, bigSmash);
+            // Additive attribution broadcast (only when a player is responsible) — existing FX path unchanged.
+            if (carrierId != 0) OnSmashAttributedRpc(carrierId, valueLost);
         }
 
         [Rpc(SendTo.Everyone)]
@@ -52,5 +62,9 @@ namespace SlopCo.Cargo
             // screen-shake / hit-stop so the punchline lands on-frame for the stream.
             OnDamageFx?.Invoke(worldPos, valueLost, bigSmash);
         }
+
+        [Rpc(SendTo.Everyone)]
+        private void OnSmashAttributedRpc(ulong carrierId, int valueLost)
+            => OnSmashAttributed?.Invoke(carrierId, valueLost);
     }
 }

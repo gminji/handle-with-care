@@ -19,6 +19,11 @@ namespace SlopCo.Gameplay
         /// <summary>Raised on all clients on a successful delivery: (worldPos, payout).</summary>
         public static event Action<Vector3, int> OnDelivered;
 
+        /// <summary>Raised on all clients when a delivery is attributed to a player: (carrierId, payout).
+        /// Additive companion to <see cref="OnDelivered"/> (existing subscribers untouched); only
+        /// <c>PlayerScoreboard</c> consumes it for the end-of-run MVP callout.</summary>
+        public static event Action<ulong, int> OnDeliveredAttributed;
+
         private void Awake()
         {
             var col = GetComponent<Collider>();
@@ -53,9 +58,12 @@ namespace SlopCo.Gameplay
             float comboMult = ServiceLocator.Get<ComboSystem>()?.RegisterDeliveryAndGetMult(transform.position) ?? 1f;
             payout = Mathf.RoundToInt(payout * comboMult); // delivery-streak combo
 
+            ulong carrier = cargo.LastCarrier;   // capture BEFORE MarkDelivered clears grab bookkeeping
             cargo.MarkDelivered();
             quota?.AddDelivery(payout);
             OnDeliveredRpc(transform.position, payout);
+            // Additive attribution broadcast (only when a player carried it) — existing path unchanged.
+            if (carrier != 0) OnDeliveredAttributedRpc(carrier, payout);
 
             var netObj = cargo.GetComponent<NetworkObject>();
             if (netObj != null && netObj.IsSpawned) netObj.Despawn(true);
@@ -63,5 +71,9 @@ namespace SlopCo.Gameplay
 
         [Rpc(SendTo.Everyone)]
         private void OnDeliveredRpc(Vector3 worldPos, int payout) => OnDelivered?.Invoke(worldPos, payout);
+
+        [Rpc(SendTo.Everyone)]
+        private void OnDeliveredAttributedRpc(ulong carrierId, int payout)
+            => OnDeliveredAttributed?.Invoke(carrierId, payout);
     }
 }

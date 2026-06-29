@@ -42,6 +42,13 @@ namespace SlopCo.Cargo
         private readonly Dictionary<int, Transform> _grabbers = new();      // handleId -> hand target
         private readonly Dictionary<int, ulong> _grabberCarriers = new();   // handleId -> carrierId
 
+        // The last player to claim a handle on this item (kept after release/throw = "last toucher").
+        // Used to attribute deliveries and smashes to a player for the end-of-run MVP callout. 0 = never carried.
+        private ulong _lastCarrier;
+        /// <summary>NetworkObjectId of the last player to carry this item (0 = never carried). Server-truth,
+        /// read by DeliveryZone to attribute the delivery.</summary>
+        public ulong LastCarrier => _lastCarrier;
+
         // Throw sequencing (applied in FixedUpdate, one frame after the request).
         private bool _pendingThrow;
         private Vector3 _throwDir;
@@ -68,6 +75,7 @@ namespace SlopCo.Cargo
 
             _grabbers[handleId] = handTarget;
             _grabberCarriers[handleId] = carrierId;
+            _lastCarrier = carrierId;          // remember the last toucher for delivery/smash attribution
             State.Value = CarryState.Held;
             return true;
         }
@@ -160,7 +168,7 @@ namespace SlopCo.Cargo
         private void OnCollisionEnter(Collision collision)
         {
             if (!IsServer || _condition == null) return;
-            _condition.ApplyImpact(collision.relativeVelocity.magnitude);
+            _condition.ApplyImpact(collision.relativeVelocity.magnitude, _lastCarrier);
         }
 
         /// <summary>SERVER. Mark delivered so it can't be re-scored before despawn.</summary>

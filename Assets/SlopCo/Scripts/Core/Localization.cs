@@ -160,6 +160,11 @@ namespace SlopCo.Core
             { "rank.3", new[]{ "Veteran Hauler", "베테랑 운반공", "ベテラン運搬人", "资深搬运工" } },
             { "rank.4", new[]{ "Slop Legend", "슬롭 전설", "スロップの伝説", "烂活传奇" } },
 
+            // ── Crew MVP callout (per-player glory/shame on the end-of-run card; co-op replay hook) ──
+            { "mvp.title",  new[]{ "CREW MVP", "크루 MVP", "クルー MVP", "团队MVP" } },
+            { "mvp.hauler", new[]{ "MVP HAULER  —  ${val}", "운반왕  —  ${val}", "運搬王  —  ${val}", "运货王  —  ${val}" } },
+            { "mvp.butter", new[]{ "BUTTERFINGERS  —  ${val} smashed", "버터핑거  —  ${val} 박살", "バターフィンガー  —  ${val} 破壊", "黄油手  —  砸了${val}" } },
+
             // ── Augments (roguelite shop) ──
             { "shop.title",      new[]{ "BUY AN AUGMENT", "증강 구매", "オーグメント購入", "购买增强" } },
             { "aug.light.name",  new[]{ "Lighter Load", "가벼운 짐", "軽い荷物", "轻装" } },
