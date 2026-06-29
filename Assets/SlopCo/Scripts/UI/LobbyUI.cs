@@ -17,21 +17,38 @@ namespace SlopCo.UI
         [SerializeField] private GameObject lobbyPanel;
         [SerializeField] private Button hostButton;
         [SerializeField] private Button joinButton;
+        [SerializeField] private Button quickMatchButton;
         [SerializeField] private Button startButton;
         [SerializeField] private Button leaveButton;
         [SerializeField] private InputField joinCodeField;
         [SerializeField] private Text statusText;
         [SerializeField] private Text playerCountText;
 
+        private bool _mmHooked;
+        private string _matchStatus = string.Empty;
+
         private void Awake()
         {
             if (hostButton != null) hostButton.onClick.AddListener(OnHost);
             if (joinButton != null) joinButton.onClick.AddListener(OnJoin);
+            if (quickMatchButton != null) quickMatchButton.onClick.AddListener(OnQuickMatch);
             if (startButton != null) startButton.onClick.AddListener(OnStart);
             if (leaveButton != null) leaveButton.onClick.AddListener(OnLeave);
         }
 
         private void OnHost() => ServiceLocator.Get<NetworkSessionManager>()?.HostGame();
+
+        private void OnQuickMatch() => ServiceLocator.Get<MatchmakingManager>()?.QuickMatch();
+
+        // MatchmakingManager registers in its own Awake, so hook its status event lazily.
+        private void HookMatchmaker()
+        {
+            if (_mmHooked) return;
+            var mm = ServiceLocator.Get<MatchmakingManager>();
+            if (mm == null) return;
+            mm.OnStatus += s => _matchStatus = s;
+            _mmHooked = true;
+        }
 
         private void OnJoin()
         {
@@ -45,6 +62,7 @@ namespace SlopCo.UI
 
         private void Update()
         {
+            HookMatchmaker();
             var nm = NetworkManager.Singleton;
             bool connected = nm != null && nm.IsListening && (nm.IsClient || nm.IsServer);
 
@@ -53,20 +71,32 @@ namespace SlopCo.UI
                               || rm.Phase.Value == RoundPhase.Lobby
                               || rm.Phase.Value == RoundPhase.GameOver;
 
+            var mm = ServiceLocator.Get<MatchmakingManager>();
+            bool matching = mm != null && mm.IsMatching;
+
             // Panel visibility is owned by UIManager now; LobbyUI only drives its own controls.
-            if (hostButton != null) hostButton.interactable = !connected;
-            if (joinButton != null) joinButton.interactable = !connected;
+            if (hostButton != null) hostButton.interactable = !connected && !matching;
+            if (joinButton != null) joinButton.interactable = !connected && !matching;
+            if (quickMatchButton != null) quickMatchButton.interactable = !connected && !matching;
             if (leaveButton != null) leaveButton.interactable = connected;
             if (startButton != null)
                 startButton.gameObject.SetActive(connected && nm.IsServer && lobbyPhase);
 
             if (statusText != null)
             {
-                string s = Localization.Get(connected ? (nm.IsServer ? "lobby.hosting" : "lobby.connected") : "lobby.offline");
-                if (connected && nm.IsServer)
+                string s;
+                if (matching)
                 {
-                    var sess = ServiceLocator.Get<NetworkSessionManager>()?.Session;
-                    if (sess != null) s += "   " + sess.LobbyDisplayCode; // share this code with friends to join
+                    s = _matchStatus; // searching / joining / hosting…
+                }
+                else
+                {
+                    s = Localization.Get(connected ? (nm.IsServer ? "lobby.hosting" : "lobby.connected") : "lobby.offline");
+                    if (connected && nm.IsServer)
+                    {
+                        var sess = ServiceLocator.Get<NetworkSessionManager>()?.Session;
+                        if (sess != null) s += "   " + sess.LobbyDisplayCode; // share this code with friends to join
+                    }
                 }
                 statusText.text = s;
             }

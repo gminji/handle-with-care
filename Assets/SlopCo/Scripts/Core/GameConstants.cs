@@ -11,6 +11,16 @@ namespace SlopCo.Core
         public const ushort DefaultPort = 7777;
         public const string DefaultJoinCode = "127.0.0.1";
 
+        // ── Matchmaking (LAN UDP quick-match discovery) ─────────
+        public const ushort DiscoveryPort = 7778;             // UDP beacon/discovery port (≠ DefaultPort)
+        public const string MatchGameId = "slopco";           // beacon guard so unrelated apps are ignored
+        public const byte MatchBeaconVersion = 1;             // bump on wire-format change → old beacons rejected
+        public const float BeaconIntervalSeconds = 1f;        // host broadcast cadence while in lobby
+        public const float DiscoveryTimeoutSeconds = 3f;      // how long a quick-match scan listens
+        public const float MatchRescanJitterSeconds = 0.75f;  // random extra wait + 1 rescan when 0 found (race relief)
+        public const float JoinConfirmSeconds = 2f;           // wait for IsConnectedClient before declaring join OK
+        public const float NetworkIdleTimeoutSeconds = 3f;    // wait for NGO Shutdown to finish before re-Start
+
         // ── Voice chat (custom NGO proximity voice) ─────────────
         // Fixed wire format: mono PCM16 @ 16 kHz. 20 ms frame = 320 samples = 640 bytes, which stays
         // inside a single unreliable-RPC MTU (no fragmentation) — do NOT batch frames past this.
