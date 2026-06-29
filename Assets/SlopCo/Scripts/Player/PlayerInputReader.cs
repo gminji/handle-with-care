@@ -16,6 +16,10 @@ namespace SlopCo.Player
         public bool ThrowReleasedThisFrame { get; private set; }
         public float ThrowCharge01 { get; private set; }
 
+        /// <summary>When true, movement/jump/throw are zeroed but GRAB is preserved — lets a transient overlay
+        /// (e.g. the ping/emote wheel) freeze the player WITHOUT dropping carried cargo. Owner-local.</summary>
+        public bool Suppressed { get; set; }
+
         private const float MaxThrowChargeTime = 1.2f;
 
         private InputAction _move, _jump, _grab, _throw;
@@ -110,6 +114,17 @@ namespace SlopCo.Player
             {
                 _throwHeldTime = 0f;
                 ThrowCharge01 = 0f;
+            }
+
+            if (Suppressed)
+            {
+                // Freeze locomotion/throw for a transient overlay (ping/emote wheel) but KEEP GrabHeld so the
+                // player never drops carried cargo merely by opening the wheel.
+                Move = Vector2.zero;
+                JumpPressed = false;
+                ThrowReleasedThisFrame = false;
+                ThrowCharge01 = 0f;
+                _throwHeldTime = 0f;
             }
         }
     }

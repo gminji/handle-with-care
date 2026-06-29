@@ -308,6 +308,8 @@ GameObject:
   - component: {fileID: 8372983842582733423}
   - component: {fileID: 614114458685068044}
   - component: {fileID: 3958951601625809168}
+  - component: {fileID: 2556751054762794942}
+  - component: {fileID: 4387529969608322376}
   m_Layer: 0
   m_Name: Player
   m_TagString: Untagged
@@ -627,6 +629,35 @@ MonoBehaviour:
   voice: {fileID: 0}
   playerController: {fileID: 0}
   heightOffset: 2.6
+--- !u!114 &2556751054762794942
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 5725589379602305267}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 381e7b97877c39f4ca1d0b2dc9ed4238, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: SlopCo::SlopCo.Player.PingEmoteController
+  ShowTopMostFoldoutHeaderGroup: 1
+  playerController: {fileID: 0}
+  wheel: {fileID: 0}
+--- !u!114 &4387529969608322376
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 5725589379602305267}
+  m_Enabled: 0
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: c00611fef645746499b1b08bbcc2c6dc, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: SlopCo::SlopCo.UI.PingEmoteWheel
+  controller: {fileID: 0}
+  inputReader: {fileID: 0}
 --- !u!1 &6033343428871254481
 GameObject:
   m_ObjectHideFlags: 0

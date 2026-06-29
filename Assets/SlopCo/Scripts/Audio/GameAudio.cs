@@ -29,6 +29,9 @@ namespace SlopCo.Audio
         [SerializeField] private AudioClip grab;
         [Header("UI")]
         [SerializeField] private AudioClip uiClick;
+        [Header("Comms (ping/emote wheel)")]
+        [SerializeField] private AudioClip ping;
+        [SerializeField] private AudioClip emote;
         [Header("Music (loops — assign CC0 tracks in the Bootstrap scene)")]
         [SerializeField] private AudioClip musicCalm;   // menu / briefing / payout / fired
         [SerializeField] private AudioClip musicHaul;   // the run — driving / urgent
@@ -92,6 +95,7 @@ namespace SlopCo.Audio
             PlayerCarryController.OnGrab += HandleGrab;
             ComboSystem.OnCombo += HandleCombo;
             BestRecords.OnNewRecord += HandleNewRecord;
+            PingEmoteController.OnPingEmote += HandlePingEmote;
         }
 
         private void OnDisable()
@@ -102,6 +106,7 @@ namespace SlopCo.Audio
             PlayerCarryController.OnGrab -= HandleGrab;
             ComboSystem.OnCombo -= HandleCombo;
             BestRecords.OnNewRecord -= HandleNewRecord;
+            PingEmoteController.OnPingEmote -= HandlePingEmote;
         }
 
         // Rising pitch as the chain climbs — the audible hype of "x4 CHAIN!".
@@ -115,6 +120,10 @@ namespace SlopCo.Audio
 
         private void HandleGrab(Vector3 worldPos) =>
             PlayOneShot(grab, SettingsManager.Sfx * 0.8f, Random.Range(0.95f, 1.05f));
+
+        // Ping/emote wheel cue: a flat blip for a ping, a slightly pitch-varied pop for an emote (null-safe).
+        private void HandlePingEmote(bool isPing, Vector3 _) =>
+            PlayOneShot(isPing ? ping : emote, SettingsManager.Sfx, isPing ? 1f : Random.Range(0.95f, 1.05f));
 
         private void HandleDamage(Vector3 worldPos, int valueLost, bool bigSmash)
         {

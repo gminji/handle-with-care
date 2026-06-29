@@ -103,5 +103,17 @@ namespace SlopCo.Core
         public const float ComboWindowSeconds = 6f;   // deliver again within this to keep the chain alive
         public const float ComboPayoutStep = 0.25f;    // +25% payout per chain level above 1
         public const float ComboMaxMult = 3f;          // payout multiplier ceiling
+
+        // ── Ping / Emote wheel (co-op comms; reliable RPC relay, presentation-only display) ──
+        public const float PingEmoteCooldown   = 0.8f;  // server-side per-player min interval between sends (anti-spam)
+        public const float PingMarkerSeconds   = 4.0f;  // world ping marker lifetime before it fades out
+        public const float PingMarkerHeight    = 1.2f;  // marker hover height above the ray hit point
+        public const float PingMarkerScale     = 0.22f; // marker TextMesh characterSize (a touch over FloatingNumber 0.14)
+        public const float EmoteBubbleSeconds  = 2.5f;  // head emote bubble lifetime
+        public const float EmoteBubbleHeight   = 3.0f;  // bubble height above player origin (above the voice ♪ at 2.6)
+        public const float EmoteBubbleScale    = 0.20f; // bubble TextMesh characterSize
+        public const float WheelRadiusPixels   = 150f;  // slice-label ring radius on the runtime overlay
+        public const float WheelInnerDeadzone  = 0.25f; // normalized cursor/stick radius below which release = cancel
+        public const float PingAimMaxDistance  = 120f;  // max camera→cursor raycast distance for ping placement
     }
 }

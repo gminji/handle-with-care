@@ -32,6 +32,10 @@ namespace SlopCo.UI
         /// <summary>True while the front-end is on the title (MainMenu) screen — the menu flyby (MenuFlyby)
         /// runs only then, and yields the camera to PlayerController once a session/round begins.</summary>
         public bool OnTitleScreen => _screen == Screen.MainMenu;
+
+        /// <summary>True while the live in-game HUD is up and no blocking overlay/pause is open — the
+        /// ping/emote wheel reads this to decide whether it may open (and force-closes if it goes false).</summary>
+        public bool InGameInteractive => _screen == Screen.InGame && !_pause && !_options && !_controls;
         private bool _mapSelect;
         private PendingMode _pending;
         private bool _autoStartSolo;

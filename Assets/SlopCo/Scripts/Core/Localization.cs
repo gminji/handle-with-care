@@ -200,6 +200,14 @@ namespace SlopCo.Core
                 "폭탄을 집어 ( E )   ·   도화선이 다 타기 전에 노란 밴까지 \"옮겨\" 배달   ·   던지거나 떨어뜨리지 마!",
                 "爆弾をつかむ ( E )   ·   導火線が燃え尽きる前に黄色いバンへ\"運ぶ\"   ·   投げたり落としたりしない！",
                 "抓起炸弹 ( E )   ·   在导火索烧完前\"搬\"到黄色货车   ·   不要投掷或摔落！" } },
+
+            // ── Ping / Emote wheel (co-op quick comms) ──
+            { "ping.here",    new[]{ "Here",   "여기",   "ここ",       "这里" } },
+            { "ping.danger",  new[]{ "Danger", "위험",   "危険",       "危险" } },
+            { "ping.cargo",   new[]{ "Cargo",  "화물",   "貨物",       "货物" } },
+            { "emote.thanks", new[]{ "Thanks", "고마워", "ありがとう", "谢谢" } },
+            { "emote.yes",    new[]{ "Yes",    "좋아",   "OK",         "好" } },
+            { "emote.no",     new[]{ "No",     "안돼",   "だめ",       "不行" } },
         };
     }
 }
