@@ -11603,6 +11603,7 @@ GameObject:
   - component: {fileID: 1050364751}
   - component: {fileID: 1050364750}
   - component: {fileID: 1050364753}
+  - component: {fileID: 1050364754}
   m_Layer: 0
   m_Name: Main Camera
   m_TagString: MainCamera
@@ -11728,6 +11729,29 @@ MonoBehaviour:
     m_VarianceClampScale: 0.9
     m_ContrastAdaptiveSharpening: 0
   m_Version: 2
+--- !u!114 &1050364754
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1050364749}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: ebc6d9dcdc234c84ca5da330d1835590, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: SlopCo::SlopCo.UI.MenuFlyby
+  ui: {fileID: 0}
+  cam: {fileID: 0}
+  mapRoots:
+  - {fileID: 0}
+  - {fileID: 0}
+  lookCenter: {x: 0, y: 0, z: 0}
+  orbitRadius: 26
+  elevationDeg: 45
+  orbitSpeedDeg: 8
+  lookHeight: 1.5
+  cycleSeconds: 12
 --- !u!1 &1052476189
 GameObject:
   m_ObjectHideFlags: 0

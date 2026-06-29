@@ -28,6 +28,10 @@ namespace SlopCo.UI
         private enum PendingMode { None, Solo, Ai, Online }
         private Screen _screen = Screen.MainMenu;
         private bool _options, _pause, _controls;
+
+        /// <summary>True while the front-end is on the title (MainMenu) screen — the menu flyby (MenuFlyby)
+        /// runs only then, and yields the camera to PlayerController once a session/round begins.</summary>
+        public bool OnTitleScreen => _screen == Screen.MainMenu;
         private bool _mapSelect;
         private PendingMode _pending;
         private bool _autoStartSolo;
