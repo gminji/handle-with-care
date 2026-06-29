@@ -32,6 +32,13 @@ namespace SlopCo.Core
         public const float VoiceMinDistance   = 2f;             // full-volume radius before rolloff begins
         public const float VoiceDefaultVolume = 0.8f;           // default voice master (SettingsManager)
 
+        // ── Voice activity indicator (head billboard; presentation only, netcode-free) ──
+        public const float VoiceIndicatorWindow     = 0.35f;    // debounce: keep showing this long after the last voiced frame (absorbs inter-syllable gaps)
+        public const float VoiceIndicatorHeight     = 2.6f;     // billboard height above the player (just above the 2.2 camera look point)
+        public const float VoiceIndicatorBaseScale  = 0.18f;    // TextMesh characterSize baseline (near FloatingNumber's 0.14)
+        public const float VoiceIndicatorPulseAmp   = 0.25f;    // pulse amplitude (±) while speaking
+        public const float VoiceIndicatorPulseSpeed = 12f;      // pulse rate (radians/sec → ~1.9 beats/sec)
+
         // ── Tags / Layers (must match Project Settings) ─────────
         public const string Tag_DeliveryZone = "DeliveryZone";
         public const string Tag_Cargo = "Cargo";

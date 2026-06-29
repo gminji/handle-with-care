@@ -307,6 +307,7 @@ GameObject:
   - component: {fileID: 724870457208572513}
   - component: {fileID: 8372983842582733423}
   - component: {fileID: 614114458685068044}
+  - component: {fileID: 3958951601625809168}
   m_Layer: 0
   m_Name: Player
   m_TagString: Untagged
@@ -611,6 +612,21 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: SlopCo::SlopCo.Audio.PlayerVoice
   ShowTopMostFoldoutHeaderGroup: 1
+--- !u!114 &3958951601625809168
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 5725589379602305267}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 665be8349d10fab46a77ae7dd0e821ef, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: SlopCo::SlopCo.Player.VoiceIndicator
+  voice: {fileID: 0}
+  playerController: {fileID: 0}
+  heightOffset: 2.6
 --- !u!1 &6033343428871254481
 GameObject:
   m_ObjectHideFlags: 0

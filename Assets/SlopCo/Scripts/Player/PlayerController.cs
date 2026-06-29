@@ -26,6 +26,10 @@ namespace SlopCo.Player
 
         public Vector3 PlanarVelocity { get; private set; }
 
+        /// <summary>This player's assigned team color (the same palette spectators read), exposed for HUD /
+        /// head-indicator tinting. Safe on remote copies — ColorIndex is replicated (defaults to 0 pre-sync).</summary>
+        public Color CurrentColor => Palette[Mathf.Clamp(ColorIndex.Value, 0, Palette.Length - 1)];
+
         private static readonly int BaseColorId = Shader.PropertyToID("_BaseColor");
         private static readonly Color[] Palette =
         {

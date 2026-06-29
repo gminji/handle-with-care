@@ -30,6 +30,22 @@ namespace SlopCo.Audio
 
         private AudioSource _source;
 
+        // ── Voice-activity signal (main thread only; feeds the head indicator) ──
+        // Stamped with Time.time when this player produces a voiced frame: locally when we SEND one
+        // (DrainWireFrames) and on each client when we RECEIVE one (PlayVoiceClientRpc). Both are main-thread,
+        // so the audio thread / SPSC ring is never touched. -1 = never spoke.
+        private float _lastVoicedTime = -1f;
+
+        /// <summary>True while this player is currently speaking (debounced). False when muted/never-spoke.
+        /// Derived locally on every client — no extra netcode, since voice frames already replicate.</summary>
+        public bool IsSpeaking => !_muted &&
+            VoiceActivity.IsActive(_lastVoicedTime, Time.time, GameConstants.VoiceIndicatorWindow);
+
+        /// <summary>Speaking strength in [0,1] (full on a fresh voiced frame, fading to 0 at the debounce
+        /// tail). 0 when muted/never-spoke. Drives the indicator's pulse + fade-out.</summary>
+        public float SpeakingIntensity => _muted ? 0f :
+            VoiceActivity.Intensity(_lastVoicedTime, Time.time, GameConstants.VoiceIndicatorWindow);
+
         // ── Receive scratch (main thread only) ──────────────────
         private float[] _rxDecode;
 
@@ -195,6 +211,7 @@ namespace SlopCo.Audio
                 var span = new ReadOnlySpan<float>(_wireAccum, 0, frame);
                 if (VoiceMath.IsVoiced(span, GameConstants.VoiceActivityRms))
                 {
+                    _lastVoicedTime = Time.time;           // local speaking signal (main thread)
                     VoiceMath.EncodePcm16(span, _txBytes);
                     UploadVoiceServerRpc(_txBytes);        // serialized synchronously → _txBytes reuse is safe
                 }
@@ -220,6 +237,7 @@ namespace SlopCo.Audio
         private void PlayVoiceClientRpc(byte[] pcm16, RpcParams rpc = default)
         {
             if (_muted) return;                            // hard-cut: drop incoming while muted
+            _lastVoicedTime = Time.time;                   // remote speaking signal (RPC = main thread)
             int n = VoiceMath.DecodePcm16(pcm16, _rxDecode);
             EnqueuePlayback(_rxDecode, n);
         }
