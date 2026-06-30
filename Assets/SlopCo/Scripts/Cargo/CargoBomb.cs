@@ -34,6 +34,7 @@ namespace SlopCo.Cargo
         private MaterialPropertyBlock _mpb;
         private bool _detonated;
         private float _armTimer; // server-side post-spawn grace: fuse can't burn/detonate while > 0
+        private float _blastMult = 1f; // today's modifier scales the blast (Demolition Day = bigger boom)
         private static Material _boomMat;
 
         public override void OnNetworkSpawn()
@@ -45,8 +46,14 @@ namespace SlopCo.Cargo
             _armTimer = GameConstants.BombArmingSeconds; // never blow the instant it appears
         }
 
-        /// <summary>SERVER. Arm the fuse with a per-second burn rate (escalates each day).</summary>
-        public void Arm(float fuseDecay) => fuseDecayPerSecond = Mathf.Max(0f, fuseDecay);
+        /// <summary>SERVER. Arm the fuse with a per-second burn rate (escalates each day) and an optional
+        /// blast multiplier from today's modifier. Clamped so a runaway value can't break chain-reaction physics.
+        /// The single-arg shape stays valid for callers that don't scale the blast (backward compatible).</summary>
+        public void Arm(float fuseDecay, float blastMult = 1f)
+        {
+            fuseDecayPerSecond = Mathf.Max(0f, fuseDecay);
+            _blastMult = Mathf.Clamp(blastMult, 0.1f, 3f);
+        }
 
         private void Update()
         {
@@ -88,11 +95,13 @@ namespace SlopCo.Cargo
             _detonated = true;
             DetonateFxRpc(transform.position);
 
-            foreach (var col in Physics.OverlapSphere(transform.position, blastRadius))
+            float radius = blastRadius * _blastMult;   // today's modifier can supersize the boom
+            float force = blastForce * _blastMult;
+            foreach (var col in Physics.OverlapSphere(transform.position, radius))
             {
                 var rb = col.attachedRigidbody;
                 if (rb != null && rb != _rb)
-                    rb.AddExplosionForce(blastForce, transform.position, blastRadius, 1.5f, ForceMode.Impulse);
+                    rb.AddExplosionForce(force, transform.position, radius, 1.5f, ForceMode.Impulse);
 
                 // CHAIN REACTION: a blast lights any nearby bomb's fuse → cascading detonations.
                 var other = col.GetComponentInParent<CargoBomb>();

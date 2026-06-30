@@ -97,7 +97,7 @@ namespace SlopCo.Gameplay
                 if (netObj == null) continue;
                 _spawned.Add(netObj);
                 var bomb = netObj.GetComponent<SlopCo.Cargo.CargoBomb>();
-                if (bomb != null) bomb.Arm(decay);
+                if (bomb != null) bomb.Arm(decay, DailyModifier.BlastMult(dayMod));
                 LastSpawnCount++;
             }
         }

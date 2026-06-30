@@ -147,6 +147,9 @@ namespace SlopCo.Core
             { "mod.rushhour",   new[]{ "RUSH HOUR — short fuse!", "러시아워 — 짧은 도화선!", "ラッシュアワー — 短い導火線！", "高峰期 — 导火索更短！" } },
             { "mod.doubleload", new[]{ "DOUBLE LOAD — extra cargo!", "더블 로드 — 화물 추가!", "ダブルロード — 貨物追加！", "双倍装载 — 货物加倍！" } },
             { "mod.hazardpay",  new[]{ "HAZARD PAY — risky, richer!", "위험 수당 — 위험한 만큼 짭짤!", "危険手当 — ハイリスク高報酬！", "危险津贴 — 高风险高回报！" } },
+            { "mod.demolition", new[]{ "DEMOLITION DAY — bigger booms!", "철거의 날 — 더 큰 폭발!", "解体の日 — 大爆発！", "拆迁日 — 爆炸更猛！" } },
+            { "mod.scenicroute",new[]{ "SCENIC ROUTE — slow fuse, lean pay", "여유로운 길 — 느린 도화선, 박한 보수", "のんびりルート — 遅い導火線・薄給", "悠闲路线 — 慢导火索，报酬微薄" } },
+            { "mod.payday",     new[]{ "PAYDAY RUN — risky, big money!", "페이데이 — 위험하지만 한탕!", "ペイデイ — ハイリスク大金！", "发薪日 — 高风险大钞！" } },
 
             // ── Crew rank (cumulative meta-progression, shown on the FIRED card) ──
             { "crew.title",    new[]{ "CREW", "크루", "クルー", "队伍" } },
