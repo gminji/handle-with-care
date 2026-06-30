@@ -57,6 +57,11 @@ namespace SlopCo.Core
         public const float DashRegenPerSecond  = 0.35f;  // gauge refilled per sec when not dashing → ~2.9s recharge
         public const float DashExhaustSeconds  = 1.0f;   // forced-stop duration on full depletion
 
+        // ── Items (drop + inventory) ──
+        public const float ItemDropIntervalSeconds = 25f;  // gacha-capsule drop cadence during Hauling
+        public const float ItemDropBeyondDistance  = 14f;  // how far past the delivery van a capsule lands (intentional detour)
+        public const float ItemDropAngleJitter     = 0.6f; // ± radians random spread around the van's outward facing
+
         // ── Animation thresholds ────────────────────────────────
         public const float AnimWalkThreshold = 0.15f;
         public const float AnimRunThreshold = 3.2f;

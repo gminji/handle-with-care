@@ -196,6 +196,20 @@ namespace SlopCo.Core
             { "dash.label",     new[]{ "DASH", "대쉬", "ダッシュ", "冲刺" } },
             { "dash.exhausted", new[]{ "EXHAUSTED", "지침", "バテた", "力尽き" } },
 
+            // ── Items (consumable + permanent) ──
+            { "item.shoes.name",  new[]{ "Fancy Shoes", "멋쟁이 신발", "おしゃれな靴", "时髦鞋" } },
+            { "item.shoes.desc",  new[]{ "Dash at high speed for a few seconds", "몇 초간 고속으로 질주", "数秒間高速でダッシュ", "数秒内高速冲刺" } },
+            { "item.flag.name",   new[]{ "Cheer Flag", "응원 깃발", "応援旗", "加油旗" } },
+            { "item.flag.desc",   new[]{ "Refill a teammate's stamina", "동료의 스태미나를 회복", "仲間のスタミナを回復", "恢复队友的体力" } },
+            { "item.horn.name",   new[]{ "Hype Horn", "응원 나팔", "応援ラッパ", "加油喇叭" } },
+            { "item.horn.desc",   new[]{ "Speed up a nearby teammate", "근처 동료의 속도를 높임", "近くの仲間を加速", "加速附近的队友" } },
+            { "item.energy.name", new[]{ "Energy Drink", "에너지 드링크", "エナジードリンク", "能量饮料" } },
+            { "item.energy.desc", new[]{ "Refill your own stamina", "자신의 스태미나를 회복", "自分のスタミナを回復", "恢复自身的体力" } },
+            { "item.insole.name", new[]{ "Comfy Insole", "편한 깔창", "快適インソール", "舒适鞋垫" } },
+            { "item.insole.desc", new[]{ "Permanent: short speed boost on use", "영구: 사용 시 짧은 속도 부스트", "恒久: 使用時に短い加速", "永久: 使用时短暂加速" } },
+            { "item.flask.name",  new[]{ "Thermos", "보온병", "魔法瓶", "保温瓶" } },
+            { "item.flask.desc",  new[]{ "Permanent: small stamina refill on use", "영구: 사용 시 소량 스태미나 회복", "恒久: 使用時に少量スタミナ回復", "永久: 使用时少量体力恢复" } },
+
             // ── Map select ──
             { "map.select", new[]{ "MAP", "맵", "マップ", "地图" } },
             { "map.random", new[]{ "RANDOM", "랜덤", "ランダム", "随机" } },
