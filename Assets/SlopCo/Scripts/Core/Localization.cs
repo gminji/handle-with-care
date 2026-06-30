@@ -209,6 +209,8 @@ namespace SlopCo.Core
             { "item.insole.desc", new[]{ "Permanent: short speed boost on use", "영구: 사용 시 짧은 속도 부스트", "恒久: 使用時に短い加速", "永久: 使用时短暂加速" } },
             { "item.flask.name",  new[]{ "Thermos", "보온병", "魔法瓶", "保温瓶" } },
             { "item.flask.desc",  new[]{ "Permanent: small stamina refill on use", "영구: 사용 시 소량 스태미나 회복", "恒久: 使用時に少量スタミナ回復", "永久: 使用时少量体力恢复" } },
+            { "item.slot.empty",  new[]{ "Item: (empty)", "아이템: (없음)", "アイテム: (なし)", "道具: (空)" } },
+            { "item.slot.none",   new[]{ "Perk: (none)", "특전: (없음)", "パーク: (なし)", "天赋: (无)" } },
 
             // ── Map select ──
             { "map.select", new[]{ "MAP", "맵", "マップ", "地图" } },

@@ -45,7 +45,7 @@ namespace SlopCo.Items
         private void RevealRpc(int itemId, Vector3 worldPos)
         {
             if (shell != null) shell.SetActive(false);
-            // part 5: Instantiate reveal particle + the item's kit model (detached one-shot at worldPos).
+            RevealPop.Spawn(worldPos);   // small client-side pickup effect (per-item kit model = later art pass)
         }
     }
 }

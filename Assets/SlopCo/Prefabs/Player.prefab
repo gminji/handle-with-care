@@ -310,6 +310,7 @@ GameObject:
   - component: {fileID: 3958951601625809168}
   - component: {fileID: 2556751054762794942}
   - component: {fileID: 4387529969608322376}
+  - component: {fileID: 7777397264592696670}
   m_Layer: 0
   m_Name: Player
   m_TagString: Untagged
@@ -462,6 +463,7 @@ MonoBehaviour:
   tintRenderers:
   - {fileID: 5566980339586671457}
   - {fileID: 5143110117059059615}
+  inventory: {fileID: 0}
 --- !u!114 &4998148268161820321
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -658,6 +660,19 @@ MonoBehaviour:
   m_EditorClassIdentifier: SlopCo::SlopCo.UI.PingEmoteWheel
   controller: {fileID: 0}
   inputReader: {fileID: 0}
+--- !u!114 &7777397264592696670
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 5725589379602305267}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 937fa59be59cc6f458e9531168e9817f, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: SlopCo::SlopCo.Items.PlayerInventory
+  ShowTopMostFoldoutHeaderGroup: 1
 --- !u!1 &6033343428871254481
 GameObject:
   m_ObjectHideFlags: 0
