@@ -15,6 +15,7 @@ namespace SlopCo.Player
         public bool GrabHeld { get; private set; }
         public bool ThrowReleasedThisFrame { get; private set; }
         public float ThrowCharge01 { get; private set; }
+        public bool DashHeld { get; private set; }
 
         /// <summary>When true, movement/jump/throw are zeroed but GRAB is preserved — lets a transient overlay
         /// (e.g. the ping/emote wheel) freeze the player WITHOUT dropping carried cargo. Owner-local.</summary>
@@ -22,7 +23,7 @@ namespace SlopCo.Player
 
         private const float MaxThrowChargeTime = 1.2f;
 
-        private InputAction _move, _jump, _grab, _throw;
+        private InputAction _move, _jump, _grab, _throw, _dash;
         private bool _enabled;
         private float _throwHeldTime;
 
@@ -56,25 +57,28 @@ namespace SlopCo.Player
 
             _throw = new InputAction("Throw", InputActionType.Button, "<Mouse>/leftButton");
             _throw.AddBinding("<Gamepad>/rightTrigger");
+
+            _dash = new InputAction("Dash", InputActionType.Button, "<Keyboard>/leftShift");
+            _dash.AddBinding("<Gamepad>/leftShoulder");
         }
 
         public void Enable()
         {
             if (_enabled) return;
-            _move.Enable(); _jump.Enable(); _grab.Enable(); _throw.Enable();
+            _move.Enable(); _jump.Enable(); _grab.Enable(); _throw.Enable(); _dash.Enable();
             _enabled = true;
         }
 
         public void Disable()
         {
             if (!_enabled) return;
-            _move.Disable(); _jump.Disable(); _grab.Disable(); _throw.Disable();
+            _move.Disable(); _jump.Disable(); _grab.Disable(); _throw.Disable(); _dash.Disable();
             _enabled = false;
         }
 
         private void OnDestroy()
         {
-            _move?.Dispose(); _jump?.Dispose(); _grab?.Dispose(); _throw?.Dispose();
+            _move?.Dispose(); _jump?.Dispose(); _grab?.Dispose(); _throw?.Dispose(); _dash?.Dispose();
         }
 
         private void Update()
@@ -85,13 +89,14 @@ namespace SlopCo.Player
                 Move = _ai != null ? _ai.Move : Vector2.zero;
                 JumpPressed = _ai != null && _ai.WantJump;
                 GrabHeld = _ai != null && _ai.GrabHeld;
+                DashHeld = false;
                 ThrowReleasedThisFrame = false; ThrowCharge01 = 0f;
                 return;
             }
 
             if (!_enabled)
             {
-                Move = Vector2.zero; JumpPressed = false; GrabHeld = false;
+                Move = Vector2.zero; JumpPressed = false; GrabHeld = false; DashHeld = false;
                 ThrowReleasedThisFrame = false; ThrowCharge01 = 0f; _throwHeldTime = 0f;
                 return;
             }
@@ -99,6 +104,7 @@ namespace SlopCo.Player
             Move = _move.ReadValue<Vector2>();
             JumpPressed = _jump.WasPressedThisFrame();
             GrabHeld = _grab.IsPressed();
+            DashHeld = _dash.IsPressed();
 
             ThrowReleasedThisFrame = _throw.WasReleasedThisFrame();
             if (_throw.IsPressed())
@@ -122,6 +128,7 @@ namespace SlopCo.Player
                 // player never drops carried cargo merely by opening the wheel.
                 Move = Vector2.zero;
                 JumpPressed = false;
+                DashHeld = false;
                 ThrowReleasedThisFrame = false;
                 ThrowCharge01 = 0f;
                 _throwHeldTime = 0f;

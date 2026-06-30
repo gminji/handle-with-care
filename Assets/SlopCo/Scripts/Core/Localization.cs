@@ -192,6 +192,10 @@ namespace SlopCo.Core
             { "aug.mule.name",     new[]{ "Pack Mule", "짐말", "駄馬", "驮骡" } },
             { "aug.mule.desc",     new[]{ "Carry 30% faster — but slower on foot", "운반 30% 빠름 — 발이 느려짐", "運搬30%速く — 足が遅くなる", "搬运快30% — 但步速变慢" } },
 
+            // ── Dash (stamina sprint) ──
+            { "dash.label",     new[]{ "DASH", "대쉬", "ダッシュ", "冲刺" } },
+            { "dash.exhausted", new[]{ "EXHAUSTED", "지침", "バテた", "力尽き" } },
+
             // ── Map select ──
             { "map.select", new[]{ "MAP", "맵", "マップ", "地图" } },
             { "map.random", new[]{ "RANDOM", "랜덤", "ランダム", "随机" } },

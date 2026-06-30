@@ -51,6 +51,12 @@ namespace SlopCo.Core
         public const float Gravity = -18f;
         public const float PlayAreaRadius = 80f; // soft owner-side bounds for the slice
 
+        // ── Dash (hold-to-sprint stamina; owner-local, NetworkTransform replicates the result) ──
+        public const float DashSpeedMultiplier = 1.8f;   // sprint speed factor while dashing
+        public const float DashDrainPerSecond  = 0.5f;   // gauge(0..1) drained per sec dashing → ~2s full sprint
+        public const float DashRegenPerSecond  = 0.35f;  // gauge refilled per sec when not dashing → ~2.9s recharge
+        public const float DashExhaustSeconds  = 1.0f;   // forced-stop duration on full depletion
+
         // ── Animation thresholds ────────────────────────────────
         public const float AnimWalkThreshold = 0.15f;
         public const float AnimRunThreshold = 3.2f;

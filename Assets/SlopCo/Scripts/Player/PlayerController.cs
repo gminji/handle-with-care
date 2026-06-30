@@ -26,6 +26,14 @@ namespace SlopCo.Player
 
         public Vector3 PlanarVelocity { get; private set; }
 
+        /// <summary>The local *human* player (set only on the real owning human, never bots/AI). On a host the
+        /// server owns both the human and all bots, so IsOwner/IsLocalPlayer can't disambiguate — DashGauge reads this.</summary>
+        public static PlayerController LocalHuman { get; private set; }
+
+        /// <summary>Owner-local dash stamina (0..1) and exhausted flag — for the local HUD dash gauge.</summary>
+        public float DashGauge01 => _dash.gauge;
+        public bool DashExhausted => _dash.exhausted;
+
         /// <summary>This player's assigned team color (the same palette spectators read), exposed for HUD /
         /// head-indicator tinting. Safe on remote copies — ColorIndex is replicated (defaults to 0 pre-sync).</summary>
         public Color CurrentColor => Palette[Mathf.Clamp(ColorIndex.Value, 0, Palette.Length - 1)];
@@ -44,6 +52,7 @@ namespace SlopCo.Player
         private float _verticalVel;
         private bool _isBot;
         private Vector3 _shoveVel; // owner-local blast knockback (decays each frame), added on top of input
+        private DashState _dash = DashStamina.Initial; // owner-local dash stamina (NetworkTransform replicates the resulting motion)
 
         /// <summary>SERVER. Flag this instance as an AI bot BEFORE <c>NetworkObject.Spawn()</c> so
         /// OnNetworkSpawn drives it with an <see cref="AiBrain"/> instead of physical input.</summary>
@@ -77,6 +86,7 @@ namespace SlopCo.Player
                 {
                     input?.Enable();
                     _cam = Camera.main;
+                    LocalHuman = this;   // the real local human (never a bot) — DashGauge reads this
                 }
             }
             else
@@ -93,6 +103,7 @@ namespace SlopCo.Player
                 CargoBomb.OnDetonated -= OnBlast;
                 input?.Disable();
             }
+            if (LocalHuman == this) LocalHuman = null;
         }
 
         // A bomb went off — fling this body away from the blast (owner-local; horizontal falloff + a pop so
@@ -120,6 +131,13 @@ namespace SlopCo.Player
                           (carry != null && carry.IsCarrying
                               ? GameConstants.PlayerCarrySpeedMultiplier * (aug != null ? aug.CarrySpeedMult : 1f)
                               : 1f);
+
+            // Dash: hold-to-sprint drains stamina; full depletion forces a brief exhausted stop (SpeedMult 0).
+            bool moving = dir.sqrMagnitude > 0.0001f;
+            _dash = DashStamina.Step(_dash, Time.deltaTime, input.DashHeld, moving,
+                        GameConstants.DashDrainPerSecond, GameConstants.DashRegenPerSecond, GameConstants.DashExhaustSeconds);
+            speed *= DashStamina.SpeedMult(_dash, GameConstants.DashSpeedMultiplier);
+
             Vector3 horizontal = dir * speed;
 
             if (_cc.isGrounded)
