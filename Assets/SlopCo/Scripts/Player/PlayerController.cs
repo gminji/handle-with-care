@@ -143,6 +143,7 @@ namespace SlopCo.Player
                 if (input.UseConsumablePressed) inventory.RequestUseConsumableRpc();
                 if (input.UsePermanentPressed)  inventory.RequestUsePermanentRpc();
                 if (input.DiscardPressed)       inventory.RequestDiscardConsumableRpc();
+                if (input.CyclePressed)         inventory.RequestCyclePermanentRpc();
             }
 
             Vector2 m = input.Move;

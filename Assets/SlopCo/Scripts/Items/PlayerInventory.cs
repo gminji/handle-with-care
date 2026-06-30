@@ -1,4 +1,6 @@
 using Unity.Netcode;
+using SlopCo.Core;
+using SlopCo.Gameplay;
 using SlopCo.Player;
 
 namespace SlopCo.Items
@@ -46,6 +48,19 @@ namespace SlopCo.Items
             if (!IsServer || !ItemCatalog.IsPermanent(itemId)) return;
             PermanentMask.Value = InventoryLogic.AddPermanent(PermanentMask.Value, itemId);
             if (SelectedPermanent.Value == InventoryLogic.Empty) SelectedPermanent.Value = itemId;
+        }
+
+        /// <summary>SERVER (via the augment shop). Buy a permanent item with crew Cash if affordable and unowned.
+        /// Mirrors <see cref="SlopCo.Gameplay.AugmentSystem"/>'s purchase flow.</summary>
+        [Rpc(SendTo.Server)]
+        public void RequestBuyPermanentRpc(int itemId)
+        {
+            if (!ItemCatalog.IsPermanent(itemId) || InventoryLogic.OwnsPermanent(PermanentMask.Value, itemId)) return;
+            var quota = ServiceLocator.Get<QuotaSystem>();
+            var def = ItemCatalog.Get(itemId);
+            if (quota == null || quota.Cash.Value < def.cost) return;
+            quota.Cash.Value -= def.cost;
+            ServerGrantPermanent(itemId);
         }
 
         // ── Client requests (owner-driven, server-validated) ──
