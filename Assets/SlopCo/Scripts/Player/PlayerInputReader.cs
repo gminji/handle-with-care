@@ -16,6 +16,9 @@ namespace SlopCo.Player
         public bool ThrowReleasedThisFrame { get; private set; }
         public float ThrowCharge01 { get; private set; }
         public bool DashHeld { get; private set; }
+        public bool UseConsumablePressed { get; private set; }
+        public bool UsePermanentPressed { get; private set; }
+        public bool DiscardPressed { get; private set; }
 
         /// <summary>When true, movement/jump/throw are zeroed but GRAB is preserved — lets a transient overlay
         /// (e.g. the ping/emote wheel) freeze the player WITHOUT dropping carried cargo. Owner-local.</summary>
@@ -23,7 +26,7 @@ namespace SlopCo.Player
 
         private const float MaxThrowChargeTime = 1.2f;
 
-        private InputAction _move, _jump, _grab, _throw, _dash;
+        private InputAction _move, _jump, _grab, _throw, _dash, _useItem, _usePerm, _discard;
         private bool _enabled;
         private float _throwHeldTime;
 
@@ -60,12 +63,20 @@ namespace SlopCo.Player
 
             _dash = new InputAction("Dash", InputActionType.Button, "<Keyboard>/leftShift");
             _dash.AddBinding("<Gamepad>/leftShoulder");
+
+            _useItem = new InputAction("UseItem", InputActionType.Button, "<Keyboard>/q");
+            _useItem.AddBinding("<Gamepad>/buttonWest");
+            _usePerm = new InputAction("UsePermanent", InputActionType.Button, "<Keyboard>/f");
+            _usePerm.AddBinding("<Gamepad>/dpad/up");
+            _discard = new InputAction("Discard", InputActionType.Button, "<Keyboard>/g");
+            _discard.AddBinding("<Gamepad>/dpad/down");
         }
 
         public void Enable()
         {
             if (_enabled) return;
             _move.Enable(); _jump.Enable(); _grab.Enable(); _throw.Enable(); _dash.Enable();
+            _useItem.Enable(); _usePerm.Enable(); _discard.Enable();
             _enabled = true;
         }
 
@@ -73,12 +84,14 @@ namespace SlopCo.Player
         {
             if (!_enabled) return;
             _move.Disable(); _jump.Disable(); _grab.Disable(); _throw.Disable(); _dash.Disable();
+            _useItem.Disable(); _usePerm.Disable(); _discard.Disable();
             _enabled = false;
         }
 
         private void OnDestroy()
         {
             _move?.Dispose(); _jump?.Dispose(); _grab?.Dispose(); _throw?.Dispose(); _dash?.Dispose();
+            _useItem?.Dispose(); _usePerm?.Dispose(); _discard?.Dispose();
         }
 
         private void Update()
@@ -90,6 +103,7 @@ namespace SlopCo.Player
                 JumpPressed = _ai != null && _ai.WantJump;
                 GrabHeld = _ai != null && _ai.GrabHeld;
                 DashHeld = false;
+                UseConsumablePressed = false; UsePermanentPressed = false; DiscardPressed = false;
                 ThrowReleasedThisFrame = false; ThrowCharge01 = 0f;
                 return;
             }
@@ -97,6 +111,7 @@ namespace SlopCo.Player
             if (!_enabled)
             {
                 Move = Vector2.zero; JumpPressed = false; GrabHeld = false; DashHeld = false;
+                UseConsumablePressed = false; UsePermanentPressed = false; DiscardPressed = false;
                 ThrowReleasedThisFrame = false; ThrowCharge01 = 0f; _throwHeldTime = 0f;
                 return;
             }
@@ -105,6 +120,9 @@ namespace SlopCo.Player
             JumpPressed = _jump.WasPressedThisFrame();
             GrabHeld = _grab.IsPressed();
             DashHeld = _dash.IsPressed();
+            UseConsumablePressed = _useItem.WasPressedThisFrame();
+            UsePermanentPressed = _usePerm.WasPressedThisFrame();
+            DiscardPressed = _discard.WasPressedThisFrame();
 
             ThrowReleasedThisFrame = _throw.WasReleasedThisFrame();
             if (_throw.IsPressed())
@@ -129,6 +147,7 @@ namespace SlopCo.Player
                 Move = Vector2.zero;
                 JumpPressed = false;
                 DashHeld = false;
+                UseConsumablePressed = false; UsePermanentPressed = false; DiscardPressed = false;
                 ThrowReleasedThisFrame = false;
                 ThrowCharge01 = 0f;
                 _throwHeldTime = 0f;

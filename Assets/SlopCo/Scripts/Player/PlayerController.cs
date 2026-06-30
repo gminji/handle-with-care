@@ -19,6 +19,8 @@ namespace SlopCo.Player
         [SerializeField] private Transform cameraTarget;
         [Tooltip("Kenney character mesh renderers to tint per player color.")]
         [SerializeField] private Renderer[] tintRenderers;
+        [Tooltip("Item inventory for use/discard (wired in part 5; auto-found if on the same object).")]
+        [SerializeField] private SlopCo.Items.PlayerInventory inventory;
 
         /// <summary>Server-assigned per-player color (PlayerSpawner writes this).</summary>
         public readonly NetworkVariable<int> ColorIndex =
@@ -33,6 +35,18 @@ namespace SlopCo.Player
         /// <summary>Owner-local dash stamina (0..1) and exhausted flag — for the local HUD dash gauge.</summary>
         public float DashGauge01 => _dash.gauge;
         public bool DashExhausted => _dash.exhausted;
+
+        // ── Item effects (owner-local; PlayerInventory fires the owner-targeted RPC below) ──
+        public void ApplyTempSpeedBuff(float mult, float seconds) { _itemBuffMult = mult; _itemBuffT = seconds; }
+        public void RefillStamina(float amount01) { _dash = DashStamina.Refill(_dash, amount01); }
+
+        /// <summary>OWNER. Apply an item effect locally — a timed speed buff or an instant stamina refill.</summary>
+        [Rpc(SendTo.Owner)]
+        public void ApplyItemEffectRpc(bool isSpeed, float magnitude, float duration)
+        {
+            if (isSpeed) ApplyTempSpeedBuff(1f + magnitude, duration);
+            else RefillStamina(magnitude);
+        }
 
         /// <summary>This player's assigned team color (the same palette spectators read), exposed for HUD /
         /// head-indicator tinting. Safe on remote copies — ColorIndex is replicated (defaults to 0 pre-sync).</summary>
@@ -53,6 +67,7 @@ namespace SlopCo.Player
         private bool _isBot;
         private Vector3 _shoveVel; // owner-local blast knockback (decays each frame), added on top of input
         private DashState _dash = DashStamina.Initial; // owner-local dash stamina (NetworkTransform replicates the resulting motion)
+        private float _itemBuffMult = 1f, _itemBuffT = 0f; // owner-local temporary speed buff from items
 
         /// <summary>SERVER. Flag this instance as an AI bot BEFORE <c>NetworkObject.Spawn()</c> so
         /// OnNetworkSpawn drives it with an <see cref="AiBrain"/> instead of physical input.</summary>
@@ -63,6 +78,7 @@ namespace SlopCo.Player
             _cc = GetComponent<CharacterController>();
             if (input == null) input = GetComponent<PlayerInputReader>();
             if (carry == null) carry = GetComponent<PlayerCarryController>();
+            if (inventory == null) inventory = GetComponent<SlopCo.Items.PlayerInventory>();
         }
 
         public override void OnNetworkSpawn()
@@ -122,6 +138,13 @@ namespace SlopCo.Player
         {
             if (!IsOwner || input == null) return;
 
+            if (inventory != null)
+            {
+                if (input.UseConsumablePressed) inventory.RequestUseConsumableRpc();
+                if (input.UsePermanentPressed)  inventory.RequestUsePermanentRpc();
+                if (input.DiscardPressed)       inventory.RequestDiscardConsumableRpc();
+            }
+
             Vector2 m = input.Move;
             Vector3 dir = new Vector3(m.x, 0f, m.y);
             if (dir.sqrMagnitude > 1f) dir.Normalize();
@@ -137,6 +160,7 @@ namespace SlopCo.Player
             _dash = DashStamina.Step(_dash, Time.deltaTime, input.DashHeld, moving,
                         GameConstants.DashDrainPerSecond, GameConstants.DashRegenPerSecond, GameConstants.DashExhaustSeconds);
             speed *= DashStamina.SpeedMult(_dash, GameConstants.DashSpeedMultiplier);
+            if (_itemBuffT > 0f) { _itemBuffT -= Time.deltaTime; speed *= _itemBuffMult; }   // item speed buff (Fancy Shoes / Hype Horn)
 
             Vector3 horizontal = dir * speed;
 

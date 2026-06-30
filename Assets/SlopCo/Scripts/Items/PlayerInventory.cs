@@ -1,4 +1,5 @@
 using Unity.Netcode;
+using SlopCo.Player;
 
 namespace SlopCo.Items
 {
@@ -63,19 +64,32 @@ namespace SlopCo.Items
             SelectedPermanent.Value = InventoryLogic.CycleSelected(PermanentMask.Value, SelectedPermanent.Value, InventoryLogic.MaskWidth);
         }
 
-        /// <summary>Use the held consumable. PART 3 applies the effect + consumes; part-1 stub does nothing
-        /// (so "use" never silently deletes an item before the effect exists).</summary>
+        /// <summary>SERVER. Use the held consumable: apply its effect, then consume it.</summary>
         [Rpc(SendTo.Server)]
         public void RequestUseConsumableRpc()
         {
-            // part 3: ItemEffects.Apply(this, ConsumableId.Value); then ConsumableId.Value = InventoryLogic.DiscardConsumable(...)
+            if (!HasConsumable) return;
+            ApplyEffectServer(ItemCatalog.Get(ConsumableId.Value));
+            ConsumableId.Value = InventoryLogic.DiscardConsumable(ConsumableId.Value);
         }
 
-        /// <summary>Use the selected permanent item (no consume). PART 3 applies the effect; part-1 stub no-ops.</summary>
+        /// <summary>SERVER. Use the selected permanent item (reusable — no consume).</summary>
         [Rpc(SendTo.Server)]
         public void RequestUsePermanentRpc()
         {
-            // part 3: ItemEffects.Apply(this, SelectedPermanent.Value)
+            int id = SelectedPermanent.Value;
+            if (!ItemCatalog.IsPermanent(id) || !InventoryLogic.OwnsPermanent(PermanentMask.Value, id)) return;
+            ApplyEffectServer(ItemCatalog.Get(id));
+        }
+
+        /// <summary>SERVER. Resolve the effect target (self or nearest teammate) and fire an owner-targeted RPC
+        /// so the effect is applied OWNER-locally (speed/stamina are owner-local state).</summary>
+        private void ApplyEffectServer(ItemDef def)
+        {
+            PlayerController target = ItemEffects.IsAlly(def.effect) ? ItemEffects.NearestOtherPlayer(this) : null;
+            if (target == null) target = GetComponent<PlayerController>();   // self (or ally fallback when alone)
+            if (target == null) return;
+            target.ApplyItemEffectRpc(ItemEffects.IsSpeed(def.effect), def.magnitude, def.duration);
         }
     }
 }

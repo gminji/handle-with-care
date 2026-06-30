@@ -102,6 +102,26 @@ namespace SlopCo.Tests.EditMode
         }
 
         [Test]
+        public void Refill_AddsStamina_AndClearsExhaustion()
+        {
+            var s = DashStamina.Initial;
+            s = Step(s, 2.5f, dash: true, moving: true);   // exhaust → gauge 0, exhausted
+            Assert.That(s.exhausted, Is.True);
+            s = DashStamina.Refill(s, 0.4f);               // item refill
+            Assert.That(s.gauge, Is.EqualTo(0.4f).Within(Tol));
+            Assert.That(s.exhausted, Is.False);            // exhaustion cleared once gauge > 0
+            Assert.That(DashStamina.SpeedMult(s, 1.8f), Is.EqualTo(1f).Within(Tol));
+        }
+
+        [Test]
+        public void Refill_ClampsAtOne()
+        {
+            var s = DashStamina.Initial;                   // gauge 1
+            s = DashStamina.Refill(s, 0.5f);
+            Assert.That(s.gauge, Is.EqualTo(1f).Within(Tol));
+        }
+
+        [Test]
         public void NegativeDt_IsTreatedAsZero()
         {
             var s = DashStamina.Initial;

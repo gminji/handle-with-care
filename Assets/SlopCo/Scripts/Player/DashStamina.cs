@@ -56,6 +56,14 @@ namespace SlopCo.Player
         public static float SpeedMult(DashState s, float dashMult)
             => s.exhausted ? 0f : (s.dashing ? dashMult : 1f);
 
+        /// <summary>Add stamina (e.g. an item refill). Clears exhaustion once the gauge is back above zero.</summary>
+        public static DashState Refill(DashState s, float amount01)
+        {
+            s.gauge = Clamp01(s.gauge + amount01);
+            if (s.exhausted && s.gauge > 0f) { s.exhausted = false; s.exhaustT = 0f; }
+            return s;
+        }
+
         private static float Clamp01(float v) => v < 0f ? 0f : (v > 1f ? 1f : v);
     }
 }
