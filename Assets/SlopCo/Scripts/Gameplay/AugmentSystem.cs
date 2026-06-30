@@ -5,8 +5,8 @@ using SlopCo.Core;
 
 namespace SlopCo.Gameplay
 {
-    public enum AugEffect { CarrySpeed, MoveSpeed, Payout }
-    public enum AugDownside { None, Rats, FasterFuse, SlowerCarry, LessPayout }
+    public enum AugEffect { CarrySpeed, MoveSpeed, Payout, FuseSlow }
+    public enum AugDownside { None, Rats, FasterFuse, SlowerCarry, LessPayout, SlowerMove }
 
     /// <summary>One purchasable augment: an effect plus a trade-off (roguelite "pick your poison").</summary>
     [System.Serializable]
@@ -45,6 +45,14 @@ namespace SlopCo.Gameplay
             new AugmentDef{ id=1, nameKey="aug.adr.name",    descKey="aug.adr.desc",    cost=200, effect=AugEffect.MoveSpeed,  magnitude=0.20f, downside=AugDownside.FasterFuse,  downsideMag=0.30f },
             new AugmentDef{ id=2, nameKey="aug.hands.name",  descKey="aug.hands.desc",  cost=180, effect=AugEffect.Payout,     magnitude=0.25f, downside=AugDownside.SlowerCarry, downsideMag=0.15f },
             new AugmentDef{ id=3, nameKey="aug.sprint.name", descKey="aug.sprint.desc", cost=120, effect=AugEffect.MoveSpeed,  magnitude=0.15f, downside=AugDownside.LessPayout,  downsideMag=0.15f },
+            new AugmentDef{ id=4,  nameKey="aug.steady.name",   descKey="aug.steady.desc",   cost=160, effect=AugEffect.FuseSlow,   magnitude=0.25f, downside=AugDownside.LessPayout,  downsideMag=0.10f },
+            new AugmentDef{ id=5,  nameKey="aug.insured.name",  descKey="aug.insured.desc",  cost=220, effect=AugEffect.FuseSlow,   magnitude=0.40f, downside=AugDownside.SlowerCarry, downsideMag=0.20f },
+            new AugmentDef{ id=6,  nameKey="aug.caffeine.name", descKey="aug.caffeine.desc", cost=210, effect=AugEffect.MoveSpeed,  magnitude=0.30f, downside=AugDownside.FasterFuse,  downsideMag=0.25f },
+            new AugmentDef{ id=7,  nameKey="aug.forklift.name", descKey="aug.forklift.desc", cost=240, effect=AugEffect.CarrySpeed, magnitude=0.50f, downside=AugDownside.SlowerMove,  downsideMag=0.20f },
+            new AugmentDef{ id=8,  nameKey="aug.hazard.name",   descKey="aug.hazard.desc",   cost=230, effect=AugEffect.Payout,     magnitude=0.40f, downside=AugDownside.Rats,        downsideMag=1f },
+            new AugmentDef{ id=9,  nameKey="aug.marathon.name", descKey="aug.marathon.desc", cost=200, effect=AugEffect.MoveSpeed,  magnitude=0.40f, downside=AugDownside.SlowerCarry, downsideMag=0.25f },
+            new AugmentDef{ id=10, nameKey="aug.greased.name",  descKey="aug.greased.desc",  cost=170, effect=AugEffect.Payout,     magnitude=0.30f, downside=AugDownside.FasterFuse,  downsideMag=0.20f },
+            new AugmentDef{ id=11, nameKey="aug.mule.name",     descKey="aug.mule.desc",     cost=150, effect=AugEffect.CarrySpeed, magnitude=0.30f, downside=AugDownside.SlowerMove,  downsideMag=0.15f },
         };
 
         public static int CatalogCount => Catalog.Length;
@@ -64,9 +72,9 @@ namespace SlopCo.Gameplay
         }
 
         // Aggregate multipliers (1.0 = neutral) summed across owned augments' effects + downsides.
-        public float MoveSpeedMult  { get { float m = 1f; for (int id = 0; id < Catalog.Length; id++) { if (!Owns(id)) continue; var a = Catalog[id]; if (a.effect == AugEffect.MoveSpeed) m += a.magnitude; } return m; } }
+        public float MoveSpeedMult  { get { float m = 1f; for (int id = 0; id < Catalog.Length; id++) { if (!Owns(id)) continue; var a = Catalog[id]; if (a.effect == AugEffect.MoveSpeed) m += a.magnitude; if (a.downside == AugDownside.SlowerMove) m -= a.downsideMag; } return Mathf.Max(0.3f, m); } }
         public float CarrySpeedMult { get { float m = 1f; for (int id = 0; id < Catalog.Length; id++) { if (!Owns(id)) continue; var a = Catalog[id]; if (a.effect == AugEffect.CarrySpeed) m += a.magnitude; if (a.downside == AugDownside.SlowerCarry) m -= a.downsideMag; } return Mathf.Max(0.3f, m); } }
-        public float FuseMult       { get { float m = 1f; for (int id = 0; id < Catalog.Length; id++) { if (!Owns(id)) continue; var a = Catalog[id]; if (a.downside == AugDownside.FasterFuse) m += a.downsideMag; } return m; } }
+        public float FuseMult       { get { float m = 1f; for (int id = 0; id < Catalog.Length; id++) { if (!Owns(id)) continue; var a = Catalog[id]; if (a.effect == AugEffect.FuseSlow) m -= a.magnitude; if (a.downside == AugDownside.FasterFuse) m += a.downsideMag; } return Mathf.Max(0.3f, m); } }
         public float PayoutMult     { get { float m = 1f; for (int id = 0; id < Catalog.Length; id++) { if (!Owns(id)) continue; var a = Catalog[id]; if (a.effect == AugEffect.Payout) m += a.magnitude; if (a.downside == AugDownside.LessPayout) m -= a.downsideMag; } return Mathf.Max(0.2f, m); } }
 
         private bool RatsActive { get { for (int id = 0; id < Catalog.Length; id++) if (Owns(id) && Catalog[id].downside == AugDownside.Rats) return true; return false; } }
