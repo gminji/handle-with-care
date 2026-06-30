@@ -463,6 +463,19 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 211d155427273d84db394b09856a4ae8, type: 3}
   m_Name: 
   m_EditorClassIdentifier: SlopCo::SlopCo.Gameplay.PlayerScoreboard
+--- !u!134 &36394328
+PhysicsMaterial:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_Name: 
+  serializedVersion: 2
+  m_DynamicFriction: 0.6
+  m_StaticFriction: 0.6
+  m_Bounciness: 0
+  m_FrictionCombine: 0
+  m_BounceCombine: 0
 --- !u!1 &40025154
 GameObject:
   m_ObjectHideFlags: 0
@@ -5741,6 +5754,8 @@ MonoBehaviour:
   phaseFail: {fileID: 8300000, guid: 9713137a4b9a8714f919e0e152ad8519, type: 3}
   grab: {fileID: 8300000, guid: ed959ad66c394ed4a9ea327742a3f1b1, type: 3}
   uiClick: {fileID: 8300000, guid: 007a8491ab38706448f77ce6838a61bf, type: 3}
+  ping: {fileID: 0}
+  emote: {fileID: 0}
   musicCalm: {fileID: 8300000, guid: 0e2cb61cf8dae3a43aec0da7d2f55bf9, type: 3}
   musicHaul: {fileID: 8300000, guid: e5dd36105d93ec24182824bbc68f023f, type: 3}
   musicFadeSpeed: 1.2
@@ -11744,8 +11759,8 @@ MonoBehaviour:
   ui: {fileID: 0}
   cam: {fileID: 0}
   mapRoots:
-  - {fileID: 0}
-  - {fileID: 0}
+  - {fileID: 825993177}
+  - {fileID: 663845700}
   lookCenter: {x: 0, y: 0, z: 0}
   orbitRadius: 26
   elevationDeg: 45
@@ -17343,7 +17358,7 @@ MeshCollider:
   m_PrefabInstance: {fileID: 0}
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 1555009393}
-  m_Material: {fileID: 0}
+  m_Material: {fileID: 36394328}
   m_IncludeLayers:
     serializedVersion: 2
     m_Bits: 0
@@ -18171,7 +18186,7 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: UnityEngine.UI::UnityEngine.UI.Image
   m_Material: {fileID: 0}
-  m_Color: {r: 0.05, g: 0.06, b: 0.09, a: 0.92}
+  m_Color: {r: 0.05, g: 0.06, b: 0.09, a: 0.35}
   m_RaycastTarget: 1
   m_RaycastPadding: {x: 0, y: 0, z: 0, w: 0}
   m_Maskable: 1
