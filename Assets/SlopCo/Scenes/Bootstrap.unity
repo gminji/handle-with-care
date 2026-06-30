@@ -289,6 +289,7 @@ GameObject:
   - component: {fileID: 32739788}
   - component: {fileID: 32739789}
   - component: {fileID: 32739790}
+  - component: {fileID: 32739791}
   m_Layer: 0
   m_Name: GameSystems
   m_TagString: Untagged
@@ -463,6 +464,21 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 211d155427273d84db394b09856a4ae8, type: 3}
   m_Name: 
   m_EditorClassIdentifier: SlopCo::SlopCo.Gameplay.PlayerScoreboard
+--- !u!114 &32739791
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 32739780}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 1faefb377e3d2954cb426b7c61881066, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: SlopCo::SlopCo.Items.ItemDropSpawner
+  ShowTopMostFoldoutHeaderGroup: 1
+  capsulePrefab: {fileID: 849232363243287076, guid: 324a8834f47a76f48be37f1e6e453936, type: 3}
+  destination: {fileID: 1905822702}
 --- !u!134 &36394328
 PhysicsMaterial:
   m_ObjectHideFlags: 0
