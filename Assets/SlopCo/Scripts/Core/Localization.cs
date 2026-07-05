@@ -153,6 +153,12 @@ namespace SlopCo.Core
             { "mod.greasy",     new[]{ "GREASY DAY — slippery cargo!", "미끄러운 날 — 화물이 주르륵!", "つるつるデー — 貨物が滑る！", "打滑日 — 货物滑溜溜！" } },
             { "mod.rubber",     new[]{ "RUBBER DAY — bouncy cargo!", "고무의 날 — 통통 튀는 화물!", "ラバーデー — 弾む貨物！", "橡胶日 — 货物弹跳！" } },
 
+            // ── Per-cargo archetypes (market-fit-7 — intra-round variety) ──
+            { "cargo.standard", new[]{ "STANDARD", "일반", "標準", "标准" } },
+            { "cargo.volatile", new[]{ "VOLATILE — short fuse!", "불안정 — 짧은 도화선!", "不安定 — 短い導火線！", "易爆 — 导火索短！" } },
+            { "cargo.slippery", new[]{ "SLIPPERY — greased up!", "미끌 — 저마찰!", "つるつる — 低摩擦！", "打滑 — 低摩擦！" } },
+            { "cargo.heavy",    new[]{ "HEAVY — needs two!", "무거움 — 2인 운반!", "重い — 二人で！", "沉重 — 需两人！" } },
+
             // ── Crew rank (cumulative meta-progression, shown on the FIRED card) ──
             { "crew.title",    new[]{ "CREW", "크루", "クルー", "队伍" } },
             { "crew.line",     new[]{ "RANK {rank} — {name}", "랭크 {rank} — {name}", "ランク {rank} — {name}", "等级 {rank} — {name}" } },

@@ -96,12 +96,26 @@ namespace SlopCo.Gameplay
                     destroyWithScene: true, isPlayerObject: false, position: pos, rotation: rot);
                 if (netObj == null) continue;
                 _spawned.Add(netObj);
+                // This bomb's archetype (deterministic per day+index): a round gets a MIX of Volatile (short fuse,
+                // grab-and-run), Slippery, Heavy and Standard instead of N identical bombs. Escalates by day.
+                var arch = SlopCo.Cargo.CargoArchetypeTable.Roll(day, i);
                 var bomb = netObj.GetComponent<SlopCo.Cargo.CargoBomb>();
                 if (bomb != null)
                 {
-                    bomb.Arm(decay, DailyModifier.BlastMult(dayMod));
-                    // Today's surface twist (Greasy = slippery, Rubber = bouncy) — no-op on normal days.
-                    bomb.SetSurface(DailyModifier.FrictionMult(dayMod), DailyModifier.Bounciness(dayMod));
+                    bomb.Arm(decay * SlopCo.Cargo.CargoArchetypeTable.FuseMult(arch), DailyModifier.BlastMult(dayMod));
+                    // Surface = the slipperier of today's modifier and this bomb's archetype (MIN) so Greasy Day and
+                    // a Slippery bomb don't double-slip; bounce stays day-driven.
+                    float friction = Mathf.Min(DailyModifier.FrictionMult(dayMod), SlopCo.Cargo.CargoArchetypeTable.FrictionMult(arch));
+                    bomb.SetSurface(friction, DailyModifier.Bounciness(dayMod));
+                    bomb.SetArchetype(arch); // replicate the tint/scale telegraph to clients
+                }
+                // Mass override only for Volatile (OneHand) / Heavy (TwoPerson); Standard & Slippery inherit the
+                // prefab's shipped mass (the bomb is TwoPerson) so co-op is never regressed.
+                var massOverride = SlopCo.Cargo.CargoArchetypeTable.MassOverride(arch);
+                if (massOverride.HasValue)
+                {
+                    var item = netObj.GetComponent<SlopCo.Cargo.CargoItem>();
+                    if (item != null) item.SetMassClass(massOverride.Value);
                 }
                 LastSpawnCount++;
             }

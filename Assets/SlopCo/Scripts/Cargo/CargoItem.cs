@@ -27,6 +27,11 @@ namespace SlopCo.Cargo
         public CargoMassClass MassClass => massClass;
         public IReadOnlyList<CarryHandle> Handles => handles;
 
+        /// <summary>SERVER. Spawn-time archetype mass override (set by CargoSpawner right after spawn, before any
+        /// grab). RequiredGrabbers reads massClass live, so a single set here is enough. Solo keeps
+        /// RequiredGrabbers = 1, so a TwoPerson override still stays solo-carriable.</summary>
+        public void SetMassClass(CargoMassClass m) { if (!IsServer) return; massClass = m; }
+
         public readonly NetworkVariable<CarryState> State =
             new NetworkVariable<CarryState>(CarryState.Loose, NetworkVariableReadPermission.Everyone, NetworkVariableWritePermission.Server);
 

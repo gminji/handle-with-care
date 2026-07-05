@@ -28,6 +28,7 @@ namespace SlopCo.Cargo
         public static event System.Action<Vector3> OnDetonated;
 
         private static readonly int EmissionId = Shader.PropertyToID("_EmissionColor");
+        private static readonly int BaseColorId = Shader.PropertyToID("_BaseColor"); // URP Lit albedo — separate from the fuse glow (_EmissionColor)
         private CargoCondition _condition;
         private CargoItem _cargoItem;
         private Rigidbody _rb;
@@ -37,6 +38,11 @@ namespace SlopCo.Cargo
         private float _blastMult = 1f; // today's modifier scales the blast (Demolition Day = bigger boom)
         private static Material _boomMat;
 
+        // Replicated per-bomb archetype (server-write): drives the client-side tint + scale telegraph only. The
+        // physics itself (fuse/friction/mass) is applied server-authoritatively and replicates on its own.
+        private readonly NetworkVariable<byte> _archetype =
+            new NetworkVariable<byte>(0, NetworkVariableReadPermission.Everyone, NetworkVariableWritePermission.Server);
+
         public override void OnNetworkSpawn()
         {
             _condition = GetComponent<CargoCondition>();
@@ -44,6 +50,36 @@ namespace SlopCo.Cargo
             _rb = GetComponent<Rigidbody>();
             _mpb = new MaterialPropertyBlock();
             _armTimer = GameConstants.BombArmingSeconds; // never blow the instant it appears
+
+            _archetype.OnValueChanged += OnArchetypeChanged;
+            ApplyArchetypeVisual((CargoArchetype)_archetype.Value); // reflect current value (late-join / server-set-before-spawn)
+        }
+
+        public override void OnNetworkDespawn()
+        {
+            _archetype.OnValueChanged -= OnArchetypeChanged;
+        }
+
+        /// <summary>SERVER. Set this bomb's archetype (CargoSpawner, at spawn). Replicates the visual to clients.</summary>
+        public void SetArchetype(CargoArchetype a) { if (!IsServer) return; _archetype.Value = (byte)a; }
+
+        private void OnArchetypeChanged(byte previous, byte current) => ApplyArchetypeVisual((CargoArchetype)current);
+
+        /// <summary>Server + every client apply the SAME local base-color tint + scale telegraph, so a
+        /// Heavy/Slippery/Volatile bomb reads at a glance and scale stays consistent everywhere. Standard = clear
+        /// tint + scale 1 = the prefab untouched (backward compatible).</summary>
+        private void ApplyArchetypeVisual(CargoArchetype a)
+        {
+            transform.localScale = Vector3.one * CargoArchetypeTable.ScaleMult(a);
+            Color tint = CargoArchetypeTable.TintColor(a);
+            if (tint.a < 0.01f || glowRenderers == null) return; // Standard — keep the prefab material
+            foreach (var r in glowRenderers)
+            {
+                if (r == null) continue;
+                r.GetPropertyBlock(_mpb);          // preserve _EmissionColor written every frame by the fuse pulse
+                _mpb.SetColor(BaseColorId, tint);
+                r.SetPropertyBlock(_mpb);
+            }
         }
 
         /// <summary>SERVER. Arm the fuse with a per-second burn rate (escalates each day) and an optional
