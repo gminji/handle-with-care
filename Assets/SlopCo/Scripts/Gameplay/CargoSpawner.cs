@@ -97,7 +97,12 @@ namespace SlopCo.Gameplay
                 if (netObj == null) continue;
                 _spawned.Add(netObj);
                 var bomb = netObj.GetComponent<SlopCo.Cargo.CargoBomb>();
-                if (bomb != null) bomb.Arm(decay, DailyModifier.BlastMult(dayMod));
+                if (bomb != null)
+                {
+                    bomb.Arm(decay, DailyModifier.BlastMult(dayMod));
+                    // Today's surface twist (Greasy = slippery, Rubber = bouncy) — no-op on normal days.
+                    bomb.SetSurface(DailyModifier.FrictionMult(dayMod), DailyModifier.Bounciness(dayMod));
+                }
                 LastSpawnCount++;
             }
         }

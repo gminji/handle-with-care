@@ -55,6 +55,34 @@ namespace SlopCo.Cargo
             _blastMult = Mathf.Clamp(blastMult, 0.1f, 3f);
         }
 
+        /// <summary>SERVER. Apply today's physics-surface twist to the cargo's colliders via a runtime
+        /// <see cref="PhysicsMaterial"/> — Greasy Day makes it near-frictionless (skids out of grip / across the
+        /// floor), Rubber Day makes it bouncy. Defaults (1, 0) are a no-op so normal days keep the prefab's own
+        /// material (backward compatible). The server simulates the cargo body (server-authoritative
+        /// NetworkRigidbody), so applying it here is enough — the resulting motion replicates like any other
+        /// physics, no extra netcode. Friction uses Minimum-combine so it stays slippery against any floor without
+        /// touching the floor asset; bounce uses Maximum-combine so it springs off whatever it hits.</summary>
+        public void SetSurface(float frictionMult, float bounciness)
+        {
+            frictionMult = Mathf.Clamp(frictionMult, 0f, 4f);
+            bounciness   = Mathf.Clamp01(bounciness);
+            bool slippery = frictionMult < 0.999f;
+            bool bouncy   = bounciness > 0.001f;
+            if (!slippery && !bouncy) return; // normal day — leave the prefab material untouched
+
+            const float baseFriction = 0.6f; // Unity's default PhysicsMaterial friction
+            var pm = new PhysicsMaterial("DaySurface")
+            {
+                dynamicFriction = baseFriction * frictionMult,
+                staticFriction  = baseFriction * frictionMult,
+                frictionCombine = slippery ? PhysicsMaterialCombine.Minimum : PhysicsMaterialCombine.Average,
+                bounciness      = bounciness,
+                bounceCombine   = bouncy ? PhysicsMaterialCombine.Maximum : PhysicsMaterialCombine.Average,
+            };
+            foreach (var col in GetComponentsInChildren<Collider>())
+                if (col != null && !col.isTrigger) col.sharedMaterial = pm;
+        }
+
         private void Update()
         {
             if (_condition == null) return;

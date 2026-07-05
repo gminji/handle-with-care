@@ -7,6 +7,8 @@ namespace SlopCo.Gameplay
         DemolitionDay = 4, // bigger booms (blast radius/force up)
         ScenicRoute = 5,   // longer fuse but leaner payout (the calm, cheap day)
         PaydayRun = 6,     // rich payout + an extra bomb (co-op): high risk, high reward
+        GreasyDay = 7,     // near-frictionless cargo — skids out of your hands / across the floor
+        RubberDay = 8,     // bouncy cargo — dropped/thrown crates boing around
     }
 
     /// <summary>
@@ -22,6 +24,7 @@ namespace SlopCo.Gameplay
         {
             DayModifier.RushHour, DayModifier.DoubleLoad, DayModifier.HazardPay,
             DayModifier.DemolitionDay, DayModifier.ScenicRoute, DayModifier.PaydayRun,
+            DayModifier.GreasyDay, DayModifier.RubberDay,
         };
 
         /// <summary>Deterministic daily roll from the day number. Uses the lowbias32 integer finalizer for a
@@ -60,6 +63,17 @@ namespace SlopCo.Gameplay
         public static float BlastMult(DayModifier m) =>
             m == DayModifier.DemolitionDay ? 1.6f : 1f;
 
+        /// <summary>Cargo surface-friction multiplier (Greasy Day = near-frictionless → cargo skids out of
+        /// grip and slides across the floor: the clip-native "slippery cargo" moment, no art needed).
+        /// 1 = default grip. Applied server-side as a runtime PhysicsMaterial by <c>CargoBomb.SetSurface</c>.</summary>
+        public static float FrictionMult(DayModifier m) =>
+            m == DayModifier.GreasyDay ? 0.05f : 1f;
+
+        /// <summary>Cargo bounciness/restitution (Rubber Day = springy cargo that boings when dropped/thrown).
+        /// 0 = inert (no bounce). Applied server-side as a runtime PhysicsMaterial by <c>CargoBomb.SetSurface</c>.</summary>
+        public static float Bounciness(DayModifier m) =>
+            m == DayModifier.RubberDay ? 0.85f : 0f;
+
         /// <summary>Localization key for the briefing banner ("RUSH HOUR — short fuse!" etc.).</summary>
         public static string NameKey(DayModifier m) =>
             m == DayModifier.RushHour      ? "mod.rushhour"    :
@@ -67,6 +81,8 @@ namespace SlopCo.Gameplay
             m == DayModifier.HazardPay     ? "mod.hazardpay"   :
             m == DayModifier.DemolitionDay ? "mod.demolition"  :
             m == DayModifier.ScenicRoute   ? "mod.scenicroute" :
-            m == DayModifier.PaydayRun     ? "mod.payday"      : "mod.none";
+            m == DayModifier.PaydayRun     ? "mod.payday"      :
+            m == DayModifier.GreasyDay     ? "mod.greasy"      :
+            m == DayModifier.RubberDay     ? "mod.rubber"      : "mod.none";
     }
 }

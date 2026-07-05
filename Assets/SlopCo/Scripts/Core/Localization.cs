@@ -150,6 +150,8 @@ namespace SlopCo.Core
             { "mod.demolition", new[]{ "DEMOLITION DAY — bigger booms!", "철거의 날 — 더 큰 폭발!", "解体の日 — 大爆発！", "拆迁日 — 爆炸更猛！" } },
             { "mod.scenicroute",new[]{ "SCENIC ROUTE — slow fuse, lean pay", "여유로운 길 — 느린 도화선, 박한 보수", "のんびりルート — 遅い導火線・薄給", "悠闲路线 — 慢导火索，报酬微薄" } },
             { "mod.payday",     new[]{ "PAYDAY RUN — risky, big money!", "페이데이 — 위험하지만 한탕!", "ペイデイ — ハイリスク大金！", "发薪日 — 高风险大钞！" } },
+            { "mod.greasy",     new[]{ "GREASY DAY — slippery cargo!", "미끄러운 날 — 화물이 주르륵!", "つるつるデー — 貨物が滑る！", "打滑日 — 货物滑溜溜！" } },
+            { "mod.rubber",     new[]{ "RUBBER DAY — bouncy cargo!", "고무의 날 — 통통 튀는 화물!", "ラバーデー — 弾む貨物！", "橡胶日 — 货物弹跳！" } },
 
             // ── Crew rank (cumulative meta-progression, shown on the FIRED card) ──
             { "crew.title",    new[]{ "CREW", "크루", "クルー", "队伍" } },

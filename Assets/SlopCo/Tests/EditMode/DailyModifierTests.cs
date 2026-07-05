@@ -26,7 +26,8 @@ namespace SlopCo.Tests.EditMode
                 Assert.AreNotEqual(DayModifier.None, m, "day " + day + " should have a modifier");
                 CollectionAssert.Contains(
                     new[]{ DayModifier.RushHour, DayModifier.DoubleLoad, DayModifier.HazardPay,
-                           DayModifier.DemolitionDay, DayModifier.ScenicRoute, DayModifier.PaydayRun }, m);
+                           DayModifier.DemolitionDay, DayModifier.ScenicRoute, DayModifier.PaydayRun,
+                           DayModifier.GreasyDay, DayModifier.RubberDay }, m);
             }
         }
 
@@ -38,18 +39,20 @@ namespace SlopCo.Tests.EditMode
         }
 
         [Test]
-        public void Roll_ProducesVariety_AndAllSixAppear()
+        public void Roll_ProducesVariety_AndAllEightAppear()
         {
             var seen = new HashSet<DayModifier>();
-            // generous span — the lowbias32 hash is well-distributed, so all six surface well within this range
-            for (int day = 2; day <= 400; day++) seen.Add(DailyModifier.Roll(day));
-            Assert.AreEqual(6, seen.Count, "all six active modifiers should appear across the span");
+            // generous span — the lowbias32 hash is well-distributed, so all eight surface well within this range
+            for (int day = 2; day <= 800; day++) seen.Add(DailyModifier.Roll(day));
+            Assert.AreEqual(8, seen.Count, "all eight active modifiers should appear across the span");
             CollectionAssert.Contains(seen, DayModifier.RushHour);
             CollectionAssert.Contains(seen, DayModifier.DoubleLoad);
             CollectionAssert.Contains(seen, DayModifier.HazardPay);
             CollectionAssert.Contains(seen, DayModifier.DemolitionDay);
             CollectionAssert.Contains(seen, DayModifier.ScenicRoute);
             CollectionAssert.Contains(seen, DayModifier.PaydayRun);
+            CollectionAssert.Contains(seen, DayModifier.GreasyDay);
+            CollectionAssert.Contains(seen, DayModifier.RubberDay);
             CollectionAssert.DoesNotContain(seen, DayModifier.None); // None is reserved for day 1 only
         }
 
@@ -79,6 +82,28 @@ namespace SlopCo.Tests.EditMode
             Assert.AreEqual(1f, DailyModifier.BlastMult(DayModifier.None));
             Assert.AreEqual(1f, DailyModifier.BlastMult(DayModifier.RushHour));
             Assert.AreEqual(1f, DailyModifier.BlastMult(DayModifier.PaydayRun));
+
+            // FrictionMult — only Greasy Day makes cargo slippery; everything else keeps full grip.
+            Assert.AreEqual(0.05f, DailyModifier.FrictionMult(DayModifier.GreasyDay));
+            Assert.AreEqual(1f, DailyModifier.FrictionMult(DayModifier.None));
+            Assert.AreEqual(1f, DailyModifier.FrictionMult(DayModifier.RubberDay));
+            Assert.AreEqual(1f, DailyModifier.FrictionMult(DayModifier.RushHour));
+
+            // Bounciness — only Rubber Day makes cargo springy; everything else is inert.
+            Assert.AreEqual(0.85f, DailyModifier.Bounciness(DayModifier.RubberDay));
+            Assert.AreEqual(0f, DailyModifier.Bounciness(DayModifier.None));
+            Assert.AreEqual(0f, DailyModifier.Bounciness(DayModifier.GreasyDay));
+            Assert.AreEqual(0f, DailyModifier.Bounciness(DayModifier.DemolitionDay));
+
+            // The two new physics-surface days are scalar-neutral (they change feel, not economy/timing).
+            Assert.AreEqual(1f, DailyModifier.FuseMult(DayModifier.GreasyDay));
+            Assert.AreEqual(1f, DailyModifier.FuseMult(DayModifier.RubberDay));
+            Assert.AreEqual(0, DailyModifier.CountBonus(DayModifier.GreasyDay));
+            Assert.AreEqual(0, DailyModifier.CountBonus(DayModifier.RubberDay));
+            Assert.AreEqual(1f, DailyModifier.PayoutMult(DayModifier.GreasyDay));
+            Assert.AreEqual(1f, DailyModifier.PayoutMult(DayModifier.RubberDay));
+            Assert.AreEqual(1f, DailyModifier.BlastMult(DayModifier.GreasyDay));
+            Assert.AreEqual(1f, DailyModifier.BlastMult(DayModifier.RubberDay));
         }
 
         [Test]
@@ -90,6 +115,8 @@ namespace SlopCo.Tests.EditMode
             Assert.AreEqual("mod.demolition", DailyModifier.NameKey(DayModifier.DemolitionDay));
             Assert.AreEqual("mod.scenicroute", DailyModifier.NameKey(DayModifier.ScenicRoute));
             Assert.AreEqual("mod.payday", DailyModifier.NameKey(DayModifier.PaydayRun));
+            Assert.AreEqual("mod.greasy", DailyModifier.NameKey(DayModifier.GreasyDay));
+            Assert.AreEqual("mod.rubber", DailyModifier.NameKey(DayModifier.RubberDay));
             Assert.AreEqual("mod.none", DailyModifier.NameKey(DayModifier.None));
         }
     }
