@@ -223,6 +223,11 @@ namespace SlopCo.Core
             { "item.slot.empty",  new[]{ "Item: (empty)", "아이템: (없음)", "アイテム: (なし)", "道具: (空)" } },
             { "item.slot.none",   new[]{ "Perk: (none)", "특전: (없음)", "パーク: (なし)", "天赋: (无)" } },
 
+            // ── Teammate loadout HUD ──
+            { "hud.loadout.aug",  new[]{ "Augment", "증강", "オーグメント", "增强" } },
+            { "hud.loadout.held", new[]{ "Holding", "보유", "所持", "持有" } },
+            { "hud.loadout.used", new[]{ "Used", "사용", "使用", "已用" } },
+
             // ── Map select ──
             { "map.select", new[]{ "MAP", "맵", "マップ", "地图" } },
             { "map.random", new[]{ "RANDOM", "랜덤", "ランダム", "随机" } },

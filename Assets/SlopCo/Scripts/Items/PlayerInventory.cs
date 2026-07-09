@@ -28,6 +28,12 @@ namespace SlopCo.Items
         public readonly NetworkVariable<int> SelectedPermanent =
             new NetworkVariable<int>(InventoryLogic.Empty, NetworkVariableReadPermission.Everyone, NetworkVariableWritePermission.Server);
 
+        /// <summary>Most recently USED item id (consumable or permanent), or <see cref="InventoryLogic.Empty"/>.
+        /// Server-written on a successful use; read by the teammate loadout HUD. Persists across rounds (shows
+        /// the last-known use); no reset.</summary>
+        public readonly NetworkVariable<int> LastUsedItemId =
+            new NetworkVariable<int>(InventoryLogic.Empty, NetworkVariableReadPermission.Everyone, NetworkVariableWritePermission.Server);
+
         public bool HasConsumable => ConsumableId.Value != InventoryLogic.Empty;
 
         // ── SERVER grants (called by capsule pickup / augment shop in later parts) ──
@@ -84,6 +90,7 @@ namespace SlopCo.Items
         public void RequestUseConsumableRpc()
         {
             if (!HasConsumable) return;
+            LastUsedItemId.Value = ConsumableId.Value;   // record the successful use before it's consumed
             ApplyEffectServer(ItemCatalog.Get(ConsumableId.Value));
             ConsumableId.Value = InventoryLogic.DiscardConsumable(ConsumableId.Value);
         }
@@ -94,6 +101,7 @@ namespace SlopCo.Items
         {
             int id = SelectedPermanent.Value;
             if (!ItemCatalog.IsPermanent(id) || !InventoryLogic.OwnsPermanent(PermanentMask.Value, id)) return;
+            LastUsedItemId.Value = id;   // record only after the validity/ownership guard passes
             ApplyEffectServer(ItemCatalog.Get(id));
         }
 
