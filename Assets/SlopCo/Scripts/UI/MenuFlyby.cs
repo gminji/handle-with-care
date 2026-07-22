@@ -81,9 +81,14 @@ namespace SlopCo.UI
 
         private void Deactivate()
         {
-            if (!_active && _mapIdx < 0) { HideAllPreviewMaps(); return; }
+            // Map-root visibility is owned solely by MapManager.Apply() once a session starts.
+            // MenuFlyby must NOT toggle the shared map roots here: MapManager.OnNetworkSpawn→Apply()
+            // activates the chosen root first, and this Deactivate runs afterwards — hiding the roots
+            // here left the active map permanently disabled (Apply never re-runs per-frame), so only the
+            // truck (moved, never toggled) stayed visible. Just reset preview state; ShowMap()'s exclusive
+            // toggle handles title re-entry.
+            if (!_active && _mapIdx < 0) return;
             _active = false;
-            HideAllPreviewMaps();   // clear preview so a session-start MapManager.Apply starts from a clean slate
             _mapIdx = -1;
         }
 
@@ -95,13 +100,6 @@ namespace SlopCo.UI
                 if (mapRoots[k] != null) mapRoots[k].SetActive(k == i);
             _mapIdx = i;
             _cycleT = 0f;
-        }
-
-        private void HideAllPreviewMaps()
-        {
-            if (!HasMaps) return;
-            for (int k = 0; k < mapRoots.Length; k++)
-                if (mapRoots[k] != null) mapRoots[k].SetActive(false);
         }
     }
 }
