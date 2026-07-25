@@ -14,10 +14,11 @@ namespace SlopCo.UI
     /// Restart (host-only) and Return-to-Title — wired to the existing engine paths
     /// (<see cref="RoundManager.RequestStartRpc"/> / <see cref="Networking.NetworkSessionManager.Leave"/>),
     /// so a fired player can play again or bail out without hunting for the lobby controls.
+    /// Panel-root visibility is owned by <see cref="UIManager"/> (LobbyUI.cs:77 pattern) — this component
+    /// only ever drives its own content and child buttons.
     /// </summary>
     public sealed class ResultsUI : MonoBehaviour
     {
-        [SerializeField] private GameObject panel;
         [SerializeField] private Text titleText;
         [SerializeField] private Text bodyText;
         [Header("Game-over actions (shown only on FIRED)")]
@@ -33,6 +34,7 @@ namespace SlopCo.UI
         private string _shareSummary = "";
         private string _gradeLetter = "";
         private bool _crewAwarded;   // crew XP is banked once per run (on GameOver), reset when a new run starts
+        private RoundPhase _shown = (RoundPhase)255;   // sentinel — never a real phase, forces first sync
 
         private void Awake()
         {
@@ -45,7 +47,6 @@ namespace SlopCo.UI
         private void OnEnable()
         {
             RoundManager.OnPhaseChanged += HandlePhase;
-            if (panel != null) panel.SetActive(false);
             SetButtons(false);
         }
 
@@ -54,15 +55,29 @@ namespace SlopCo.UI
             RoundManager.OnPhaseChanged -= HandlePhase;
         }
 
-        private void HandlePhase(RoundPhase phase)
+        // RPC path: keeps the low-latency stinger timing (ScreenShake/BestRecords) that Show() fires.
+        private void HandlePhase(RoundPhase phase) => SyncPhase(phase);
+
+        // Polling path: late-join + shutdown fallback — reads the replicated Phase live every frame.
+        private void Update()
         {
+            var rm = ServiceLocator.Get<RoundManager>();
+            SyncPhase(rm != null ? rm.Phase.Value : RoundPhase.Lobby);
+        }
+
+        // Single entry point for both paths; the _shown sentinel guards against Show()/reset re-running
+        // twice for the same phase (RPC + polling can both land the same value).
+        private void SyncPhase(RoundPhase phase)
+        {
+            if (phase == _shown) return;
+            _shown = phase;
+
             if (phase == RoundPhase.Payout || phase == RoundPhase.GameOver)
             {
                 Show(phase);
             }
             else
             {
-                if (panel != null) panel.SetActive(false);
                 SetButtons(false);
                 _crewAwarded = false; // a new run is under way — allow the next GameOver to bank crew XP
             }
@@ -70,8 +85,6 @@ namespace SlopCo.UI
 
         private void Show(RoundPhase phase)
         {
-            if (panel != null) panel.SetActive(true);
-
             var quota = ServiceLocator.Get<QuotaSystem>();
             var round = ServiceLocator.Get<RoundManager>();
             var stats = ServiceLocator.Get<RunStats>();
@@ -308,11 +321,10 @@ namespace SlopCo.UI
         // Host-only path; RequestStartRpc is server-gated so a stray client click is a harmless no-op.
         private void OnRestart() => ServiceLocator.Get<RoundManager>()?.RequestStartRpc();
 
-        // Leave() disconnects only this peer; UIManager.Update() then falls back to MainMenu. No
-        // OnPhaseChanged fires on shutdown, so hide the card explicitly to avoid a lingering panel.
+        // Leave() disconnects only this peer. Panel-root hiding is UIManager's job (it polls connected/phase
+        // every frame); content reset is our polling Update()/SyncPhase() picking up rm == null → Lobby.
         private void OnReturnToTitle()
         {
-            if (panel != null) panel.SetActive(false);
             SetButtons(false);
             ServiceLocator.Get<NetworkSessionManager>()?.Leave();
         }

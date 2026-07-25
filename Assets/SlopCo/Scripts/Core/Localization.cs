@@ -178,6 +178,9 @@ namespace SlopCo.Core
 
             // ── Augments (roguelite shop) ──
             { "shop.title",      new[]{ "BUY AN AUGMENT", "증강 구매", "オーグメント購入", "购买增强" } },
+            { "shop.cash",       new[]{ "CASH ${cash}", "보유 ${cash}", "所持 ${cash}", "持有 ${cash}" } },
+            { "shop.short",      new[]{ "(NOT ENOUGH)", "(잔액 부족)", "(残高不足)", "(余额不足)" } },
+            { "shop.owned",      new[]{ "OWNED", "보유 중", "所持済み", "已拥有" } },
             { "aug.light.name",  new[]{ "Lighter Load", "가벼운 짐", "軽い荷物", "轻装" } },
             { "aug.light.desc",  new[]{ "Carry 35% faster — but RATS chase you!", "운반 35% 빠름 — 대신 쥐가 쫓아옴!", "運搬35%速く — ただしネズミが追う！", "搬运快35% — 但老鼠会追你！" } },
             { "aug.adr.name",    new[]{ "Adrenaline", "아드레날린", "アドレナリン", "肾上腺素" } },

@@ -10,7 +10,8 @@ namespace SlopCo.UI
     /// The front-end shell / screen-state owner. Drives which top-level panel is visible
     /// (MainMenu → Lobby → in-game HUD) plus the Options, Pause and Controls overlays. ESC opens/closes
     /// Pause while in a session. This is the single owner of panel visibility — LobbyUI no longer toggles
-    /// its own panel. Buttons call the public methods here.
+    /// its own panel, and the Payout/GameOver round overlays (results card, augment shop) are owned here too.
+    /// Buttons call the public methods here.
     /// </summary>
     public sealed class UIManager : MonoBehaviour
     {
@@ -23,6 +24,9 @@ namespace SlopCo.UI
         [SerializeField] private GameObject optionsPanel;
         [SerializeField] private GameObject pausePanel;
         [SerializeField] private GameObject controlsPanel;
+        [Header("Round overlays (Payout / GameOver)")]
+        [SerializeField] private GameObject resultsPanel;      // ResultsRoot/ResultsPanel
+        [SerializeField] private GameObject augmentShopPanel;  // AugmentShop/ShopPanel
 
         private enum Screen { MainMenu, Lobby, InGame }
         private enum PendingMode { None, Solo, Ai, Online }
@@ -45,6 +49,8 @@ namespace SlopCo.UI
         {
             SettingsManager.Load();
             _screen = Screen.MainMenu;
+            if (resultsPanel == null || augmentShopPanel == null)
+                Debug.LogError("UIManager: round overlay panels not wired (resultsPanel/augmentShopPanel)");
             Apply();
         }
 
@@ -194,6 +200,26 @@ namespace SlopCo.UI
             if (optionsPanel != null)  optionsPanel.SetActive(_options);
             if (controlsPanel != null) controlsPanel.SetActive(_controls);
             if (pausePanel != null)    pausePanel.SetActive(_pause && !_options && !_controls);
+
+            // Round overlays — Payout/GameOver card and the Payout shop. Only SetActive site for either panel root.
+            // Unlike _screen/_options/... round state isn't refreshed by any caller, so it's read live here
+            // (LobbyUI.cs:64-72 pattern). Caching it would drift a frame at OnBackToMenu()'s post-Shutdown call.
+            // ShutdownInProgress is required: NetworkManager.Shutdown() (:1542-1559) only synchronously sets
+            // m_ShuttingDown (:1553); IsListening=false happens later in ShutdownInternal() (:1639) during
+            // PostLateUpdate. Without that term, OnBackToMenu()/OnReturnToTitle() calling Apply() on the same
+            // frame would still see connected==true and leave the FIRED card showing over the main menu.
+            // Update()'s (:151) connected calc is only for _screen transitions so this lag there is harmless
+            // and left as-is on purpose.
+            var nm = NetworkManager.Singleton;
+            bool connected = nm != null && nm.IsListening && !nm.ShutdownInProgress && (nm.IsClient || nm.IsServer);
+            var rm = ServiceLocator.Get<RoundManager>();
+            var phase = rm != null ? rm.Phase.Value : RoundPhase.Lobby;
+
+            bool roundOverlay = connected && !_pause && !_options && !_controls;
+            if (resultsPanel != null)
+                resultsPanel.SetActive(roundOverlay && (phase == RoundPhase.Payout || phase == RoundPhase.GameOver));
+            if (augmentShopPanel != null)
+                augmentShopPanel.SetActive(roundOverlay && phase == RoundPhase.Payout);
         }
     }
 }
