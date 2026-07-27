@@ -24,6 +24,8 @@ namespace SlopCo.UI
         [SerializeField] private GameObject optionsPanel;
         [SerializeField] private GameObject pausePanel;
         [SerializeField] private GameObject controlsPanel;
+        [Tooltip("How-to-play overlay opened by the HELP button (menu + lobby).")]
+        [SerializeField] private GameObject helpPanel;
         [Header("Round overlays (Payout / GameOver)")]
         [SerializeField] private GameObject resultsPanel;      // ResultsRoot/ResultsPanel
         [SerializeField] private GameObject augmentShopPanel;  // AugmentShop/ShopPanel
@@ -31,7 +33,7 @@ namespace SlopCo.UI
         private enum Screen { MainMenu, Lobby, InGame }
         private enum PendingMode { None, Solo, Ai, Online }
         private Screen _screen = Screen.MainMenu;
-        private bool _options, _pause, _controls;
+        private bool _options, _pause, _controls, _help;
 
         /// <summary>True while the front-end is on the title (MainMenu) screen — the menu flyby (MenuFlyby)
         /// runs only then, and yields the camera to PlayerController once a session/round begins.</summary>
@@ -39,7 +41,7 @@ namespace SlopCo.UI
 
         /// <summary>True while the live in-game HUD is up and no blocking overlay/pause is open — the
         /// ping/emote wheel reads this to decide whether it may open (and force-closes if it goes false).</summary>
-        public bool InGameInteractive => _screen == Screen.InGame && !_pause && !_options && !_controls;
+        public bool InGameInteractive => _screen == Screen.InGame && !_pause && !_options && !_controls && !_help;
         private bool _mapSelect;
         private PendingMode _pending;
         private bool _autoStartSolo;
@@ -124,6 +126,11 @@ namespace SlopCo.UI
         public void CloseOptions()  { _options = false; SettingsManager.Save(); Apply(); }
         public void OpenControls()  { _controls = true; Apply(); }
         public void CloseControls() { _controls = false; Apply(); }
+
+        /// <summary>HELP button (menu + lobby) — the how-to-play overlay. Sits above whatever screen is
+        /// underneath, exactly like the Controls card, and ESC backs out of it first.</summary>
+        public void OpenHelp()      { _help = true; Apply(); }
+        public void CloseHelp()     { _help = false; Apply(); }
         public void ResumeGame()    { _pause = false; Apply(); }
 
         public void OnBackToMenu()
@@ -136,7 +143,7 @@ namespace SlopCo.UI
             _autoStartSolo = false;
             _lobbyIntent = false;
             _screen = Screen.MainMenu;
-            _pause = _options = _controls = _mapSelect = false;
+            _pause = _options = _controls = _help = _mapSelect = false;
             _pending = PendingMode.None;
             Apply();
         }
@@ -180,6 +187,7 @@ namespace SlopCo.UI
             if (kb != null && kb.escapeKey.wasPressedThisFrame)
             {
                 if (_options) _options = false;
+                else if (_help) _help = false;
                 else if (_controls) _controls = false;
                 else if (_mapSelect) { _mapSelect = false; _pending = PendingMode.None; }
                 else if (_lobbyIntent) { _lobbyIntent = false; _screen = Screen.MainMenu; } // back out of online lobby
@@ -193,13 +201,14 @@ namespace SlopCo.UI
         private void Apply()
         {
             bool mainMenu = _screen == Screen.MainMenu;
-            if (mainMenuPanel != null) mainMenuPanel.SetActive(mainMenu && !_options && !_controls && !_mapSelect);
-            if (mapSelectPanel != null) mapSelectPanel.SetActive(mainMenu && _mapSelect && !_options && !_controls);
-            if (lobbyPanel != null)    lobbyPanel.SetActive(_screen == Screen.Lobby && !_options);
+            if (mainMenuPanel != null) mainMenuPanel.SetActive(mainMenu && !_options && !_controls && !_help && !_mapSelect);
+            if (mapSelectPanel != null) mapSelectPanel.SetActive(mainMenu && _mapSelect && !_options && !_controls && !_help);
+            if (lobbyPanel != null)    lobbyPanel.SetActive(_screen == Screen.Lobby && !_options && !_help);
             if (hudRoot != null)       hudRoot.SetActive(_screen == Screen.InGame);
             if (optionsPanel != null)  optionsPanel.SetActive(_options);
-            if (controlsPanel != null) controlsPanel.SetActive(_controls);
-            if (pausePanel != null)    pausePanel.SetActive(_pause && !_options && !_controls);
+            if (controlsPanel != null) controlsPanel.SetActive(_controls && !_help);
+            if (helpPanel != null)     helpPanel.SetActive(_help && !_options);
+            if (pausePanel != null)    pausePanel.SetActive(_pause && !_options && !_controls && !_help);
 
             // Round overlays — Payout/GameOver card and the Payout shop. Only SetActive site for either panel root.
             // Unlike _screen/_options/... round state isn't refreshed by any caller, so it's read live here
@@ -215,7 +224,7 @@ namespace SlopCo.UI
             var rm = ServiceLocator.Get<RoundManager>();
             var phase = rm != null ? rm.Phase.Value : RoundPhase.Lobby;
 
-            bool roundOverlay = connected && !_pause && !_options && !_controls;
+            bool roundOverlay = connected && !_pause && !_options && !_controls && !_help;
             if (resultsPanel != null)
                 resultsPanel.SetActive(roundOverlay && (phase == RoundPhase.Payout || phase == RoundPhase.GameOver));
             if (augmentShopPanel != null)

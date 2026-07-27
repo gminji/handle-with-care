@@ -69,6 +69,7 @@ namespace SlopCo.Core
             { "menu.online",   new[]{ "PLAY ONLINE", "온라인 플레이", "オンライン", "在线游戏" } },
             { "menu.tutorial", new[]{ "TUTORIAL", "튜토리얼", "チュートリアル", "教程" } },
             { "menu.options",  new[]{ "OPTIONS", "옵션", "オプション", "选项" } },
+            { "menu.help",     new[]{ "HELP", "도움말", "ヘルプ", "帮助" } },
             { "menu.controls", new[]{ "CONTROLS", "조작법", "操作方法", "操作说明" } },
             { "menu.quit",     new[]{ "QUIT", "종료", "終了", "退出" } },
             { "menu.footer",   new[]{ "vertical slice", "버티컬 슬라이스", "バーティカルスライス", "垂直切片" } },
@@ -99,6 +100,14 @@ namespace SlopCo.Core
                 "WASD / 왼쪽 스틱     이동\n\nE / RB     잡기 (큰 짐은 친구와 함께)\n\n마우스 좌클릭 / RT     던지기 (꾹 눌러 차지)\n\nSpace / A     점프\n\nESC     일시정지",
                 "WASD / 左スティック     移動\n\nE / RB     つかむ（大きい荷物は仲間と一緒に）\n\n左クリック / RT     投げる（長押しでチャージ）\n\nSpace / A     ジャンプ\n\nESC     ポーズ",
                 "WASD / 左摇杆     移动\n\nE / RB     抓取（大件物品需与队友合搬）\n\n左键 / RT     投掷（长按蓄力）\n\n空格 / A     跳跃\n\nESC     暂停" } },
+
+            // ── Help (how-to-play overlay; opened from the HELP button on the menu and in the lobby) ──
+            { "help.title", new[]{ "HOW TO PLAY", "게임 방법", "遊び方", "玩法说明" } },
+            { "help.body",  new[]{
+                "GOAL\nCarry every BOMB to the yellow VAN before its fuse burns out. One detonation ends the run.\n\nHAULING\nHold E to grab. Carrying slows you down. Heavy cargo needs TWO people — grab it together.\nThrowing is fast but cargo takes damage when it lands, and damage eats your payout.\n\nSURVIVAL\nHold SHIFT to dash — stamina runs out, then you stall. Kick with RIGHT MOUSE to shove a\nteammate out of the way, or to drive off rats, thieves and UFOs.\n\nBETWEEN DAYS\nSpend the crew's cash on AUGMENTS. Every augment has a downside. Online, the crew VOTES\non which one to buy — a tie is decided at random.",
+                "목표\n도화선이 다 타기 전에 모든 폭탄을 노란 밴까지 옮기세요. 한 번이라도 터지면 그 판은 끝입니다.\n\n운반\nE를 누른 채로 잡습니다. 짐을 들면 느려집니다. 무거운 화물은 2인 운반 — 같이 잡으세요.\n던지면 빠르지만 착지할 때 화물이 손상되고, 손상은 그대로 보수에서 깎입니다.\n\n생존\nSHIFT로 대쉬 — 스태미너가 바닥나면 잠시 멈춥니다. 마우스 우클릭으로 발차기를 해서 동료를\n밀어내거나 쥐·도둑·UFO를 쫓아낼 수 있습니다.\n\n하루가 끝나면\n크루의 현금으로 증강을 구매합니다. 모든 증강에는 대가가 따릅니다. 온라인에서는 크루가\n투표로 정하고, 동표면 랜덤으로 결정됩니다.",
+                "目標\n導火線が燃え尽きる前に、すべての爆弾を黄色いバンへ運ぼう。一度でも爆発すればランは終了。\n\n運搬\nE長押しでつかむ。荷物を持つと遅くなる。重い貨物は二人がかり — 一緒につかもう。\n投げれば速いが、着地で貨物が傷み、傷みはそのまま報酬から引かれる。\n\n生存\nSHIFTでダッシュ — スタミナが尽きると一時停止。右クリックのキックで仲間を押しのけたり、\nネズミ・泥棒・UFOを追い払える。\n\n一日の終わりに\nクルーの資金でオーグメントを購入。どれにも代償がある。オンラインではクルーの投票で決まり、\n同票ならランダム。",
+                "目标\n在导火索烧完前把所有炸弹搬到黄色货车。只要爆炸一次，本局就结束。\n\n搬运\n长按 E 抓取。搬运时移动变慢。沉重货物需要两人合搬 — 一起抓。\n投掷更快，但落地会损坏货物，损坏会直接从报酬里扣。\n\n生存\n按 SHIFT 冲刺 — 体力耗尽会短暂停顿。用鼠标右键踢击可以推开队友，\n也能赶走老鼠、小偷和 UFO。\n\n每天结束后\n用队伍的现金购买增强。每个增强都有代价。联机时由队伍投票决定，\n平票则随机选出。" } },
 
             // ── Lobby ──
             { "lobby.host",  new[]{ "HOST", "호스트", "ホスト", "创建房间" } },
