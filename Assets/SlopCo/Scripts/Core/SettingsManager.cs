@@ -18,8 +18,9 @@ namespace SlopCo.Core
         public static float Master { get; private set; } = 0.8f;
         public static float Music  { get; private set; } = 0.8f;
         public static float Sfx    { get; private set; } = 0.8f;
-        // Voice chat: mic open/closed + playback volume for incoming voice.
-        public static bool  VoiceEnabled { get; private set; } = true;
+        // Voice chat: mic open/closed + playback volume for incoming voice. Defaults to OFF — an open mic
+        // on first launch is a nasty surprise (and a privacy one); players opt in from Options.
+        public static bool  VoiceEnabled { get; private set; }
         public static float VoiceVolume  { get; private set; } = 0.8f;
         public static bool  Fullscreen { get; private set; }
         public static int   QualityLevel { get; private set; }
@@ -43,7 +44,7 @@ namespace SlopCo.Core
             VSync     = PlayerPrefs.GetInt(K_VSync, QualitySettings.vSyncCount > 0 ? 1 : 0) == 1;
             ResWidth  = PlayerPrefs.GetInt(K_ResW, Screen.width);
             ResHeight = PlayerPrefs.GetInt(K_ResH, Screen.height);
-            VoiceEnabled = PlayerPrefs.GetInt(K_VoiceOn, 1) == 1;
+            VoiceEnabled = PlayerPrefs.GetInt(K_VoiceOn, 0) == 1;   // default OFF; a saved choice still wins
             VoiceVolume  = PlayerPrefs.GetFloat(K_VoiceVol, 0.8f);
 
             ApplyAll();
