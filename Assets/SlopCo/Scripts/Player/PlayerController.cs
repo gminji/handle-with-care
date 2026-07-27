@@ -40,6 +40,16 @@ namespace SlopCo.Player
         public void ApplyTempSpeedBuff(float mult, float seconds) { _itemBuffMult = mult; _itemBuffT = seconds; }
         public void RefillStamina(float amount01) { _dash = DashStamina.Refill(_dash, amount01); }
 
+        /// <summary>OWNER. Someone booted us. The server resolved the hit (see <c>KickAbility</c>) but only the
+        /// owner may move its own CharacterController, so the launch lands here — same path as the blast shove.
+        /// The vertical pop rides <c>_shoveVel.y</c>, NOT <c>_verticalVel</c>, so gravity still behaves.</summary>
+        [Rpc(SendTo.Owner)]
+        public void ApplyKnockbackRpc(Vector3 horizontalImpulse, float popUp)
+        {
+            _shoveVel += new Vector3(horizontalImpulse.x, popUp, horizontalImpulse.z);
+            ScreenShake.Add(GameConstants.KickShakeVictim);
+        }
+
         /// <summary>OWNER. Apply an item effect locally — a timed speed buff or an instant stamina refill.</summary>
         [Rpc(SendTo.Owner)]
         public void ApplyItemEffectRpc(bool isSpeed, float magnitude, float duration)

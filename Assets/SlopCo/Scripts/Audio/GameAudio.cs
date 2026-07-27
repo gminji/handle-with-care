@@ -27,6 +27,10 @@ namespace SlopCo.Audio
         [SerializeField] private AudioClip phaseFail;
         [Header("Interaction")]
         [SerializeField] private AudioClip grab;
+        [Tooltip("Kick impact. Falls back to the grab thud (pitched down) when unassigned.")]
+        [SerializeField] private AudioClip kickHit;
+        [Tooltip("Kick that hit nothing. Optional — silence is fine for a whiff.")]
+        [SerializeField] private AudioClip kickWhiff;
         [Header("UI")]
         [SerializeField] private AudioClip uiClick;
         [Header("Comms (ping/emote wheel)")]
@@ -96,6 +100,7 @@ namespace SlopCo.Audio
             ComboSystem.OnCombo += HandleCombo;
             BestRecords.OnNewRecord += HandleNewRecord;
             PingEmoteController.OnPingEmote += HandlePingEmote;
+            SlopCo.Player.KickAbility.OnKickFx += HandleKick;
         }
 
         private void OnDisable()
@@ -107,6 +112,18 @@ namespace SlopCo.Audio
             ComboSystem.OnCombo -= HandleCombo;
             BestRecords.OnNewRecord -= HandleNewRecord;
             PingEmoteController.OnPingEmote -= HandlePingEmote;
+            SlopCo.Player.KickAbility.OnKickFx -= HandleKick;
+        }
+
+        // The boot: a solid thud on contact, a light swish on a miss. With no dedicated clips assigned the
+        // impact borrows the grab thud pitched down — audible feedback without new scene wiring.
+        private void HandleKick(Vector3 worldPos, bool connected)
+        {
+            if (connected)
+                PlayOneShot(kickHit != null ? kickHit : grab, SettingsManager.Sfx,
+                            kickHit != null ? Random.Range(0.95f, 1.05f) : 0.6f);
+            else if (kickWhiff != null)
+                PlayOneShot(kickWhiff, SettingsManager.Sfx * 0.6f, Random.Range(1.05f, 1.15f));
         }
 
         // Rising pitch as the chain climbs — the audible hype of "x4 CHAIN!".

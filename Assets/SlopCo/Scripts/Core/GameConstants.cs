@@ -74,6 +74,17 @@ namespace SlopCo.Core
         public const float BlastKnockbackPopUp  = 4.5f; // vertical pop so bodies actually leave the ground
         public const float BlastKnockbackDecay  = 22f;  // how fast the shove bleeds off (units/sec per sec)
 
+        // ── Kick (player-vs-player shove + hazard repellent) ────
+        // Resolved server-side with KickMath, applied by the victim's owner (same reason as the blast
+        // shove above: a CharacterController can't be pushed from the server).
+        public const float KickRange       = 2.6f;   // reach of the boot (planar)
+        public const float KickHalfAngle   = 65f;    // ± arc around the kicker's facing
+        public const float KickSpeed       = 11f;    // peak launch speed (units/sec) at point-blank
+        public const float KickPopUp       = 3.0f;   // vertical pop so the victim actually leaves the ground
+        public const float KickCooldown    = 0.7f;   // seconds between kicks (validated on the server too)
+        public const float KickShakeVictim = 0.45f;  // screen shake on the player who got booted
+        public const float KickShakeKicker = 0.12f;  // lighter feedback for the kicker
+
         // ── Carry / co-carry (PD force controller, server-side) ──
         public const float CarryGrabRadius = 1.6f;        // generous server grab tolerance
         public const float CarryPD_Spring = 600f;         // kp

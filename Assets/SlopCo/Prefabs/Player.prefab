@@ -311,6 +311,7 @@ GameObject:
   - component: {fileID: 2556751054762794942}
   - component: {fileID: 4387529969608322376}
   - component: {fileID: 7777397264592696670}
+  - component: {fileID: 8342751712994657911}
   m_Layer: 0
   m_Name: Player
   m_TagString: Untagged
@@ -673,6 +674,21 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: SlopCo::SlopCo.Items.PlayerInventory
   ShowTopMostFoldoutHeaderGroup: 1
+--- !u!114 &8342751712994657911
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 5725589379602305267}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: ce8a65ee25e606347b5f6e4a73cc7209, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: SlopCo::SlopCo.Player.KickAbility
+  ShowTopMostFoldoutHeaderGroup: 1
+  input: {fileID: 766864435039163520}
+  controller: {fileID: 3084159529664421536}
 --- !u!1 &6033343428871254481
 GameObject:
   m_ObjectHideFlags: 0

@@ -11,15 +11,42 @@ namespace SlopCo.Gameplay
     /// plus a little screen shake. Moves server-side (a server-authoritative NetworkTransform replicates
     /// the pose). Spawned/cleared by <see cref="AugmentSystem"/> via RoundManager hooks.
     /// </summary>
-    public sealed class RatHazard : NetworkBehaviour
+    public sealed class RatHazard : NetworkBehaviour, IKickable
     {
         [SerializeField] private float speed = 3.2f;
         [SerializeField] private float bumpRange = 1.3f;
+        [Tooltip("Seconds a kicked rat spends scurrying away before it resumes the chase.")]
+        [SerializeField] private float kickedFleeSeconds = 3f;
+        [SerializeField] private float fleeSpeedMultiplier = 2.2f;
         private float _cooldown;
+        private float _fleeT;
+        private Vector3 _fleeDir;
+
+        /// <summary>SERVER. Booted — scurry off for a few seconds instead of tripping anyone.</summary>
+        public void OnKicked(Vector3 fromPos)
+        {
+            if (!IsServer) return;
+            Vector3 away = transform.position - fromPos; away.y = 0f;
+            _fleeDir = away.sqrMagnitude > 0.0001f ? away.normalized : -transform.forward;
+            _fleeT = kickedFleeSeconds;
+            _cooldown = Mathf.Max(_cooldown, kickedFleeSeconds);   // can't trip anyone while running away
+            ScreenShake.Add(0.2f);
+        }
 
         private void Update()
         {
             if (!IsServer) return;
+
+            if (_fleeT > 0f)
+            {
+                _fleeT -= Time.deltaTime;
+                transform.position += _fleeDir * (speed * fleeSpeedMultiplier * Time.deltaTime);
+                transform.position = new Vector3(transform.position.x, 0.5f, transform.position.z);
+                if (_fleeDir.sqrMagnitude > 0.0001f)
+                    transform.rotation = Quaternion.LookRotation(_fleeDir, Vector3.up);
+                _cooldown -= Time.deltaTime;
+                return;
+            }
 
             var target = NearestCarrier();
             if (target == null) return;

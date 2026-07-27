@@ -22,6 +22,8 @@ namespace SlopCo.Player
         public bool CyclePressed { get; private set; }
         /// <summary>Viewpoint toggle (third ⇄ first person) pressed this frame.</summary>
         public bool TogglePovPressed { get; private set; }
+        /// <summary>Kick pressed this frame — shoves teammates and drives off hazards.</summary>
+        public bool KickPressed { get; private set; }
 
         /// <summary>When true, movement/jump/throw are zeroed but GRAB is preserved — lets a transient overlay
         /// (e.g. the ping/emote wheel) freeze the player WITHOUT dropping carried cargo. Owner-local.</summary>
@@ -29,7 +31,7 @@ namespace SlopCo.Player
 
         private const float MaxThrowChargeTime = 1.2f;
 
-        private InputAction _move, _jump, _grab, _throw, _dash, _useItem, _usePerm, _discard, _cycle, _pov;
+        private InputAction _move, _jump, _grab, _throw, _dash, _useItem, _usePerm, _discard, _cycle, _pov, _kick;
         private bool _enabled;
         private float _throwHeldTime;
 
@@ -77,13 +79,15 @@ namespace SlopCo.Player
             _cycle.AddBinding("<Gamepad>/dpad/left");
             _pov = new InputAction("TogglePov", InputActionType.Button, "<Keyboard>/v");
             _pov.AddBinding("<Gamepad>/rightStickPress");
+            _kick = new InputAction("Kick", InputActionType.Button, "<Mouse>/rightButton");
+            _kick.AddBinding("<Gamepad>/buttonEast");
         }
 
         public void Enable()
         {
             if (_enabled) return;
             _move.Enable(); _jump.Enable(); _grab.Enable(); _throw.Enable(); _dash.Enable();
-            _useItem.Enable(); _usePerm.Enable(); _discard.Enable(); _cycle.Enable(); _pov.Enable();
+            _useItem.Enable(); _usePerm.Enable(); _discard.Enable(); _cycle.Enable(); _pov.Enable(); _kick.Enable();
             _enabled = true;
         }
 
@@ -91,14 +95,14 @@ namespace SlopCo.Player
         {
             if (!_enabled) return;
             _move.Disable(); _jump.Disable(); _grab.Disable(); _throw.Disable(); _dash.Disable();
-            _useItem.Disable(); _usePerm.Disable(); _discard.Disable(); _cycle.Disable(); _pov.Disable();
+            _useItem.Disable(); _usePerm.Disable(); _discard.Disable(); _cycle.Disable(); _pov.Disable(); _kick.Disable();
             _enabled = false;
         }
 
         private void OnDestroy()
         {
             _move?.Dispose(); _jump?.Dispose(); _grab?.Dispose(); _throw?.Dispose(); _dash?.Dispose();
-            _useItem?.Dispose(); _usePerm?.Dispose(); _discard?.Dispose(); _cycle?.Dispose(); _pov?.Dispose();
+            _useItem?.Dispose(); _usePerm?.Dispose(); _discard?.Dispose(); _cycle?.Dispose(); _pov?.Dispose(); _kick?.Dispose();
         }
 
         private void Update()
@@ -111,7 +115,7 @@ namespace SlopCo.Player
                 GrabHeld = _ai != null && _ai.GrabHeld;
                 DashHeld = false;
                 UseConsumablePressed = false; UsePermanentPressed = false; DiscardPressed = false; CyclePressed = false;
-                ThrowReleasedThisFrame = false; ThrowCharge01 = 0f; TogglePovPressed = false;
+                ThrowReleasedThisFrame = false; ThrowCharge01 = 0f; TogglePovPressed = false; KickPressed = false;
                 return;
             }
 
@@ -119,7 +123,7 @@ namespace SlopCo.Player
             {
                 Move = Vector2.zero; JumpPressed = false; GrabHeld = false; DashHeld = false;
                 UseConsumablePressed = false; UsePermanentPressed = false; DiscardPressed = false; CyclePressed = false;
-                ThrowReleasedThisFrame = false; ThrowCharge01 = 0f; _throwHeldTime = 0f; TogglePovPressed = false;
+                ThrowReleasedThisFrame = false; ThrowCharge01 = 0f; _throwHeldTime = 0f; TogglePovPressed = false; KickPressed = false;
                 return;
             }
 
@@ -132,6 +136,7 @@ namespace SlopCo.Player
             DiscardPressed = _discard.WasPressedThisFrame();
             CyclePressed = _cycle.WasPressedThisFrame();
             TogglePovPressed = _pov.WasPressedThisFrame();
+            KickPressed = _kick.WasPressedThisFrame();
 
             ThrowReleasedThisFrame = _throw.WasReleasedThisFrame();
             if (_throw.IsPressed())
@@ -157,7 +162,7 @@ namespace SlopCo.Player
                 JumpPressed = false;
                 DashHeld = false;
                 UseConsumablePressed = false; UsePermanentPressed = false; DiscardPressed = false; CyclePressed = false;
-                TogglePovPressed = false;
+                TogglePovPressed = false; KickPressed = false;
                 ThrowReleasedThisFrame = false;
                 ThrowCharge01 = 0f;
                 _throwHeldTime = 0f;
