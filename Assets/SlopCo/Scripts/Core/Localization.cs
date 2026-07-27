@@ -20,8 +20,16 @@ namespace SlopCo.Core
 
         public static readonly string[] LanguageNames = { "English", "한국어", "日本語", "中文" };
 
+        /// <summary>Boot-time language resolve. FIRST LAUNCH (no saved choice) adopts the OS language via
+        /// <see cref="LanguageDetect"/> and persists it, so a Korean machine opens in Korean without anyone
+        /// hunting through Options. Once the player has picked a language, that choice always wins.</summary>
         public static void Load()
         {
+            if (!PlayerPrefs.HasKey(Key))
+            {
+                SetLanguage(LanguageDetect.FromSystem(Application.systemLanguage));
+                return;
+            }
             int v = PlayerPrefs.GetInt(Key, (int)Language.English);
             Current = (Language)Mathf.Clamp(v, 0, 3);
         }
