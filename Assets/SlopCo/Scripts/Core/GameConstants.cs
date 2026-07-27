@@ -101,6 +101,16 @@ namespace SlopCo.Core
         public const float FallStaminaPerMetre= 0.085f;
         public const float FallStaminaMax     = 0.9f;
 
+        // ── Thief hazard (snatches cargo you dropped) ────────────
+        public const float ThiefLoiterSpeed   = 2.2f;   // idle circling near the cargo it is eyeing
+        public const float ThiefSprintSpeed   = 7.5f;   // the dash once something hits the floor
+        public const float ThiefLoiterRadius  = 5f;     // how far out it circles while waiting
+        public const float ThiefGrabRange     = 1.4f;   // close enough to snatch
+        public const float ThiefRestSpeed     = 0.9f;   // cargo slower than this counts as "landed"
+        public const float ThiefSettleSeconds = 0.35f;  // …and it must stay that slow this long
+        public const float ThiefGiveUpSeconds = 26f;    // nothing dropped? wander off
+        public const float ThiefCarryHeight   = 1.1f;   // where the loot rides while it runs
+
         // ── Hazard director (spawns the roaming hazards during a haul) ──
         public const float HazardFirstDelay   = 18f;   // grace before the first hazard of the day
         public const float HazardInterval     = 30f;   // seconds between hazard spawns
