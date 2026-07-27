@@ -35,7 +35,7 @@ namespace SlopCo.Gameplay
 
         private void Update()
         {
-            if (!IsServer) return;
+            if (!IsServer || DisconnectVote.GameFrozen) return;
 
             if (_fleeT > 0f)
             {

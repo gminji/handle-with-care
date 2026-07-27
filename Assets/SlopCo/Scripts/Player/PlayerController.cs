@@ -190,6 +190,10 @@ namespace SlopCo.Player
         {
             if (!IsOwner || input == null) return;
 
+            // Run frozen for a disconnect vote: every owner (humans AND the host's bots) stops dead.
+            input.Frozen = SlopCo.Gameplay.DisconnectVote.GameFrozen;
+            if (input.Frozen) { PlanarVelocity = Vector3.zero; return; }
+
             // Viewpoint toggle (third ⇄ first). Persisted immediately so the choice survives the session.
             if (input.TogglePovPressed)
             {

@@ -76,6 +76,7 @@ namespace SlopCo.Gameplay
         {
             if (!IsServer) return;
             if (Phase.Value == RoundPhase.Lobby || Phase.Value == RoundPhase.GameOver) return;
+            if (DisconnectVote.GameFrozen) return;   // someone dropped — the crew is deciding whether to go on
 
             _phaseTimer -= Time.deltaTime;
             TimeRemaining.Value = Mathf.Max(0f, _phaseTimer);

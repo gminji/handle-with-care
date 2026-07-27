@@ -56,7 +56,7 @@ namespace SlopCo.Gameplay
 
         private void Update()
         {
-            if (!IsServer || !_running) return;
+            if (!IsServer || !_running || DisconnectVote.GameFrozen) return;
 
             _alive.RemoveAll(h => h == null || !h.IsSpawned);
             if (_alive.Count >= GameConstants.HazardMaxAlive) return;

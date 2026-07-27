@@ -122,6 +122,18 @@ namespace SlopCo.Core
             { "lobby.connected", new[]{ "CONNECTED", "접속됨", "接続済み", "已连接" } },
             { "lobby.offline",   new[]{ "OFFLINE", "오프라인", "オフライン", "离线" } },
 
+            // ── Disconnect vote (a player dropped mid-run) ──
+            { "dc.title",   new[]{ "A PLAYER DISCONNECTED", "플레이어 접속 끊김", "プレイヤーが切断しました", "有玩家掉线了" } },
+            { "dc.body",    new[]{ "The run is paused. {n} player(s) have dropped.\nKeep going, or call it a day?",
+                                   "게임을 일시정지했습니다. 지금까지 {n}명이 나갔습니다.\n계속할까요, 여기서 끝낼까요?",
+                                   "ゲームを一時停止しました。これまでに{n}人が退出。\n続けますか、それとも終了しますか？",
+                                   "游戏已暂停。目前有 {n} 名玩家掉线。\n继续，还是就此收工？" } },
+            { "dc.tally",   new[]{ "Keep going {keep}   ·   End run {end}", "계속 {keep}표   ·   종료 {end}표", "続行 {keep}票   ·   終了 {end}票", "继续 {keep}票   ·   结束 {end}票" } },
+            { "dc.timer",   new[]{ "Auto-continue in {s}s", "{s}초 후 자동으로 계속", "{s}秒後に自動で続行", "{s}秒后自动继续" } },
+            { "dc.waiting", new[]{ "(waiting for the others)", "(다른 사람 기다리는 중)", "(他の人を待っています)", "(等待其他人)" } },
+            { "dc.keep",    new[]{ "KEEP GOING", "계속하기", "続行", "继续" } },
+            { "dc.end",     new[]{ "END RUN", "게임 종료", "終了する", "结束本局" } },
+
             // ── HUD phase banner ──
             { "phase.lobby",    new[]{ "LOBBY", "로비", "ロビー", "大厅" } },
             { "phase.briefing", new[]{ "GET READY", "준비", "準備", "准备" } },

@@ -111,6 +111,9 @@ namespace SlopCo.Core
         public const float ThiefGiveUpSeconds = 26f;    // nothing dropped? wander off
         public const float ThiefCarryHeight   = 1.1f;   // where the loot rides while it runs
 
+        // ── Disconnect vote (a player dropped mid-run) ───────────
+        public const float DisconnectVoteSeconds = 20f;   // answer window; no answer = carry on
+
         // ── Hazard director (spawns the roaming hazards during a haul) ──
         public const float HazardFirstDelay   = 18f;   // grace before the first hazard of the day
         public const float HazardInterval     = 30f;   // seconds between hazard spawns

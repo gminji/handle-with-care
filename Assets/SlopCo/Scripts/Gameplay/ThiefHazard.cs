@@ -47,7 +47,7 @@ namespace SlopCo.Gameplay
 
         private void Update()
         {
-            if (!IsServer) return;
+            if (!IsServer || DisconnectVote.GameFrozen) return;
             _stageT += Time.deltaTime;
 
             switch (_stage)

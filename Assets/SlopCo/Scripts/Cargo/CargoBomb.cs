@@ -140,6 +140,8 @@ namespace SlopCo.Cargo
                 }
 
             if (!IsServer) return;
+            // A dropped player froze the run — the fuse waits too, or the vote itself would kill the crew.
+            if (SlopCo.Gameplay.DisconnectVote.GameFrozen) return;
             // Delivered to the van = defused: never blows once it is safely dropped off.
             if (_cargoItem != null && _cargoItem.State.Value == CarryState.Delivered) return;
 

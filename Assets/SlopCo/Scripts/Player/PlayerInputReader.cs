@@ -29,6 +29,11 @@ namespace SlopCo.Player
         /// (e.g. the ping/emote wheel) freeze the player WITHOUT dropping carried cargo. Owner-local.</summary>
         public bool Suppressed { get; set; }
 
+        /// <summary>Hard freeze — EVERY intent reads false/zero, including grab and kick. Used while the run
+        /// is paused for a disconnect vote, where <see cref="Suppressed"/> is too soft (it deliberately keeps
+        /// grab and kick alive). Carried cargo is unaffected: the server keeps the handle, nothing is dropped.</summary>
+        public bool Frozen { get; set; }
+
         private const float MaxThrowChargeTime = 1.2f;
 
         private InputAction _move, _jump, _grab, _throw, _dash, _useItem, _usePerm, _discard, _cycle, _pov, _kick;
@@ -107,6 +112,16 @@ namespace SlopCo.Player
 
         private void Update()
         {
+            // Hard freeze (disconnect vote): nobody — human or bot — acts until the crew decides.
+            if (Frozen)
+            {
+                Move = Vector2.zero; JumpPressed = false; GrabHeld = false; DashHeld = false;
+                UseConsumablePressed = false; UsePermanentPressed = false; DiscardPressed = false; CyclePressed = false;
+                TogglePovPressed = false; KickPressed = false;
+                ThrowReleasedThisFrame = false; ThrowCharge01 = 0f; _throwHeldTime = 0f;
+                return;
+            }
+
             // AI-driven (bot): pull intents from the brain, ignore physical devices entirely.
             if (_aiMode)
             {
