@@ -27,7 +27,13 @@ namespace SlopCo.Gameplay
     /// Convention — each map root must contain child holders named exactly:
     ///   "PlayerSpawns" (its children = player spawn points),
     ///   "DepotSpawns"  (its children = cargo/bomb spawn points),
-    ///   "VanAnchor"    (the pose the shared Van is moved to).
+    ///   "VanAnchor"    (the pose the shared Van is moved to), and optionally
+    ///   "VanAnchors"   (several candidate docks — the run picks one, so the haul length varies), and
+    ///   "ObstacleSlots" (candidate junk positions — a seeded subset is filled each run).
+    ///
+    /// Per-run variety rides on a single replicated <see cref="LayoutSeed"/>: every client feeds it to the
+    /// pure <see cref="MapLayout"/> and rebuilds the identical dock choice and obstacle field, so the
+    /// variety costs one int on the wire (the same trick <see cref="DailyModifier"/> plays with the day).
     /// Registered in ServiceLocator.
     /// </summary>
     public sealed class MapManager : NetworkBehaviour
@@ -36,9 +42,20 @@ namespace SlopCo.Gameplay
         [SerializeField] private CargoSpawner cargoSpawner;
         [SerializeField] private PlayerSpawner playerSpawner;
         [SerializeField] private Transform van;
+        [Header("Per-run obstacles")]
+        [Tooltip("Material for the generated obstacles. Unassigned = Unity's default (visible, just untinted).")]
+        [SerializeField] private Material obstacleMaterial;
+        [Tooltip("Roughly what share of the candidate slots fill each run, in percent.")]
+        [Range(0, 100)][SerializeField] private int obstacleDensity = 55;
 
         public readonly NetworkVariable<int> ActiveMap =
             new NetworkVariable<int>(0, NetworkVariableReadPermission.Everyone, NetworkVariableWritePermission.Server);
+
+        /// <summary>Server-rolled per-run layout seed: which van dock, and which obstacles are out.</summary>
+        public readonly NetworkVariable<int> LayoutSeed =
+            new NetworkVariable<int>(0, NetworkVariableReadPermission.Everyone, NetworkVariableWritePermission.Server);
+
+        private const string ObstacleRootName = "ObstaclesRuntime";
 
         public int MapCount => maps != null ? maps.Length : 0;
         public string MapNameKey(int i) => (maps != null && i >= 0 && i < maps.Length) ? maps[i].nameKey : string.Empty;
@@ -47,21 +64,34 @@ namespace SlopCo.Gameplay
         {
             ServiceLocator.Register(this);
             ActiveMap.OnValueChanged += HandleMapChanged;
-            if (IsServer) ActiveMap.Value = ResolveInitialMap();
+            LayoutSeed.OnValueChanged += HandleLayoutChanged;
+            if (IsServer)
+            {
+                ActiveMap.Value = ResolveInitialMap();
+                LayoutSeed.Value = NewSeed();
+            }
             Apply(ActiveMap.Value); // initial apply (also covers late-join clients)
         }
 
         public override void OnNetworkDespawn()
         {
             ActiveMap.OnValueChanged -= HandleMapChanged;
+            LayoutSeed.OnValueChanged -= HandleLayoutChanged;
             if (ServiceLocator.Get<MapManager>() == this) ServiceLocator.Unregister<MapManager>();
         }
 
-        /// <summary>SERVER. Re-pick the map (called on (re)start). Honors SelectedMap / random.</summary>
+        /// <summary>SERVER. Re-pick the map AND re-roll the layout (called on (re)start). Honors
+        /// SelectedMap / random. A fresh seed means a new dock distance and a new obstacle field even when
+        /// the crew replays the same map.</summary>
         public void RollMap()
         {
-            if (IsServer) ActiveMap.Value = ResolveInitialMap();
+            if (!IsServer) return;
+            ActiveMap.Value = ResolveInitialMap();
+            LayoutSeed.Value = NewSeed();
+            Apply(ActiveMap.Value);   // same-map restarts don't fire OnValueChanged, so re-apply explicitly
         }
+
+        private static int NewSeed() => UnityEngine.Random.Range(1, int.MaxValue);
 
         private int ResolveInitialMap()
         {
@@ -72,6 +102,7 @@ namespace SlopCo.Gameplay
         }
 
         private void HandleMapChanged(int _, int next) => Apply(next);
+        private void HandleLayoutChanged(int _, int __) => Apply(ActiveMap.Value);
 
         private void Apply(int idx)
         {
@@ -85,15 +116,82 @@ namespace SlopCo.Gameplay
             if (m == null || m.root == null) return;
             var rootT = m.root.transform;
 
-            var vanAnchor = rootT.Find("VanAnchor");
+            var vanAnchor = PickVanAnchor(rootT);
             if (van != null && vanAnchor != null)
                 van.SetPositionAndRotation(vanAnchor.position, vanAnchor.rotation);
+
+            BuildObstacles(rootT);
 
             var depot = ChildrenOf(rootT, "DepotSpawns");
             if (cargoSpawner != null && depot != null) cargoSpawner.SetDepotSpawnPoints(depot);
 
             var players = ChildrenOf(rootT, "PlayerSpawns");
             if (playerSpawner != null && players != null) playerSpawner.SetSpawnPoints(players);
+        }
+
+        // Which dock the van parks at this run. "VanAnchors" (plural) holds the candidates; a map that only
+        // ships the original single "VanAnchor" keeps its fixed distance, so this is backwards compatible.
+        private Transform PickVanAnchor(Transform rootT)
+        {
+            var multi = rootT.Find("VanAnchors");
+            if (multi != null && multi.childCount > 0)
+                return multi.GetChild(MapLayout.VanAnchorIndex(LayoutSeed.Value, multi.childCount));
+            return rootT.Find("VanAnchor");
+        }
+
+        // Fill a seeded subset of the map's candidate obstacle slots. Identical on every client (same seed →
+        // same result), so these are plain scene props: no NetworkObjects, no spawn traffic. Rebuilt from
+        // scratch on every apply, which is also how they get cleaned up when the map or seed changes.
+        private void BuildObstacles(Transform rootT)
+        {
+            var existing = rootT.Find(ObstacleRootName);
+            if (existing != null) DestroyImmediateSafe(existing.gameObject);
+
+            var slots = rootT.Find("ObstacleSlots");
+            if (slots == null || slots.childCount == 0) return;
+
+            var holder = new GameObject(ObstacleRootName);
+            holder.transform.SetParent(rootT, false);
+            holder.hideFlags = HideFlags.DontSave;   // runtime-only: never leaks into the saved scene
+
+            int seed = LayoutSeed.Value;
+            for (int i = 0; i < slots.childCount; i++)
+            {
+                if (!MapLayout.SlotActive(seed, i, obstacleDensity)) continue;
+                var slot = slots.GetChild(i);
+                var kind = MapLayout.KindFor(seed, i);
+                float s = MapLayout.ScaleFor(seed, i, 0.7f, 1.35f);
+
+                var go = GameObject.CreatePrimitive(kind == ObstacleKind.Crate ? PrimitiveType.Cube
+                                                  : kind == ObstacleKind.Barrier ? PrimitiveType.Cube
+                                                  : PrimitiveType.Cylinder);
+                go.name = kind + "_" + i;
+                go.transform.SetParent(holder.transform, false);
+                go.transform.SetPositionAndRotation(slot.position, Quaternion.Euler(0f, MapLayout.YawFor(seed, i), 0f));
+                go.transform.localScale = SizeOf(kind) * s;
+                go.transform.position += Vector3.up * (go.transform.localScale.y * 0.5f);
+
+                if (obstacleMaterial != null)
+                {
+                    var r = go.GetComponent<Renderer>();
+                    if (r != null) r.sharedMaterial = obstacleMaterial;
+                }
+            }
+        }
+
+        // Footprints chosen so nothing can fully plug the 1.5-wide bridge: everything is at most ~1.1 across
+        // at base scale, and the slots themselves are authored clear of the gate and bridge centreline.
+        private static Vector3 SizeOf(ObstacleKind kind) => kind switch
+        {
+            ObstacleKind.Crate   => new Vector3(0.9f, 0.9f, 0.9f),
+            ObstacleKind.Barrel  => new Vector3(0.8f, 0.55f, 0.8f),   // cylinder: y is half-height
+            ObstacleKind.Cone    => new Vector3(0.45f, 0.4f, 0.45f),
+            _                    => new Vector3(1.1f, 0.5f, 0.35f),   // low barrier — hop it or go around
+        };
+
+        private static void DestroyImmediateSafe(GameObject go)
+        {
+            if (Application.isPlaying) Destroy(go); else DestroyImmediate(go);
         }
 
         private static Transform[] ChildrenOf(Transform root, string holderName)
