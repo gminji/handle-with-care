@@ -34,6 +34,13 @@ namespace SlopCo.UI
         private readonly int[] _costState = new int[8];
         private int _lastCash = int.MinValue;
 
+        // ── Crew vote (online only) ──
+        private int _lastOffer = int.MinValue;   // OfferPacked we last built cards from
+        private int _lastVotes = int.MinValue;   // VotesPacked we last painted badges from
+        private int _myVote = -1;                // slot this client voted for (-1 = hasn't voted)
+        private int _revealSlot = -1;            // winning slot once the vote resolves (-1 = still open)
+        private Coroutine _reveal;
+
         private void Awake()
         {
             if (cardButtons != null)
@@ -48,12 +55,15 @@ namespace SlopCo.UI
         {
             RoundManager.OnPhaseChanged += HandlePhase;
             Localization.OnLanguageChanged += InvalidateLabels;
+            AugmentSystem.OnVoteResolved += HandleVoteResolved;
         }
 
         private void OnDisable()
         {
             RoundManager.OnPhaseChanged -= HandlePhase;
             Localization.OnLanguageChanged -= InvalidateLabels;
+            AugmentSystem.OnVoteResolved -= HandleVoteResolved;
+            StopReveal();
         }
 
         // RPC path: immediate roll on the phase-change cue.
@@ -78,6 +88,17 @@ namespace SlopCo.UI
         {
             var aug = ServiceLocator.Get<AugmentSystem>();
             var inv = LocalInventory();
+
+            // Online: the crew VOTES, so the three cards must be the server's offer — a locally rolled set
+            // would mean "slot 1" named a different augment on every screen. Solo/AI keeps the local mixed
+            // roll (augments + personal permanents) and buys on click, which is what the player asked for.
+            if (AugmentSystem.VotingMode)
+            {
+                _myVote = -1;
+                _revealSlot = -1;
+                ApplyServerOffer(aug);
+                return;
+            }
 
             // Mixed pool of (isItem, id) — choices the buyer does not already own.
             var poolId = new System.Collections.Generic.List<int>();
@@ -142,6 +163,8 @@ namespace SlopCo.UI
             if (panel == null || !panel.activeSelf) return;
             var aug = ServiceLocator.Get<AugmentSystem>();
             var quota = ServiceLocator.Get<QuotaSystem>();
+            if (AugmentSystem.VotingMode) { UpdateVoting(aug, quota); return; }
+
             var inv = LocalInventory();
             int cash = quota != null ? quota.Cash.Value : 0;
             for (int i = 0; i < _offerCount; i++)
@@ -189,8 +212,153 @@ namespace SlopCo.UI
         private void Buy(int slot)
         {
             if (slot < 0 || slot >= _offerCount) return;
+
+            // Online: a click is a BALLOT, not a purchase — the server buys whatever the crew lands on.
+            if (AugmentSystem.VotingMode)
+            {
+                if (_revealSlot >= 0) return;               // vote already decided
+                _myVote = slot;
+                _lastVotes = int.MinValue;                  // force the badges to repaint
+                ServiceLocator.Get<AugmentSystem>()?.SubmitVoteRpc(slot);
+                return;
+            }
+
             if (_offeredIsItem[slot]) LocalInventory()?.RequestBuyPermanentRpc(_offered[slot]);
             else ServiceLocator.Get<AugmentSystem>()?.RequestBuyRpc(_offered[slot]);
+        }
+
+        // ── Crew vote mode ────────────────────────────────────────────────
+
+        // Rebuild the cards from the server's offer. Called on the phase cue and again whenever OfferPacked
+        // changes, because the replicated value can land a frame or two after the phase RPC.
+        private void ApplyServerOffer(AugmentSystem aug)
+        {
+            int packed = aug != null ? aug.OfferPacked.Value : 0;
+            _lastOffer = packed;
+            int n = Mathf.Min(AugmentOffer.Count(packed), _offered.Length);
+            if (cardButtons != null) n = Mathf.Min(n, cardButtons.Length);
+            _offerCount = n;
+            for (int i = 0; i < n; i++)
+            {
+                _offered[i] = AugmentOffer.Slot(packed, i);
+                _offeredIsItem[i] = false;                  // the crew vote is augments only
+            }
+            InvalidateLabels();
+            ResetCardScales();
+        }
+
+        private void UpdateVoting(AugmentSystem aug, QuotaSystem quota)
+        {
+            if (aug == null) return;
+            if (aug.OfferPacked.Value != _lastOffer) ApplyServerOffer(aug);
+
+            int votes = aug.VotesPacked.Value;
+            int cash = quota != null ? quota.Cash.Value : 0;
+            if (votes != _lastVotes || cash != _lastCash)
+            {
+                _lastVotes = votes;
+                _lastCash = cash;
+                PaintVoteLabels(votes, cash);
+            }
+
+            for (int i = 0; i < _offerCount; i++)
+                if (cardButtons[i] != null) cardButtons[i].interactable = _revealSlot < 0;
+        }
+
+        private void PaintVoteLabels(int votes, int cash)
+        {
+            if (titleText != null)
+                titleText.text = Localization.Get("vote.title")
+                               + "\n<size=20>" + Localization.Get("shop.cash").Replace("{cash}", cash.ToString())
+                               + "   ·   " + Localization.Get("vote.hint") + "</size>";
+
+            for (int i = 0; i < _offerCount; i++)
+            {
+                if (cardCostTexts == null || i >= cardCostTexts.Length || cardCostTexts[i] == null) continue;
+                var a = AugmentSystem.Get(_offered[i]);
+                int n = Mathf.Max(0, AugmentOffer.Slot(votes, i));
+                string line = "$" + a.cost + "   " + Localization.Get("vote.tally").Replace("{n}", n.ToString());
+                if (i == _myVote) line += "   " + Localization.Get("vote.mine");
+                cardCostTexts[i].text = line;
+                cardCostTexts[i].color = i == _myVote ? new Color(1f, 0.9f, 0.35f)
+                                       : cash >= a.cost ? new Color(0.5f, 1f, 0.55f)
+                                       : new Color(1f, 0.45f, 0.40f);
+            }
+        }
+
+        private void HandleVoteResolved(int slot, int augmentId, bool wasTie, bool bought)
+        {
+            if (!AugmentSystem.VotingMode) return;
+            _revealSlot = slot;
+            StopReveal();
+            _reveal = StartCoroutine(RevealRoutine(slot, wasTie, bought));
+        }
+
+        // The decision animation: a highlight sweeps across the cards, slows down, and lands on the winner,
+        // which then pops. A tie says so out loud — otherwise a random pick reads as the game misreading votes.
+        private System.Collections.IEnumerator RevealRoutine(int slot, bool wasTie, bool bought)
+        {
+            if (_offerCount <= 0) yield break;
+
+            if (slot < 0)   // nobody voted
+            {
+                if (titleText != null) titleText.text = Localization.Get("vote.title") + "\n<size=22>" + Localization.Get("vote.none") + "</size>";
+                yield break;
+            }
+
+            float t = 0f, step = 0.06f;
+            int cursor = 0;
+            while (t < GameConstants.VoteSpinSeconds)
+            {
+                HighlightOnly(cursor % _offerCount);
+                cursor++;
+                yield return new WaitForSecondsRealtime(step);
+                t += step;
+                step *= 1.12f;                               // decelerate into the result
+            }
+
+            // Land on the winner and hold it there.
+            HighlightOnly(slot);
+            if (titleText != null)
+            {
+                string headline = wasTie ? Localization.Get("vote.tie") : Localization.Get("vote.won");
+                if (!bought) headline += "  ·  " + Localization.Get("vote.broke");
+                titleText.text = Localization.Get("vote.title") + "\n<size=24>" + headline + "</size>";
+            }
+
+            // A short scale pop on the winning card.
+            var rt = cardButtons != null && slot < cardButtons.Length && cardButtons[slot] != null
+                   ? cardButtons[slot].transform as RectTransform : null;
+            for (float p = 0f; p < 0.45f && rt != null; p += Time.unscaledDeltaTime)
+            {
+                float k = 1f + 0.18f * Mathf.Sin(p / 0.45f * Mathf.PI);
+                rt.localScale = Vector3.one * k;
+                yield return null;
+            }
+            if (rt != null) rt.localScale = Vector3.one * 1.08f;
+        }
+
+        private void HighlightOnly(int slot)
+        {
+            if (cardButtons == null) return;
+            for (int i = 0; i < _offerCount && i < cardButtons.Length; i++)
+            {
+                if (cardButtons[i] == null) continue;
+                var rt = cardButtons[i].transform as RectTransform;
+                if (rt != null) rt.localScale = Vector3.one * (i == slot ? 1.08f : 0.94f);
+            }
+        }
+
+        private void ResetCardScales()
+        {
+            if (cardButtons == null) return;
+            foreach (var b in cardButtons)
+                if (b != null) b.transform.localScale = Vector3.one;
+        }
+
+        private void StopReveal()
+        {
+            if (_reveal != null) { StopCoroutine(_reveal); _reveal = null; }
         }
 
         private static void Set(Text[] arr, int i, string s)

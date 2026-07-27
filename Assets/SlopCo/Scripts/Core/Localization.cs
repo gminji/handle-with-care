@@ -201,6 +201,16 @@ namespace SlopCo.Core
             { "shop.cash",       new[]{ "CASH ${cash}", "보유 ${cash}", "所持 ${cash}", "持有 ${cash}" } },
             { "shop.short",      new[]{ "(NOT ENOUGH)", "(잔액 부족)", "(残高不足)", "(余额不足)" } },
             { "shop.owned",      new[]{ "OWNED", "보유 중", "所持済み", "已拥有" } },
+
+            // ── Crew augment vote (online) ──
+            { "vote.title",  new[]{ "CREW VOTE — AUGMENT", "크루 투표 — 증강", "クルー投票 — オーグメント", "队伍投票 — 增强" } },
+            { "vote.hint",   new[]{ "Pick one — most votes wins, ties are random", "하나 고르세요 — 최다 득표, 동표는 랜덤", "一つ選ぼう — 最多得票、同票はランダム", "选一个 — 得票最多者胜，平票随机" } },
+            { "vote.tally",  new[]{ "{n} votes", "{n}표", "{n}票", "{n}票" } },
+            { "vote.mine",   new[]{ "YOUR PICK", "내 선택", "あなたの選択", "你的选择" } },
+            { "vote.tie",    new[]{ "TIE — RANDOM!", "동표 — 랜덤!", "同票 — ランダム！", "平票 — 随机！" } },
+            { "vote.won",    new[]{ "CREW PICKED THIS", "크루가 선택함", "クルーが選択", "队伍选择了这个" } },
+            { "vote.broke",  new[]{ "NOT ENOUGH CASH", "현금 부족", "資金不足", "现金不足" } },
+            { "vote.none",   new[]{ "NOBODY VOTED", "아무도 투표하지 않음", "誰も投票しなかった", "无人投票" } },
             { "aug.light.name",  new[]{ "Lighter Load", "가벼운 짐", "軽い荷物", "轻装" } },
             { "aug.light.desc",  new[]{ "Carry 35% faster — but RATS chase you!", "운반 35% 빠름 — 대신 쥐가 쫓아옴!", "運搬35%速く — ただしネズミが追う！", "搬运快35% — 但老鼠会追你！" } },
             { "aug.adr.name",    new[]{ "Adrenaline", "아드레날린", "アドレナリン", "肾上腺素" } },

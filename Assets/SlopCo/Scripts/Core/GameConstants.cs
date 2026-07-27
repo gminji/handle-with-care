@@ -151,6 +151,10 @@ namespace SlopCo.Core
         // ── Augments (roguelite shop) ───────────────────────────
         public const float PayoutWindowSeconds = 9f;  // extended Payout so the between-round shop is browsable
         public const int AugmentShopChoices = 3;       // cards offered each visit
+        // Online only: the crew VOTES on the augment. The ballot closes this many seconds before the Payout
+        // window ends so the reveal animation plays while the shop panel is still up.
+        public const float VoteRevealSeconds = 3.2f;
+        public const float VoteSpinSeconds   = 1.7f;   // roulette sweep before it settles on the winner
 
         // ── Delivery combo (the chase) ──────────────────────────
         public const float ComboWindowSeconds = 6f;   // deliver again within this to keep the chain alive
