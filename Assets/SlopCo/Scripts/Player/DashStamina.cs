@@ -56,6 +56,22 @@ namespace SlopCo.Player
         public static float SpeedMult(DashState s, float dashMult)
             => s.exhausted ? 0f : (s.dashing ? dashMult : 1f);
 
+        /// <summary>Remove stamina (e.g. slamming into the ground after a UFO drops you). Draining the gauge
+        /// to empty triggers the same forced-stop exhaustion a dash burnout does — the punchline of the fall.</summary>
+        public static DashState Drain(DashState s, float amount01, float exhaustSeconds)
+        {
+            if (amount01 <= 0f) return s;
+            s.gauge = Clamp01(s.gauge - amount01);
+            if (s.gauge <= 0f && !s.exhausted)
+            {
+                s.gauge = 0f;
+                s.exhausted = true;
+                s.exhaustT = exhaustSeconds;
+                s.dashing = false;
+            }
+            return s;
+        }
+
         /// <summary>Add stamina (e.g. an item refill). Clears exhaustion once the gauge is back above zero.</summary>
         public static DashState Refill(DashState s, float amount01)
         {

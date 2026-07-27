@@ -109,6 +109,7 @@ namespace SlopCo.Gameplay
         {
             cargoSpawner?.SpawnRoundCargo();
             ServiceLocator.Get<AugmentSystem>()?.SpawnRatsIfNeeded(); // augment hazard, this round
+            ServiceLocator.Get<HazardDirector>()?.BeginHaul();        // roaming hazards (UFO / thief)
             _bombsToDeliver = cargoSpawner != null ? cargoSpawner.LastSpawnCount : 0;
             _bombsDelivered = 0;
             SetPhase(RoundPhase.Hauling, GameConstants.HaulSeconds);
@@ -118,6 +119,7 @@ namespace SlopCo.Gameplay
         {
             cargoSpawner?.ClearRemainingCargo();
             ServiceLocator.Get<AugmentSystem>()?.ClearRats(); // hazards gone during the shop beat
+            ServiceLocator.Get<HazardDirector>()?.ClearHazards();
             _payoutMet = (cargoSpawner != null && cargoSpawner.BombMode)
                 ? _bombsDelivered >= _bombsToDeliver
                 : quota != null && quota.EvaluateQuota();
@@ -140,6 +142,9 @@ namespace SlopCo.Gameplay
 
         private void SetPhase(RoundPhase phase, float duration)
         {
+            // A run can end mid-haul (detonation), so sweep the roaming hazards here rather than only at Payout.
+            if (phase == RoundPhase.GameOver || phase == RoundPhase.Lobby)
+                ServiceLocator.Get<HazardDirector>()?.ClearHazards();
             Phase.Value = phase;
             _phaseTimer = duration;
             TimeRemaining.Value = duration;

@@ -290,6 +290,7 @@ GameObject:
   - component: {fileID: 32739789}
   - component: {fileID: 32739790}
   - component: {fileID: 32739791}
+  - component: {fileID: 32739792}
   m_Layer: 0
   m_Name: GameSystems
   m_TagString: Untagged
@@ -479,6 +480,22 @@ MonoBehaviour:
   ShowTopMostFoldoutHeaderGroup: 1
   capsulePrefab: {fileID: 849232363243287076, guid: 324a8834f47a76f48be37f1e6e453936, type: 3}
   destination: {fileID: 1905822702}
+--- !u!114 &32739792
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 32739780}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 34768825d2240e34eb5ddf9f85f7c70a, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: SlopCo::SlopCo.Gameplay.HazardDirector
+  ShowTopMostFoldoutHeaderGroup: 1
+  ufoPrefab: {fileID: 7426178446995419927, guid: 70892171a3c340d4093d9ff563acd240, type: 3}
+  thiefPrefab: {fileID: 0}
+  entryPoints: []
 --- !u!134 &36394328
 PhysicsMaterial:
   m_ObjectHideFlags: 0
@@ -6536,6 +6553,8 @@ MonoBehaviour:
   phaseWin: {fileID: 8300000, guid: e0e0bb299cc1c214393368de356fd7c9, type: 3}
   phaseFail: {fileID: 8300000, guid: 9713137a4b9a8714f919e0e152ad8519, type: 3}
   grab: {fileID: 8300000, guid: ed959ad66c394ed4a9ea327742a3f1b1, type: 3}
+  kickHit: {fileID: 0}
+  kickWhiff: {fileID: 0}
   uiClick: {fileID: 8300000, guid: 007a8491ab38706448f77ce6838a61bf, type: 3}
   ping: {fileID: 0}
   emote: {fileID: 0}

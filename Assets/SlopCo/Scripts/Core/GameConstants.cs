@@ -85,6 +85,27 @@ namespace SlopCo.Core
         public const float KickShakeVictim = 0.45f;  // screen shake on the player who got booted
         public const float KickShakeKicker = 0.12f;  // lighter feedback for the kicker
 
+        // ── UFO hazard (abduct → drop) ───────────────────────────
+        // The saucer is server-driven, but the abduction itself runs on the VICTIM'S owner (same
+        // CharacterController constraint as the kick/blast shove). Timing lives in AbductionMath.
+        public const float UfoCruiseHeight    = 11f;   // hover altitude while hunting
+        public const float UfoMoveSpeed       = 7f;    // horizontal chase speed
+        public const float UfoCatchRadius     = 3.2f;  // planar distance at which the beam locks on
+        public const float UfoLiftSeconds     = 1.6f;  // beam-up duration
+        public const float UfoHoldSeconds     = 1.4f;  // dangling under the saucer before the drop
+        public const float UfoCarryGap        = 2.6f;  // how far below the hull the victim hangs
+        public const float UfoLeaveSeconds    = 3f;    // climb-out time after a drop (or a kick)
+        public const float UfoHuntSeconds     = 14f;   // give up and leave if nobody gets caught
+        // Landing cost: short hops are free, a full sky-drop nearly empties the gauge.
+        public const float FallFreeHeight     = 2.5f;
+        public const float FallStaminaPerMetre= 0.085f;
+        public const float FallStaminaMax     = 0.9f;
+
+        // ── Hazard director (spawns the roaming hazards during a haul) ──
+        public const float HazardFirstDelay   = 18f;   // grace before the first hazard of the day
+        public const float HazardInterval     = 30f;   // seconds between hazard spawns
+        public const int   HazardMaxAlive     = 2;     // concurrent roaming hazards
+
         // ── Carry / co-carry (PD force controller, server-side) ──
         public const float CarryGrabRadius = 1.6f;        // generous server grab tolerance
         public const float CarryPD_Spring = 600f;         // kp

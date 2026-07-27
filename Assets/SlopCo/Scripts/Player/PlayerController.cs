@@ -50,6 +50,39 @@ namespace SlopCo.Player
             ScreenShake.Add(GameConstants.KickShakeVictim);
         }
 
+        /// <summary>OWNER. A UFO has us in its beam. The server picked the victim and already made us drop any
+        /// cargo; the lift/hold/drop itself runs here because only the owner may move this CharacterController.
+        /// Passing the saucer by reference (not a fixed point) keeps us hanging under it as it drifts.</summary>
+        [Rpc(SendTo.Owner)]
+        public void BeginAbductionRpc(NetworkObjectReference ufo)
+        {
+            if (!ufo.TryGet(out var ufoObj)) return;
+            _abductor = ufoObj.transform;
+            _abductT = 0f;
+            _abductStartY = transform.position.y;
+            _falling = false;
+            _shoveVel = Vector3.zero;   // a shove mid-beam would fight the lift
+        }
+
+        /// <summary>OWNER. Beam cut early (the saucer was kicked or despawned) — drop from wherever we are.</summary>
+        [Rpc(SendTo.Owner)]
+        public void EndAbductionRpc() => ReleaseFromBeam();
+
+        private void ReleaseFromBeam()
+        {
+            if (_abductor == null) return;
+            _abductor = null;
+            _abductT = 0f;
+            _verticalVel = 0f;                       // let gravity take over from a standstill
+            _falling = true;
+            _fallPeakY = transform.position.y;
+            if (input != null && _beamSuppressedInput) { input.Suppressed = false; _beamSuppressedInput = false; }
+        }
+
+        /// <summary>True while a saucer has this player off the ground — the HUD/AI can read it, and the
+        /// hazard checks it so two UFOs never fight over the same victim.</summary>
+        public bool IsAbducted => _abductor != null;
+
         /// <summary>OWNER. Apply an item effect locally — a timed speed buff or an instant stamina refill.</summary>
         [Rpc(SendTo.Owner)]
         public void ApplyItemEffectRpc(bool isSpeed, float magnitude, float duration)
@@ -79,6 +112,14 @@ namespace SlopCo.Player
         private DashState _dash = DashStamina.Initial; // owner-local dash stamina (NetworkTransform replicates the resulting motion)
         private float _itemBuffMult = 1f, _itemBuffT = 0f; // owner-local temporary speed buff from items
         private bool _fpHidden;   // are our own renderers currently hidden for the first-person view?
+
+        // ── UFO abduction (owner-local; the server only decides WHO gets taken) ──
+        private Transform _abductor;     // the saucer we are hanging from (null = not abducted)
+        private float _abductT;          // seconds into the abduction
+        private float _abductStartY;     // ground height we were plucked from
+        private bool  _falling;          // released and on the way down — waiting to measure the landing
+        private float _fallPeakY;
+        private bool  _beamSuppressedInput;   // only WE may clear Suppressed, never someone else's overlay
 
         /// <summary>SERVER. Flag this instance as an AI bot BEFORE <c>NetworkObject.Spawn()</c> so
         /// OnNetworkSpawn drives it with an <see cref="AiBrain"/> instead of physical input.</summary>
@@ -156,6 +197,9 @@ namespace SlopCo.Player
                 SettingsManager.Save();
             }
 
+            // Off the ground in a tractor beam: the saucer owns our motion until it lets go.
+            if (_abductor != null) { TickAbduction(); return; }
+
             if (inventory != null)
             {
                 if (input.UseConsumablePressed) inventory.RequestUseConsumableRpc();
@@ -199,6 +243,7 @@ namespace SlopCo.Player
             _cc.Move((velocity + _shoveVel) * Time.deltaTime);
             _shoveVel = Vector3.MoveTowards(_shoveVel, Vector3.zero, GameConstants.BlastKnockbackDecay * Time.deltaTime);
             PlanarVelocity = new Vector3(horizontal.x, 0f, horizontal.z);
+            TrackLanding();
 
             if (horizontal.sqrMagnitude > 0.01f)
             {
@@ -230,6 +275,44 @@ namespace SlopCo.Player
             ScreenShake.Sample(Time.deltaTime, out Vector2 shakeOff, out float roll);
             _cam.transform.position += _cam.transform.right * shakeOff.x + _cam.transform.up * shakeOff.y;
             _cam.transform.rotation *= Quaternion.Euler(0f, 0f, roll);
+        }
+
+        // OWNER. One frame of the beam: rise toward the saucer, hang under it, then get dropped.
+        private void TickAbduction()
+        {
+            if (input != null) { input.Suppressed = true; _beamSuppressedInput = true; }
+            _abductT += Time.deltaTime;
+
+            var phase = SlopCo.Gameplay.AbductionMath.Phase(_abductT, GameConstants.UfoLiftSeconds, GameConstants.UfoHoldSeconds);
+            if (phase == SlopCo.Gameplay.AbductPhase.Done) { ReleaseFromBeam(); return; }
+
+            Vector3 hang = _abductor.position - Vector3.up * GameConstants.UfoCarryGap;
+            Vector3 here = transform.position;
+            Vector3 target = phase == SlopCo.Gameplay.AbductPhase.Lift
+                ? Vector3.Lerp(new Vector3(here.x, _abductStartY, here.z), hang,
+                               SlopCo.Gameplay.AbductionMath.LiftT(_abductT, GameConstants.UfoLiftSeconds))
+                : hang;
+
+            _cc.Move(target - here);
+            _verticalVel = 0f;
+            PlanarVelocity = Vector3.zero;
+        }
+
+        // OWNER. Measure the drop and bill the landing to stamina — the whole point of being abducted.
+        private void TrackLanding()
+        {
+            if (!_falling) return;
+            float y = transform.position.y;
+            if (y > _fallPeakY) _fallPeakY = y;
+            if (!_cc.isGrounded) return;
+
+            _falling = false;
+            float drop = _fallPeakY - y;
+            float cost = SlopCo.Gameplay.AbductionMath.StaminaPenalty(drop, GameConstants.FallFreeHeight,
+                             GameConstants.FallStaminaPerMetre, GameConstants.FallStaminaMax);
+            if (cost <= 0f) return;
+            _dash = DashStamina.Drain(_dash, cost, GameConstants.DashExhaustSeconds);
+            ScreenShake.Add(Mathf.Clamp(cost, 0.2f, 0.8f));
         }
 
         // First person: hide OUR OWN character mesh so the head/torso doesn't fill the view. Local-only —

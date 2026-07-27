@@ -157,12 +157,14 @@ namespace SlopCo.Player
             if (Suppressed)
             {
                 // Freeze locomotion/throw for a transient overlay (ping/emote wheel) but KEEP GrabHeld so the
-                // player never drops carried cargo merely by opening the wheel.
+                // player never drops carried cargo merely by opening the wheel. KICK also stays live: being
+                // suppressed is exactly the state you're in while a UFO has you, and kicking the saucer is
+                // the way out.
                 Move = Vector2.zero;
                 JumpPressed = false;
                 DashHeld = false;
                 UseConsumablePressed = false; UsePermanentPressed = false; DiscardPressed = false; CyclePressed = false;
-                TogglePovPressed = false; KickPressed = false;
+                TogglePovPressed = false;
                 ThrowReleasedThisFrame = false;
                 ThrowCharge01 = 0f;
                 _throwHeldTime = 0f;
