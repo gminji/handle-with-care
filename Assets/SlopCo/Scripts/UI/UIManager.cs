@@ -59,7 +59,10 @@ namespace SlopCo.UI
         // ── Button hooks ───────────────────────────────────────
         // Mode buttons no longer start immediately: they record the intent and open the map picker.
         // Choosing a map then launches the pending mode (see ChooseMap).
-        public void OnPlay()       { _pending = PendingMode.Online; ShowMapSelect(); }
+        /// <summary>Online: match FIRST, pick the map together after. Going through the menu's map picker
+        /// before anyone has connected would let the host decide for a crew that isn't in the room yet — the
+        /// map is now a crew vote in the lobby (see <see cref="MapSelectUI"/>).</summary>
+        public void OnPlay()       { _pending = PendingMode.None; EnterOnlineLobby(); }
 
         /// <summary>Single-player: solo-tuned, host yourself — after picking a map.</summary>
         public void OnPlaySolo()   { _pending = PendingMode.Solo;   ShowMapSelect(); }
@@ -201,8 +204,12 @@ namespace SlopCo.UI
         private void Apply()
         {
             bool mainMenu = _screen == Screen.MainMenu;
-            if (mainMenuPanel != null) mainMenuPanel.SetActive(mainMenu && !_options && !_controls && !_help && !_mapSelect);
-            if (mapSelectPanel != null) mapSelectPanel.SetActive(mainMenu && _mapSelect && !_options && !_controls && !_help);
+            // Online lobby: the same picker doubles as the crew's map vote, so it is also up on the Lobby
+            // screen (MapSelectUI moves itself out of the lobby card's way while voting).
+            bool crewMapVote = _screen == Screen.Lobby && ServiceLocator.Get<MapManager>()?.CrewVoteActive == true;
+            bool overlayUp = _options || _controls || _help;
+            if (mainMenuPanel != null) mainMenuPanel.SetActive(mainMenu && !overlayUp && !_mapSelect);
+            if (mapSelectPanel != null) mapSelectPanel.SetActive(!overlayUp && ((mainMenu && _mapSelect) || crewMapVote));
             if (lobbyPanel != null)    lobbyPanel.SetActive(_screen == Screen.Lobby && !_options && !_help);
             if (hudRoot != null)       hudRoot.SetActive(_screen == Screen.InGame);
             if (optionsPanel != null)  optionsPanel.SetActive(_options);

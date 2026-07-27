@@ -5,12 +5,16 @@ namespace SlopCo.Gameplay
     /// project's established <c>NetworkVariable&lt;int&gt;</c> pattern instead of introducing a NetworkList.
     /// Pure bit twiddling — EditMode-testable, no UnityEngine dependency.
     ///
-    /// Layout: 3 slots × 8 bits. A slot holds <c>value + 1</c> so 0 reads as "empty", which also makes the
+    /// Layout: 4 slots × 8 bits. A slot holds <c>value + 1</c> so 0 reads as "empty", which also makes the
     /// default value of a fresh NetworkVariable (0) mean "no offer yet".
+    ///
+    /// Also used for the MAP vote tally (<see cref="MapManager"/>) — same shape, same wire cost. Four slots
+    /// is the hard ceiling; a build shipping more than four maps must widen this (MapManager logs and falls
+    /// back to a random map rather than silently dropping the extra options).
     /// </summary>
     public static class AugmentOffer
     {
-        public const int MaxSlots = 3;
+        public const int MaxSlots = 4;
 
         /// <summary>Pack up to <see cref="MaxSlots"/> small non-negative values (ids or counts).</summary>
         public static int Pack(int[] values, int count)

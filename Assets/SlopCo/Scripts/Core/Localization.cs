@@ -263,6 +263,7 @@ namespace SlopCo.Core
 
             // ── Map select ──
             { "map.select", new[]{ "MAP", "맵", "マップ", "地图" } },
+            { "map.vote",   new[]{ "VOTE: MAP", "맵 투표", "マップ投票", "地图投票" } },
             { "map.random", new[]{ "RANDOM", "랜덤", "ランダム", "随机" } },
             { "map.0",      new[]{ "DEPOT", "디포", "デポ", "仓库" } },
             { "map.1",      new[]{ "YARD", "야드", "ヤード", "货场" } },

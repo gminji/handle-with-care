@@ -55,7 +55,62 @@ namespace SlopCo.Gameplay
         public readonly NetworkVariable<int> LayoutSeed =
             new NetworkVariable<int>(0, NetworkVariableReadPermission.Everyone, NetworkVariableWritePermission.Server);
 
+        /// <summary>Live map-vote tally, packed by <see cref="AugmentOffer"/> (slot = map index).</summary>
+        public readonly NetworkVariable<int> MapVotesPacked =
+            new NetworkVariable<int>(0, NetworkVariableReadPermission.Everyone, NetworkVariableWritePermission.Server);
+
+        private readonly System.Collections.Generic.Dictionary<ulong, int> _mapBallots = new();
+        private bool _warnedTooManyMaps;
+
         private const string ObstacleRootName = "ObstaclesRuntime";
+
+        /// <summary>True while the connected crew should be picking the map together: online only (solo,
+        /// co-op-with-AI and the tutorial keep the pick-then-launch menu flow), sitting in the lobby, with a
+        /// votable number of maps. Both the shell (which panel to show) and the picker read this, so there
+        /// is one definition of "the crew is voting".</summary>
+        public bool CrewVoteActive
+        {
+            get
+            {
+                if (!IsSpawned) return false;
+                if (GameModeState.Solo || GameModeState.WithAi || GameModeState.Tutorial) return false;
+                var rm = ServiceLocator.Get<RoundManager>();
+                if (rm == null || rm.Phase.Value != RoundPhase.Lobby) return false;
+                if (MapCount < 2) return false;
+                if (MapCount > AugmentOffer.MaxSlots)
+                {
+                    if (!_warnedTooManyMaps)
+                    {
+                        _warnedTooManyMaps = true;
+                        Debug.LogWarning($"[MapManager] {MapCount} maps exceeds the {AugmentOffer.MaxSlots}-slot vote tally; " +
+                                         "the crew map vote is disabled and the map will be rolled at random.");
+                    }
+                    return false;
+                }
+                return true;
+            }
+        }
+
+        /// <summary>Votes currently cast for a map (0 when none).</summary>
+        public int VotesFor(int mapIndex) => Mathf.Max(0, AugmentOffer.Slot(MapVotesPacked.Value, mapIndex));
+
+        /// <summary>SERVER (via client request). Cast or change this client's map vote.</summary>
+        [Rpc(SendTo.Server)]
+        public void SubmitMapVoteRpc(int mapIndex, RpcParams rpcParams = default)
+        {
+            if (!CrewVoteActive) return;
+            if (mapIndex < 0 || mapIndex >= MapCount || mapIndex >= AugmentOffer.MaxSlots) return;
+            _mapBallots[rpcParams.Receive.SenderClientId] = mapIndex;   // re-voting replaces
+            PublishMapVotes();
+        }
+
+        private void PublishMapVotes()
+        {
+            var counts = new int[AugmentOffer.MaxSlots];
+            foreach (var kv in _mapBallots)
+                if (kv.Value >= 0 && kv.Value < counts.Length) counts[kv.Value]++;
+            MapVotesPacked.Value = AugmentOffer.Pack(counts, counts.Length);
+        }
 
         public int MapCount => maps != null ? maps.Length : 0;
         public string MapNameKey(int i) => (maps != null && i >= 0 && i < maps.Length) ? maps[i].nameKey : string.Empty;
@@ -97,6 +152,21 @@ namespace SlopCo.Gameplay
         {
             int n = MapCount;
             if (n <= 0) return 0;
+
+            // Online: the crew voted in the lobby, so their ballot beats whatever the menu had selected.
+            // Ties go to a seeded random pick, decided here on the server and replicated as ActiveMap.
+            if (_mapBallots.Count > 0)
+            {
+                var counts = new int[AugmentOffer.MaxSlots];
+                foreach (var kv in _mapBallots)
+                    if (kv.Value >= 0 && kv.Value < counts.Length) counts[kv.Value]++;
+                uint seed = (uint)(MapVotesPacked.Value * 2654435761u + (uint)_mapBallots.Count);
+                int won = VoteTally.Resolve(counts, seed);
+                _mapBallots.Clear();
+                PublishMapVotes();
+                if (won >= 0 && won < n) return won;
+            }
+
             int sel = GameModeState.SelectedMap;
             return (sel < 0 || sel >= n) ? UnityEngine.Random.Range(0, n) : sel; // -1 / OOB = random
         }

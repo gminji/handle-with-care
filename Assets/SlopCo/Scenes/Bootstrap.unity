@@ -2026,7 +2026,7 @@ RectTransform:
   m_AnchorMin: {x: 0, y: 1}
   m_AnchorMax: {x: 0, y: 1}
   m_AnchoredPosition: {x: 40, y: -40}
-  m_SizeDelta: {x: 380, y: 12}
+  m_SizeDelta: {x: 380, y: 0}
   m_Pivot: {x: 0, y: 1}
 --- !u!114 &142712232
 MonoBehaviour:
@@ -4372,6 +4372,7 @@ MonoBehaviour:
   - {fileID: 1392688574}
   - {fileID: 1206175207}
   randomButton: {fileID: 957210219}
+  titleText: {fileID: 188529930}
 --- !u!1 &359320795
 GameObject:
   m_ObjectHideFlags: 0
