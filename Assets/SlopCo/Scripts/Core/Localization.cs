@@ -86,6 +86,9 @@ namespace SlopCo.Core
             { "opt.quality",    new[]{ "Quality", "품질", "品質", "画质" } },
             { "opt.resolution", new[]{ "Resolution", "해상도", "解像度", "分辨率" } },
             { "opt.language",   new[]{ "Language", "언어", "言語", "语言" } },
+            { "opt.pov",        new[]{ "Camera", "시점", "視点", "视角" } },
+            { "pov.third",      new[]{ "THIRD", "3인칭", "三人称", "第三人称" } },
+            { "pov.first",      new[]{ "FIRST", "1인칭", "一人称", "第一人称" } },
             { "opt.back",       new[]{ "BACK", "뒤로", "戻る", "返回" } },
 
             // ── Pause ──
@@ -96,10 +99,10 @@ namespace SlopCo.Core
             // ── Controls ──
             { "controls.title", new[]{ "CONTROLS", "조작법", "操作方法", "操作说明" } },
             { "controls.body",  new[]{
-                "WASD / Left Stick     Move\n\nE / Right Bumper     Grab & hold  (carry big items WITH a friend)\n\nLeft Mouse / Right Trigger     Throw  (hold to charge)\n\nSpace / A     Jump\n\nESC     Pause",
-                "WASD / 왼쪽 스틱     이동\n\nE / RB     잡기 (큰 짐은 친구와 함께)\n\n마우스 좌클릭 / RT     던지기 (꾹 눌러 차지)\n\nSpace / A     점프\n\nESC     일시정지",
-                "WASD / 左スティック     移動\n\nE / RB     つかむ（大きい荷物は仲間と一緒に）\n\n左クリック / RT     投げる（長押しでチャージ）\n\nSpace / A     ジャンプ\n\nESC     ポーズ",
-                "WASD / 左摇杆     移动\n\nE / RB     抓取（大件物品需与队友合搬）\n\n左键 / RT     投掷（长按蓄力）\n\n空格 / A     跳跃\n\nESC     暂停" } },
+                "WASD / Left Stick     Move\n\nE / Right Bumper     Grab & hold  (carry big items WITH a friend)\n\nLeft Mouse / Right Trigger     Throw  (hold to charge)\n\nSpace / A     Jump\n\nV / Right Stick Click     Camera  (third ⇄ first person)\n\nESC     Pause",
+                "WASD / 왼쪽 스틱     이동\n\nE / RB     잡기 (큰 짐은 친구와 함께)\n\n마우스 좌클릭 / RT     던지기 (꾹 눌러 차지)\n\nSpace / A     점프\n\nV / 오른쪽 스틱 클릭     시점 전환 (3인칭 ⇄ 1인칭)\n\nESC     일시정지",
+                "WASD / 左スティック     移動\n\nE / RB     つかむ（大きい荷物は仲間と一緒に）\n\n左クリック / RT     投げる（長押しでチャージ）\n\nSpace / A     ジャンプ\n\nV / 右スティック押し込み     視点切替（三人称 ⇄ 一人称）\n\nESC     ポーズ",
+                "WASD / 左摇杆     移动\n\nE / RB     抓取（大件物品需与队友合搬）\n\n左键 / RT     投掷（长按蓄力）\n\n空格 / A     跳跃\n\nV / 右摇杆按下     切换视角（第三人称 ⇄ 第一人称）\n\nESC     暂停" } },
 
             // ── Help (how-to-play overlay; opened from the HELP button on the menu and in the lobby) ──
             { "help.title", new[]{ "HOW TO PLAY", "게임 방법", "遊び方", "玩法说明" } },

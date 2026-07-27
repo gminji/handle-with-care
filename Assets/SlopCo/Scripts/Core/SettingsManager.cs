@@ -14,6 +14,7 @@ namespace SlopCo.Core
         const string K_Fullscreen = "opt_fullscreen", K_Quality = "opt_quality", K_VSync = "opt_vsync";
         const string K_ResW = "opt_resw", K_ResH = "opt_resh";
         const string K_VoiceOn = "opt_voiceon", K_VoiceVol = "opt_voicevol";
+        const string K_FirstPerson = "opt_firstperson";
 
         public static float Master { get; private set; } = 0.8f;
         public static float Music  { get; private set; } = 0.8f;
@@ -22,6 +23,9 @@ namespace SlopCo.Core
         // on first launch is a nasty surprise (and a privacy one); players opt in from Options.
         public static bool  VoiceEnabled { get; private set; }
         public static float VoiceVolume  { get; private set; } = 0.8f;
+        /// <summary>Camera viewpoint: false = the default pulled-back third person, true = first person.
+        /// Toggled in Options or with the in-game POV key; <see cref="SlopCo.Player.PlayerController"/> reads it live.</summary>
+        public static bool  FirstPerson { get; private set; }
         public static bool  Fullscreen { get; private set; }
         public static int   QualityLevel { get; private set; }
         public static bool  VSync { get; private set; }
@@ -46,6 +50,7 @@ namespace SlopCo.Core
             ResHeight = PlayerPrefs.GetInt(K_ResH, Screen.height);
             VoiceEnabled = PlayerPrefs.GetInt(K_VoiceOn, 0) == 1;   // default OFF; a saved choice still wins
             VoiceVolume  = PlayerPrefs.GetFloat(K_VoiceVol, 0.8f);
+            FirstPerson  = PlayerPrefs.GetInt(K_FirstPerson, 0) == 1;   // default: third person
 
             ApplyAll();
             Localization.Load();
@@ -63,6 +68,8 @@ namespace SlopCo.Core
 
         public static void SetVoiceEnabled(bool on) { VoiceEnabled = on; PlayerPrefs.SetInt(K_VoiceOn, on ? 1 : 0); }
         public static void SetVoiceVolume(float v)  { VoiceVolume = Mathf.Clamp01(v); PlayerPrefs.SetFloat(K_VoiceVol, VoiceVolume); }
+
+        public static void SetFirstPerson(bool on) { FirstPerson = on; PlayerPrefs.SetInt(K_FirstPerson, on ? 1 : 0); }
 
         public static void SetFullscreen(bool f)
         {

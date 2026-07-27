@@ -29,6 +29,8 @@ namespace SlopCo.UI
         [SerializeField] private Text qualityValue;
         [SerializeField] private Text resolutionValue;
         [SerializeField] private Text languageValue;
+        [Tooltip("THIRD/FIRST label on the camera-viewpoint toggle row.")]
+        [SerializeField] private Text povValue;
 
         private List<Vector2Int> _resolutions;
         private int _resIndex;
@@ -94,6 +96,8 @@ namespace SlopCo.UI
             }
             if (languageValue != null)
                 languageValue.text = Localization.LanguageNames[(int)Localization.Current];
+            if (povValue != null)
+                povValue.text = Localization.Get(SettingsManager.FirstPerson ? "pov.first" : "pov.third");
         }
 
         public void LanguagePrev() { Localization.Cycle(-1); Sync(); }
@@ -105,6 +109,9 @@ namespace SlopCo.UI
         public void ToggleFullscreen() { SettingsManager.SetFullscreen(!SettingsManager.Fullscreen); Sync(); }
         public void ToggleVSync()      { SettingsManager.SetVSync(!SettingsManager.VSync); Sync(); }
         public void ToggleVoice()      { SettingsManager.SetVoiceEnabled(!SettingsManager.VoiceEnabled); Sync(); }
+
+        /// <summary>Camera viewpoint row: third ⇄ first person (same toggle is bound to V / right-stick in game).</summary>
+        public void ToggleFirstPerson() { SettingsManager.SetFirstPerson(!SettingsManager.FirstPerson); Sync(); }
 
         public void QualityPrev() { SettingsManager.SetQuality(SettingsManager.QualityLevel - 1); Sync(); }
         public void QualityNext() { SettingsManager.SetQuality(SettingsManager.QualityLevel + 1); Sync(); }

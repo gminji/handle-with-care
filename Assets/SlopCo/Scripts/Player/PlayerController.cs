@@ -68,6 +68,7 @@ namespace SlopCo.Player
         private Vector3 _shoveVel; // owner-local blast knockback (decays each frame), added on top of input
         private DashState _dash = DashStamina.Initial; // owner-local dash stamina (NetworkTransform replicates the resulting motion)
         private float _itemBuffMult = 1f, _itemBuffT = 0f; // owner-local temporary speed buff from items
+        private bool _fpHidden;   // are our own renderers currently hidden for the first-person view?
 
         /// <summary>SERVER. Flag this instance as an AI bot BEFORE <c>NetworkObject.Spawn()</c> so
         /// OnNetworkSpawn drives it with an <see cref="AiBrain"/> instead of physical input.</summary>
@@ -138,6 +139,13 @@ namespace SlopCo.Player
         {
             if (!IsOwner || input == null) return;
 
+            // Viewpoint toggle (third ⇄ first). Persisted immediately so the choice survives the session.
+            if (input.TogglePovPressed)
+            {
+                SettingsManager.SetFirstPerson(!SettingsManager.FirstPerson);
+                SettingsManager.Save();
+            }
+
             if (inventory != null)
             {
                 if (input.UseConsumablePressed) inventory.RequestUseConsumableRpc();
@@ -195,11 +203,16 @@ namespace SlopCo.Player
         {
             if (!IsOwner || _cam == null) return;
             Transform t = cameraTarget != null ? cameraTarget : transform;
-            // Lower, pulled-back 3/4 view: shows the world + horizon instead of staring at the floor.
-            Vector3 desired = t.position + new Vector3(0f, 5f, -9f);
-            float k = 1f - Mathf.Exp(-10f * Time.deltaTime);
+
+            // Third person = the pulled-back 3/4 view (world + horizon); first person = head-height down
+            // the facing direction. CameraRig owns the placement math (pure, unit-tested).
+            bool fp = SettingsManager.FirstPerson;
+            ApplyFirstPersonVisibility(fp);
+            Vector3 desired = CameraRig.DesiredPosition(fp, t.position, transform.forward);
+            // First person is rigid on purpose: smoothing the eye position lags the body and reads as drift.
+            float k = fp ? 1f : 1f - Mathf.Exp(-10f * Time.deltaTime);
             _cam.transform.position = Vector3.Lerp(_cam.transform.position, desired, k);
-            Vector3 look = (t.position + Vector3.up * 2.2f) - _cam.transform.position;
+            Vector3 look = CameraRig.DesiredLookAt(fp, t.position, transform.forward) - _cam.transform.position;
             if (look.sqrMagnitude > 0.001f)
                 _cam.transform.rotation = Quaternion.Slerp(_cam.transform.rotation, Quaternion.LookRotation(look), k);
 
@@ -207,6 +220,16 @@ namespace SlopCo.Player
             ScreenShake.Sample(Time.deltaTime, out Vector2 shakeOff, out float roll);
             _cam.transform.position += _cam.transform.right * shakeOff.x + _cam.transform.up * shakeOff.y;
             _cam.transform.rotation *= Quaternion.Euler(0f, 0f, roll);
+        }
+
+        // First person: hide OUR OWN character mesh so the head/torso doesn't fill the view. Local-only —
+        // this instance's renderers on this machine; every other client still sees the full body.
+        private void ApplyFirstPersonVisibility(bool firstPerson)
+        {
+            if (_fpHidden == firstPerson || tintRenderers == null) return;
+            _fpHidden = firstPerson;
+            foreach (var r in tintRenderers)
+                if (r != null) r.enabled = !firstPerson;
         }
 
         // Soft, owner-side bounds — avoids a server overwrite fight with the owner-auth transform.
