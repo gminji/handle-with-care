@@ -32,7 +32,7 @@ namespace SlopCo.UI
         private void HandlePhase(RoundPhase phase)
         {
             if (phase == RoundPhase.Briefing) { _briefing = true; _hideTimer = 0f; Refresh(); }
-            else if (phase == RoundPhase.Hauling) { _briefing = false; _hideTimer = 3f; } // linger then fade
+            else if (phase == RoundPhase.Hauling) { _briefing = false; _hideTimer = UIMotion.BannerLingerSeconds; } // linger then fade
             else { _briefing = false; _target = 0f; _hideTimer = 0f; }
         }
 
@@ -52,10 +52,12 @@ namespace SlopCo.UI
             if (_briefing) Refresh();
             if (_hideTimer > 0f)
             {
-                _hideTimer -= Time.deltaTime;
+                // unscaledDeltaTime so the linger runs on the same clock as the fade below — Juice's
+                // big-smash hit-stop (Time.timeScale = 0.18f) must not stretch one and not the other.
+                _hideTimer -= Time.unscaledDeltaTime;
                 if (_hideTimer <= 0f) _target = 0f;
             }
-            if (group != null) group.alpha = Mathf.MoveTowards(group.alpha, _target, Time.deltaTime * 2f);
+            UIMotion.Fade(group, _target);
         }
     }
 }

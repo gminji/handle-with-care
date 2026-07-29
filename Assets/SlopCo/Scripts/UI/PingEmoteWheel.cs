@@ -111,7 +111,14 @@ namespace SlopCo.UI
             if (mouse != null)
             {
                 Vector2 center = new Vector2(Screen.width * 0.5f, Screen.height * 0.5f);
-                dir = (mouse.position.ReadValue() - center) / GameConstants.WheelRadiusPixels;
+                // WheelRadiusPixels is in canvas REFERENCE units, but the mouse reports raw device pixels.
+                // Now that the canvas scales with the screen (see EnsureOverlay), the drawn ring grows with
+                // resolution and the two must be reconciled — at 1440p the ring is ~200px wide while the
+                // selection maths would still think it is 150, selecting a slice before the cursor reaches it.
+                // Computed from Screen.width rather than read off _canvas.scaleFactor, because the scaler
+                // writes that in its own Update and it is still 1 on the frame the wheel is re-activated.
+                float scale = Screen.width / UITheme.ReferenceResolution.x;   // match = 0 → width drives the scale
+                dir = (mouse.position.ReadValue() - center) / (GameConstants.WheelRadiusPixels * scale);
             }
             else
             {
@@ -150,12 +157,23 @@ namespace SlopCo.UI
             go.transform.SetParent(transform, false);   // parented for lifecycle; overlay ignores parent for rendering
             _canvas = go.GetComponent<Canvas>();
             _canvas.renderMode = RenderMode.ScreenSpaceOverlay;
-            _canvas.sortingOrder = 5000;
+            _canvas.sortingOrder = UITheme.SortWheel;
+
+            // The CanvasScaler used to be added and then never configured, leaving it on the default
+            // ConstantPixelSize — the only canvas in the game that did not scale with the screen. These four
+            // values are exactly what the three authored canvases use (Bootstrap.unity :9929-9934 / :13904-13909
+            // / :20162-20167), so the wheel finally matches them.
+            var scaler = go.GetComponent<CanvasScaler>();
+            scaler.uiScaleMode = CanvasScaler.ScaleMode.ScaleWithScreenSize;
+            scaler.referenceResolution = UITheme.ReferenceResolution;
+            scaler.screenMatchMode = CanvasScaler.ScreenMatchMode.MatchWidthOrHeight;
+            scaler.matchWidthOrHeight = UITheme.MatchWidthOrHeight;   // 0 = match width
+            scaler.referencePixelsPerUnit = UITheme.RefPPU;
 
             var bg = new GameObject("Backdrop", typeof(RectTransform), typeof(Image));
             bg.transform.SetParent(go.transform, false);
             var bgImg = bg.GetComponent<Image>();
-            bgImg.color = new Color(0f, 0f, 0f, 0.35f);
+            bgImg.color = UITheme.ScrimLight;   // lighter than the modal Scrim — the world must stay legible behind the wheel
             bgImg.raycastTarget = false;
             var bgRt = bgImg.rectTransform;
             bgRt.anchorMin = Vector2.zero; bgRt.anchorMax = Vector2.one;
@@ -170,7 +188,7 @@ namespace SlopCo.UI
                 lblGo.transform.SetParent(go.transform, false);
                 var txt = lblGo.GetComponent<Text>();
                 txt.font = font;
-                txt.fontSize = 28;
+                txt.fontSize = UITheme.FontBodyLarge;
                 txt.fontStyle = FontStyle.Bold;
                 txt.alignment = TextAnchor.MiddleCenter;
                 txt.horizontalOverflow = HorizontalWrapMode.Overflow;
@@ -206,10 +224,12 @@ namespace SlopCo.UI
             {
                 if (_labels[i] == null) continue;
                 bool sel = i == _selected;
-                Color c = items[i].Color;
-                c.a = sel ? 1f : 0.55f;
+                // Resolved from the theme each time rather than cached on the item, so a future palette swap
+                // reaches the wheel (see the Items comment in PingEmoteController).
+                Color c = UITheme.WheelColors[i];
+                c.a = sel ? 1f : UITheme.DisabledAlpha;
                 _labels[i].color = c;
-                _labels[i].transform.localScale = Vector3.one * (sel ? 1.25f : 1f);
+                _labels[i].transform.localScale = Vector3.one * (sel ? UIMotion.WheelSelectedScale : 1f);
             }
         }
     }

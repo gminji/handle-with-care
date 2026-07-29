@@ -24,20 +24,24 @@ namespace SlopCo.Player
             public readonly PingEmoteKind Kind;
             public readonly string Glyph;    // decorative; the localized label always carries the meaning
             public readonly string LocKey;
-            public readonly Color Color;
-            public WheelItem(PingEmoteKind k, string g, string loc, Color c) { Kind = k; Glyph = g; LocKey = loc; Color = c; }
+            public WheelItem(PingEmoteKind k, string g, string loc) { Kind = k; Glyph = g; LocKey = loc; }
         }
 
         // Index order == wheel slice order (slice 0 at 12 o'clock, clockwise). Single source of truth shared by
         // the wheel UI (draw slices) and the display dispatch (render by index).
+        //
+        // Deliberately carries NO Color: this is a `static readonly` array, so a colour stored here would be
+        // snapshotted at type-load and frozen forever — a later UITheme.SetPalette() (colour-blind / high
+        // contrast mode) could never reach the wheel. Colour lives in UITheme.WheelColors[i] and is read live
+        // at both draw sites (PingEmoteWheel.HighlightLabels and Display below).
         public static readonly WheelItem[] Items =
         {
-            new WheelItem(PingEmoteKind.Ping,  "!", "ping.here",    new Color(1f, 1f, 1f)),        // 0 Here
-            new WheelItem(PingEmoteKind.Ping,  "▲", "ping.danger",  new Color(1f, 0.35f, 0.25f)), // 1 Danger ▲
-            new WheelItem(PingEmoteKind.Ping,  "$", "ping.cargo",   new Color(1f, 0.85f, 0.3f)),   // 2 Cargo
-            new WheelItem(PingEmoteKind.Emote, "♥", "emote.thanks", new Color(1f, 0.45f, 0.6f)),  // 3 Thanks ♥
-            new WheelItem(PingEmoteKind.Emote, "✓", "emote.yes",    new Color(0.4f, 1f, 0.5f)),   // 4 Yes ✓
-            new WheelItem(PingEmoteKind.Emote, "✕", "emote.no",     new Color(0.9f, 0.5f, 0.3f)), // 5 No ✕
+            new WheelItem(PingEmoteKind.Ping,  "!", "ping.here"),    // 0 Here
+            new WheelItem(PingEmoteKind.Ping,  "▲", "ping.danger"),  // 1 Danger ▲
+            new WheelItem(PingEmoteKind.Ping,  "$", "ping.cargo"),   // 2 Cargo
+            new WheelItem(PingEmoteKind.Emote, "♥", "emote.thanks"), // 3 Thanks ♥
+            new WheelItem(PingEmoteKind.Emote, "✓", "emote.yes"),    // 4 Yes ✓
+            new WheelItem(PingEmoteKind.Emote, "✕", "emote.no"),     // 5 No ✕
         };
 
         /// <summary>Raised on every client when any player's ping/emote is shown (drives GameAudio). bool = isPing.</summary>
@@ -110,7 +114,8 @@ namespace SlopCo.Player
             else
             {
                 if (_liveMarker != null) Destroy(_liveMarker);
-                _liveMarker = SlopCo.Gameplay.PingMarker.Spawn(worldPos, item.Glyph, label, item.Color);
+                // Colour resolved live from the theme (see the Items comment) rather than stored on the item.
+                _liveMarker = SlopCo.Gameplay.PingMarker.Spawn(worldPos, item.Glyph, label, UITheme.WheelColors[index]);
             }
 
             OnPingEmote?.Invoke(item.Kind == PingEmoteKind.Ping, worldPos);

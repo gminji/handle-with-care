@@ -34,18 +34,19 @@ namespace SlopCo.UI
             float fuse = Mathf.Clamp01(min);
 
             if (root != null && !root.activeSelf) root.SetActive(true);
+            bool critical = fuse < UITheme.FuseCriticalThreshold;
             if (fill != null)
             {
                 fill.fillAmount = fuse;
-                Color c = Color.Lerp(new Color(1f, 0.18f, 0.1f), new Color(0.4f, 1f, 0.45f), fuse);
-                if (fuse < 0.3f)
+                Color c = UITheme.FuseRamp(fuse);
+                if (critical)
                 {
-                    float p = 0.5f + 0.5f * Mathf.Sin(Time.unscaledTime * 12f);
-                    c = Color.Lerp(c, Color.white, p * 0.6f);
+                    float p = UIMotion.Pulse(Time.unscaledTime, UIMotion.PulseHzCritical);
+                    c = Color.Lerp(c, Color.white, p * UIMotion.PulseFlashAmount);
                 }
                 fill.color = c;
             }
-            if (label != null) label.text = SlopCo.Core.Localization.Get(fuse < 0.3f ? "fuse.critical" : "fuse.label");
+            if (label != null) label.text = SlopCo.Core.Localization.Get(critical ? "fuse.critical" : "fuse.label");
         }
     }
 }

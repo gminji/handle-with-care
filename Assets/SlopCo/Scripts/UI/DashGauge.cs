@@ -23,13 +23,36 @@ namespace SlopCo.UI
 
             float g = Mathf.Clamp01(owner.DashGauge01);
             bool ex = owner.DashExhausted;
+            int state = DashGaugeView.State(g, ex);
             if (fill != null)
             {
                 fill.fillAmount = g;
-                Color full = new Color(0.35f, 0.8f, 1f), low = new Color(1f, 0.5f, 0.15f);
-                fill.color = ex ? new Color(1f, 0.25f, 0.2f) : Color.Lerp(low, full, g);
+                fill.color = state switch
+                {
+                    2 => UITheme.DangerFill,
+                    1 => UITheme.WarningFill,   // below threshold — snap, don't lerp, so fill matches the label flip
+                    _ => UITheme.StaminaRamp(g),
+                };
             }
-            if (label != null) label.text = SlopCo.Core.Localization.Get(ex ? "dash.exhausted" : "dash.label");
+            if (label != null) label.text = SlopCo.Core.Localization.Get(DashGaugeView.LabelKey(state));
         }
+    }
+
+    /// <summary>
+    /// Pure dash-stamina state ladder (design.md §5.2, §6-D) — the color-only "부족" signal FuseGauge already
+    /// fixes gets the same treatment here: state 1 (LOW) gets its own label AND a color snap, not a lerp, so
+    /// the fill and the text flip at the exact same gauge value instead of drifting apart.
+    /// </summary>
+    public static class DashGaugeView
+    {
+        public static int State(float g01, bool exhausted)
+            => exhausted ? 2 : (g01 < UITheme.StaminaLowThreshold ? 1 : 0);
+
+        public static string LabelKey(int s) => s switch
+        {
+            2 => "dash.exhausted",
+            1 => "dash.low",
+            _ => "dash.label",
+        };
     }
 }

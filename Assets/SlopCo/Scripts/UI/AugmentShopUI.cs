@@ -188,14 +188,15 @@ namespace SlopCo.UI
                 {
                     _costState[i] = state;
                     var t = cardCostTexts[i];
+                    string marker = ShopCardView.Marker(state);
                     switch (state)
                     {
-                        case 1: t.text = Localization.Get("shop.owned");
-                                t.color = new Color(0.60f, 0.65f, 0.70f); break;          // grey — owned
-                        case 2: t.text = "$" + cost + "  " + Localization.Get("shop.short");
-                                t.color = new Color(1f, 0.45f, 0.40f); break;             // red — can't afford
-                        default: t.text = "$" + cost;
-                                 t.color = new Color(0.5f, 1f, 0.55f); break;             // scene-serialized green
+                        case 1: t.text = marker + " " + Localization.Get("shop.owned");
+                                t.color = UITheme.TextMuted; break;          // grey — owned
+                        case 2: t.text = marker + " $" + cost + "  " + Localization.Get("shop.short");
+                                t.color = UITheme.Danger; break;             // red — can't afford
+                        default: t.text = marker + " $" + cost;
+                                 t.color = UITheme.Success; break;           // green — affordable
                     }
                 }
             }
@@ -205,7 +206,7 @@ namespace SlopCo.UI
             {
                 _lastCash = cash;
                 titleText.text = Localization.Get("shop.title")
-                               + "\n<size=20>" + Localization.Get("shop.cash").Replace("{cash}", cash.ToString()) + "</size>";
+                               + "\n" + UITheme.Size(UITheme.FontBodySmall, Localization.Get("shop.cash").Replace("{cash}", cash.ToString()));
             }
         }
 
@@ -269,20 +270,25 @@ namespace SlopCo.UI
         {
             if (titleText != null)
                 titleText.text = Localization.Get("vote.title")
-                               + "\n<size=20>" + Localization.Get("shop.cash").Replace("{cash}", cash.ToString())
-                               + "   ·   " + Localization.Get("vote.hint") + "</size>";
+                               + "\n" + UITheme.Size(UITheme.FontBodySmall, Localization.Get("shop.cash").Replace("{cash}", cash.ToString())
+                               + "   ·   " + Localization.Get("vote.hint"));
 
+            // Crew-vote is the multiplayer MAIN path (design.md §5.1 §6-D) — the affordable/unaffordable
+            // glyph must land here too, not just the solo Update() path above, or the 4-player mode ships
+            // with worse color-only signaling than solo.
             for (int i = 0; i < _offerCount; i++)
             {
                 if (cardCostTexts == null || i >= cardCostTexts.Length || cardCostTexts[i] == null) continue;
                 var a = AugmentSystem.Get(_offered[i]);
                 int n = Mathf.Max(0, AugmentOffer.Slot(votes, i));
-                string line = "$" + a.cost + "   " + Localization.Get("vote.tally").Replace("{n}", n.ToString());
+                bool affordable = cash >= a.cost;
+                string marker = ShopCardView.Marker(affordable ? 0 : 2);
+                string line = marker + " $" + a.cost + "   " + Localization.Get("vote.tally").Replace("{n}", n.ToString());
                 if (i == _myVote) line += "   " + Localization.Get("vote.mine");
                 cardCostTexts[i].text = line;
-                cardCostTexts[i].color = i == _myVote ? new Color(1f, 0.9f, 0.35f)
-                                       : cash >= a.cost ? new Color(0.5f, 1f, 0.55f)
-                                       : new Color(1f, 0.45f, 0.40f);
+                cardCostTexts[i].color = i == _myVote ? UITheme.SelectionTint
+                                       : affordable ? UITheme.Success
+                                       : UITheme.Danger;
             }
         }
 
@@ -302,7 +308,7 @@ namespace SlopCo.UI
 
             if (slot < 0)   // nobody voted
             {
-                if (titleText != null) titleText.text = Localization.Get("vote.title") + "\n<size=22>" + Localization.Get("vote.none") + "</size>";
+                if (titleText != null) titleText.text = Localization.Get("vote.title") + "\n" + UITheme.Size(UITheme.FontBody, Localization.Get("vote.none"));
                 yield break;
             }
 
@@ -323,19 +329,19 @@ namespace SlopCo.UI
             {
                 string headline = wasTie ? Localization.Get("vote.tie") : Localization.Get("vote.won");
                 if (!bought) headline += "  ·  " + Localization.Get("vote.broke");
-                titleText.text = Localization.Get("vote.title") + "\n<size=24>" + headline + "</size>";
+                titleText.text = Localization.Get("vote.title") + "\n" + UITheme.Size(UITheme.FontBodyLarge, headline);
             }
 
             // A short scale pop on the winning card.
             var rt = cardButtons != null && slot < cardButtons.Length && cardButtons[slot] != null
                    ? cardButtons[slot].transform as RectTransform : null;
-            for (float p = 0f; p < 0.45f && rt != null; p += Time.unscaledDeltaTime)
+            for (float p = 0f; p < UIMotion.DurRevealPop && rt != null; p += Time.unscaledDeltaTime)
             {
-                float k = 1f + 0.18f * Mathf.Sin(p / 0.45f * Mathf.PI);
+                float k = UIMotion.PunchScale(p / UIMotion.DurRevealPop, UIMotion.PunchAmountCard);
                 rt.localScale = Vector3.one * k;
                 yield return null;
             }
-            if (rt != null) rt.localScale = Vector3.one * 1.08f;
+            if (rt != null) rt.localScale = Vector3.one * UIMotion.SelectedScale;
         }
 
         private void HighlightOnly(int slot)
@@ -345,7 +351,7 @@ namespace SlopCo.UI
             {
                 if (cardButtons[i] == null) continue;
                 var rt = cardButtons[i].transform as RectTransform;
-                if (rt != null) rt.localScale = Vector3.one * (i == slot ? 1.08f : 0.94f);
+                if (rt != null) rt.localScale = Vector3.one * (i == slot ? UIMotion.SelectedScale : UIMotion.UnselectedScale);
             }
         }
 
@@ -367,9 +373,21 @@ namespace SlopCo.UI
         }
     }
 
-    /// <summary>Shop card price-label display state (0=affordable, 1=owned, 2=insufficient funds) — pure verdict.</summary>
+    /// <summary>Shop card price-label display state (0=affordable, 1=owned, 2=insufficient funds) — pure verdict.
+    /// <see cref="State"/> is pinned byte-identical by ShopLayoutTests — never change its shape.</summary>
     public static class ShopCardView
     {
         public static int State(bool owned, int cash, int cost) => owned ? 1 : (cash >= cost ? 0 : 2);
+
+        /// <summary>Glyph prefix for a shop card's price label (design.md §5.1/§6-D) — the "affordable" state
+        /// had no textual cue at all before this (owned="shop.owned", short="shop.short" already existed).
+        /// Values must match <see cref="UITheme.StateGlyph"/> exactly — this is that thin wrapper, not a
+        /// second source of truth.</summary>
+        public static string Marker(int state) => state switch
+        {
+            1 => UITheme.StateGlyph(UIState.Owned),          // "·"
+            2 => UITheme.StateGlyph(UIState.Unaffordable),   // "✕"
+            _ => UITheme.StateGlyph(UIState.Affordable),     // "★"
+        };
     }
 }

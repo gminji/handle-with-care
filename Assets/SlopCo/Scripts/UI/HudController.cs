@@ -29,14 +29,32 @@ namespace SlopCo.UI
         private float _popupTimer;
         private float _flashTimer;
         private float _comboPunch;
-        private const float PopupDuration = 1.1f;
-        private const float FlashDuration = 0.18f;
+        private const float PopupDuration = UIMotion.DurPopup;
+        private const float FlashDuration = UIMotion.DurFlash;
+
+        // Change-detection caches so Update() (60fps × 3min Payout window) doesn't reallocate the cash/quota/
+        // day/chain strings every frame — the AugmentShopUI:35 _lastCash idiom. int.MinValue never matches a
+        // real replicated value, so the first frame after enable/language-switch always repaints once.
+        private int _lastCash = int.MinValue;
+        private int _lastQuota = int.MinValue;
+        private int _lastDay = int.MinValue;
+        private int _lastChain = int.MinValue;
+        private RoundPhase _lastPhase = (RoundPhase)255;
+
+        // _lastPhase must be reset too: it is gated on the phase VALUE, so without this a language switch
+        // mid-phase would leave the phase label stuck in the old language until the phase next changes.
+        private void InvalidateLabels()
+        {
+            _lastCash = _lastQuota = _lastDay = _lastChain = int.MinValue;
+            _lastPhase = (RoundPhase)255;
+        }
 
         private void OnEnable()
         {
             CargoCondition.OnDamageFx += HandleDamage;
             DeliveryZone.OnDelivered += HandleDelivered;
             ComboSystem.OnCombo += HandleCombo;
+            Localization.OnLanguageChanged += InvalidateLabels;
         }
 
         private void OnDisable()
@@ -44,6 +62,7 @@ namespace SlopCo.UI
             CargoCondition.OnDamageFx -= HandleDamage;
             DeliveryZone.OnDelivered -= HandleDelivered;
             ComboSystem.OnCombo -= HandleCombo;
+            Localization.OnLanguageChanged -= InvalidateLabels;
         }
 
         private void HandleCombo(int combo, Vector3 worldPos) => _comboPunch = 1f;
@@ -53,16 +72,31 @@ namespace SlopCo.UI
             var quota = ServiceLocator.Get<QuotaSystem>();
             if (quota != null)
             {
-                if (cashText != null) cashText.text = $"${quota.Cash.Value}";
-                if (quotaText != null) quotaText.text = $"QUOTA  ${quota.Quota.Value}";
+                int cash = quota.Cash.Value, target = quota.Quota.Value;
+                if (cash != _lastCash) { _lastCash = cash; if (cashText != null) cashText.text = $"${cash}"; }
+                if (target != _lastQuota)
+                {
+                    _lastQuota = target;
+                    if (quotaText != null) quotaText.text = Localization.Get("hud.quota").Replace("{quota}", target.ToString());
+                }
             }
 
             var round = ServiceLocator.Get<RoundManager>();
             if (round != null)
             {
                 if (timerText != null) timerText.text = FormatTime(round.TimeRemaining.Value);
-                if (roundText != null) roundText.text = $"DAY {round.RoundNumber.Value}";
-                if (phaseText != null) phaseText.text = PhaseLabel(round.Phase.Value);
+                int day = round.RoundNumber.Value;
+                if (day != _lastDay)
+                {
+                    _lastDay = day;
+                    if (roundText != null) roundText.text = Localization.Get("hud.day").Replace("{day}", day.ToString());
+                }
+                var phase = round.Phase.Value;
+                if (phase != _lastPhase)
+                {
+                    _lastPhase = phase;
+                    if (phaseText != null) phaseText.text = PhaseLabel(phase);
+                }
             }
 
             if (_popupTimer > 0f)
@@ -74,7 +108,7 @@ namespace SlopCo.UI
             if (_flashTimer > 0f && flashImage != null)
             {
                 _flashTimer -= Time.deltaTime;
-                float a = Mathf.Clamp01(_flashTimer / FlashDuration) * 0.35f;
+                float a = Mathf.Clamp01(_flashTimer / FlashDuration) * UITheme.FlashAlpha;
                 var c = flashImage.color; c.a = a; flashImage.color = c;
             }
 
@@ -87,9 +121,13 @@ namespace SlopCo.UI
                 if (comboText.gameObject.activeSelf != showCombo) comboText.gameObject.SetActive(showCombo);
                 if (showCombo)
                 {
-                    comboText.text = $"x{chain}  CHAIN!";
-                    comboText.transform.localScale = Vector3.one * (1f + 0.35f * _comboPunch);
-                    comboText.color = Color.Lerp(new Color(1f, 0.85f, 0.2f), new Color(1f, 0.35f, 0.2f), Mathf.InverseLerp(2f, 8f, chain));
+                    if (chain != _lastChain)
+                    {
+                        _lastChain = chain;
+                        comboText.text = Localization.Get("hud.chain").Replace("{chain}", chain.ToString());
+                    }
+                    comboText.transform.localScale = Vector3.one * (1f + UIMotion.PunchAmountLarge * _comboPunch);
+                    comboText.color = UITheme.ComboRamp(Mathf.InverseLerp(2f, 8f, chain));
                 }
             }
             if (comboBar != null)
@@ -97,17 +135,17 @@ namespace SlopCo.UI
                 if (comboBar.gameObject.activeSelf != showCombo) comboBar.gameObject.SetActive(showCombo);
                 if (showCombo && combo != null) comboBar.fillAmount = Mathf.Clamp01(combo.WindowRemaining.Value / GameConstants.ComboWindowSeconds);
             }
-            if (_comboPunch > 0f) _comboPunch = Mathf.Max(0f, _comboPunch - Time.deltaTime * 3f);
+            if (_comboPunch > 0f) _comboPunch = UIMotion.Decay(_comboPunch, UIMotion.PunchDecayRate, Time.deltaTime);
         }
 
         private void HandleDamage(Vector3 worldPos, int valueLost, bool bigSmash)
         {
-            ShowPopup($"-${valueLost}", bigSmash ? Color.red : new Color(1f, 0.6f, 0.3f));
+            ShowPopup($"-${valueLost}", bigSmash ? UITheme.DangerFill : UITheme.Warning);
             if (bigSmash) _flashTimer = FlashDuration;
         }
 
         private void HandleDelivered(Vector3 worldPos, int payout)
-            => ShowPopup($"+${payout}", new Color(0.4f, 1f, 0.5f));
+            => ShowPopup($"+${payout}", UITheme.PayoutGreen);
 
         private void ShowPopup(string text, Color color)
         {

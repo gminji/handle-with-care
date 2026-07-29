@@ -99,13 +99,13 @@ namespace SlopCo.UI
                 if (phase == RoundPhase.GameOver)
                 {
                     titleText.text = Localization.Get("phase.gameover"); // "FIRED." — reuse existing key
-                    titleText.color = new Color(1f, 0.4f, 0.35f);
+                    titleText.color = UITheme.Danger;
                 }
                 else
                 {
                     titleText.text = Localization.Get(met ? "res.day.survived" : "res.day.short")
                         .Replace("{day}", day.ToString());
-                    titleText.color = met ? new Color(0.45f, 1f, 0.5f) : new Color(1f, 0.7f, 0.3f);
+                    titleText.color = met ? UITheme.Success : UITheme.Warning;
                 }
             }
 
@@ -166,7 +166,7 @@ namespace SlopCo.UI
 
                 // Chaos Rating block — the big screenshot badge + auto-generated punchline.
                 b += "\n\n— " + Localization.Get("grade.title") + " —";
-                b += $"\n<size=46><color={GradeColorHex(verdict.Grade)}><b>{RunGrade.Letter(verdict.Grade)}</b></color></size>   {BuildHeadline(verdict.Flavor, stats, day)}";
+                b += $"\n{UITheme.Size(UITheme.FontH2, $"<color={UITheme.GradeHex((int)verdict.Grade)}><b>{RunGrade.Letter(verdict.Grade)}</b></color>")}   {BuildHeadline(verdict.Flavor, stats, day)}";
 
                 if (flourish)
                 {
@@ -174,9 +174,9 @@ namespace SlopCo.UI
                                 : flourishDay   ? Localization.Get("res.what.day").Replace("{day}", day.ToString())
                                 : flourishCash  ? $"${cash}"   // pure number — no translation needed
                                 :                 Localization.Get("res.what.chain").Replace("{chain}", chain.ToString());
-                    b += $"\n<color=#FFD24A><b>{Localization.Get("res.newrecord").Replace("{what}", what)}</b></color>";
-                    if (titleText != null) titleText.color = new Color(1f, 0.84f, 0.29f); // gold overrides the phase tint
-                    ScreenShake.Add(0.5f);          // static global punch — no wiring needed
+                    b += $"\n<color={UITheme.GoldHex}><b>{Localization.Get("res.newrecord").Replace("{what}", what)}</b></color>";
+                    if (titleText != null) titleText.color = UITheme.Gold; // gold overrides the phase tint — 4/255 drift fixed (design.md §5.5)
+                    ScreenShake.Add(UIMotion.ShakeRecord);          // static global punch — no wiring needed
                     BestRecords.RaiseNewRecord();   // GameAudio plays the record stinger
                 }
 
@@ -191,13 +191,13 @@ namespace SlopCo.UI
                     b += "\n" + Localization.Get("crew.line")
                              .Replace("{rank}", (tier + 1).ToString())
                              .Replace("{name}", Localization.Get("rank." + tier));
-                    b += "\n<size=18>" + (toNext > 0
+                    b += "\n" + UITheme.Size(UITheme.FontCaption, toNext > 0
                             ? Localization.Get("crew.progress").Replace("{run}", verdict.Score.ToString()).Replace("{tonext}", toNext.ToString())
-                            : Localization.Get("crew.maxed").Replace("{run}", verdict.Score.ToString())) + "</size>";
+                            : Localization.Get("crew.maxed").Replace("{run}", verdict.Score.ToString()));
                     if (rankUp)
                     {
-                        b += "\n<color=#FFD24A><b>" + Localization.Get("crew.rankup").Replace("{name}", Localization.Get("rank." + tier)) + "</b></color>";
-                        ScreenShake.Add(0.5f);
+                        b += $"\n<color={UITheme.GoldHex}><b>" + Localization.Get("crew.rankup").Replace("{name}", Localization.Get("rank." + tier)) + "</b></color>";
+                        ScreenShake.Add(UIMotion.ShakeRecord);
                         BestRecords.RaiseNewRecord(); // reuse the record stinger for the rank-up moment
                     }
                 }
@@ -257,16 +257,6 @@ namespace SlopCo.UI
             }
             return $"<color=#{ColorUtility.ToHtmlStringRGB(c)}><b>{text}</b></color>";
         }
-
-        // Grade → rich-text color (gold S → red D). The badge color carries the verdict at a glance.
-        private static string GradeColorHex(Grade g) => g switch
-        {
-            Grade.S => "#FFD24A",   // gold
-            Grade.A => "#7CFF6B",   // green
-            Grade.B => "#6BD0FF",   // blue
-            Grade.C => "#FFB14A",   // orange
-            _       => "#FF6B6B",   // red (D)
-        };
 
         // Flavor → localized headline template with {token} substitution. Missing key/token falls back
         // safely (Localization.Get returns the key; absent tokens are simply not replaced).

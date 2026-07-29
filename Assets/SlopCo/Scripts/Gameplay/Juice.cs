@@ -1,6 +1,7 @@
 using UnityEngine;
 using SlopCo.Core;
 using SlopCo.Cargo;
+using SlopCo.UI;    // UITheme — world FX shares the HUD's payout/damage colours (see HandleDamage/HandleDeliver)
 
 namespace SlopCo.Gameplay
 {
@@ -56,15 +57,17 @@ namespace SlopCo.Gameplay
                   bigSmash ? new Color(1f, 0.5f, 0.2f) : new Color(0.85f, 0.85f, 0.9f),
                   bigSmash ? 30 : 8 + Mathf.RoundToInt(sev * 14f),
                   bigSmash ? 6.5f : 3f);
+            // Same tokens HudController:105 uses for the canvas-side popup — the two fire on one event and
+            // must read as the same colour in world space and on the HUD.
             FloatingNumber.Spawn(pos + Vector3.up * 1.3f, "-$" + valueLost,
-                  bigSmash ? Color.red : new Color(1f, 0.6f, 0.3f), bigSmash ? 1.7f : 1f);
+                  bigSmash ? UITheme.DangerFill : UITheme.Warning, bigSmash ? 1.7f : 1f);
         }
 
         private void HandleDeliver(Vector3 pos, int payout)
         {
             ScreenShake.Add(0.22f);
-            Burst(pos + Vector3.up * 1f, new Color(0.35f, 1f, 0.45f), 32, 5.5f);
-            FloatingNumber.Spawn(pos + Vector3.up * 1.7f, "+$" + payout, new Color(0.4f, 1f, 0.5f), 1.5f);
+            Burst(pos + Vector3.up * 1f, UITheme.SuccessFill, 32, 5.5f);
+            FloatingNumber.Spawn(pos + Vector3.up * 1.7f, "+$" + payout, UITheme.PayoutGreen, 1.5f);
         }
 
         private static Material ParticleMat()
