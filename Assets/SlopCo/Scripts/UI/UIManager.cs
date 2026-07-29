@@ -30,6 +30,14 @@ namespace SlopCo.UI
         [SerializeField] private GameObject resultsPanel;      // ResultsRoot/ResultsPanel
         [SerializeField] private GameObject augmentShopPanel;  // AugmentShop/ShopPanel
 
+        [Header("Co-op with AI")]
+        [Tooltip("Buttons row shown on the map picker while the pending mode is PLAY WITH AI.")]
+        [SerializeField] private GameObject aiCrewRow;
+        [SerializeField] private UnityEngine.UI.Text aiCrewLabel;
+        // Serialized so crew 3/4 is reachable from the Inspector even in a scene where the button is not
+        // wired yet — the co-carry numbers cannot be validated at all without it.
+        [SerializeField, Range(1, 3)] private int aiTeammates = 1;
+
         private enum Screen { MainMenu, Lobby, InGame }
         private enum PendingMode { None, Solo, Ai, Online }
         private Screen _screen = Screen.MainMenu;
@@ -53,7 +61,45 @@ namespace SlopCo.UI
             _screen = Screen.MainMenu;
             if (resultsPanel == null || augmentShopPanel == null)
                 Debug.LogError("UIManager: round overlay panels not wired (resultsPanel/augmentShopPanel)");
+
+            // Real end-of-session census reset: fires once every despawn for the ending session has already
+            // run (unlike the OnBackToMenu Reset(), which only cleans up the PREVIOUS session's leftovers —
+            // see that call site). Subscription/unsubscription paired the same way as HostBeacon.
+            var nm = NetworkManager.Singleton;
+            if (nm != null)
+            {
+                nm.OnServerStopped += HandleNetworkStopped;
+                nm.OnClientStopped += HandleNetworkStopped;
+            }
+
+            RefreshAiCrewLabel();     // seed from the serialized default so the label matches aiTeammates
             Apply();
+        }
+
+        private void OnDestroy()
+        {
+            var nm = NetworkManager.Singleton;
+            if (nm != null)
+            {
+                nm.OnServerStopped -= HandleNetworkStopped;
+                nm.OnClientStopped -= HandleNetworkStopped;
+            }
+        }
+
+        private void HandleNetworkStopped(bool _) => SlopCo.Core.CrewCensus.Reset();
+
+        /// <summary>Map-picker button (PLAY WITH AI only): cycle 1 -> 2 -> 3 -> 1 AI teammates. The crew size
+        /// this produces (1 human + N bots) is what CoCarryMath.LoadCrew scales the cargo by, so this is the
+        /// only non-online way to observe crew 3 and crew 4 at all.</summary>
+        public void OnCycleAiTeammates()
+        {
+            aiTeammates = aiTeammates >= GameConstants.MaxPlayers - 1 ? 1 : aiTeammates + 1;
+            RefreshAiCrewLabel();
+        }
+
+        private void RefreshAiCrewLabel()
+        {
+            if (aiCrewLabel != null) aiCrewLabel.text = $"AI x{aiTeammates}";
         }
 
         // ── Button hooks ───────────────────────────────────────
@@ -108,7 +154,7 @@ namespace SlopCo.UI
             GameModeState.Solo = false;       // co-op tuning (a bot can co-carry two-person items)
             GameModeState.Tutorial = false;
             GameModeState.WithAi = true;
-            GameModeState.BotCount = 1;
+            GameModeState.BotCount = Mathf.Clamp(aiTeammates, 1, GameConstants.MaxPlayers - 1);   // was hardcoded 1
             _options = _controls = _mapSelect = false;
             _autoStartSolo = true;            // reuse the solo self-host auto-start
             ServiceLocator.Get<SlopCo.Networking.NetworkSessionManager>()?.HostGame();
@@ -143,6 +189,12 @@ namespace SlopCo.UI
             GameModeState.Solo = false;
             GameModeState.Tutorial = false;
             GameModeState.WithAi = false;
+            // This does NOT zero out THIS session's count — nm.Shutdown() above defers actual NGO
+            // despawns (and therefore CrewCensus.Unregister calls) past this method's return. It only
+            // clears whatever the PREVIOUS session left behind; this session's own reset is the
+            // OnServerStopped/OnClientStopped subscription in Start(), plus Unregister's 0-floor clamp
+            // catching any Unregister that arrives after this line.
+            SlopCo.Core.CrewCensus.Reset();
             _autoStartSolo = false;
             _lobbyIntent = false;
             _screen = Screen.MainMenu;
@@ -210,6 +262,8 @@ namespace SlopCo.UI
             bool overlayUp = _options || _controls || _help;
             if (mainMenuPanel != null) mainMenuPanel.SetActive(mainMenu && !overlayUp && !_mapSelect);
             if (mapSelectPanel != null) mapSelectPanel.SetActive(!overlayUp && ((mainMenu && _mapSelect) || crewMapVote));
+            // The AI-teammate-count row is only meaningful while the map picker is up for PLAY WITH AI.
+            if (aiCrewRow != null) aiCrewRow.SetActive(_mapSelect && _pending == PendingMode.Ai);
             if (lobbyPanel != null)    lobbyPanel.SetActive(_screen == Screen.Lobby && !_options && !_help);
             if (hudRoot != null)       hudRoot.SetActive(_screen == Screen.InGame);
             if (optionsPanel != null)  optionsPanel.SetActive(_options);

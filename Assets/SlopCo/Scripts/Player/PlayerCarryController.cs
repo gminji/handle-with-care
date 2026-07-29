@@ -10,6 +10,8 @@ namespace SlopCo.Player
     /// SERVER validates and tracks ownership (the cargo's PD drive then pulls toward this player's hand).
     /// Hold grab to keep carrying, release to drop, click/trigger to throw (charged). All cargo physics
     /// happen server-side in CargoItem; this class only sends intents and replicates a held-handle.
+    /// Also registers/unregisters this player body (human OR bot) with <see cref="CrewCensus"/>, the live
+    /// headcount that CoCarryMath scales cargo load by.
     /// </summary>
     public sealed class PlayerCarryController : NetworkBehaviour
     {
@@ -24,11 +26,20 @@ namespace SlopCo.Player
         /// <summary>Null-safe: true only if the referenced cargo currently resolves on this client.</summary>
         public bool IsCarrying => HeldCargo.Value.TryGet(out _);
 
+        /// <summary>The crew-scaled haul-speed factor of the cargo we are holding, or the flat legacy
+        /// constant when empty-handed (empty hands = no penalty at all) or when the reference resolves to
+        /// something without a CargoItem. Read once per frame by PlayerController — the CargoItem is cached
+        /// on HeldCargo changes AND seeded at spawn, so this is a field read, not a GetComponent.</summary>
+        public float CurrentHaulSpeedMult =>
+            _heldCargoItem != null ? _heldCargoItem.HaulSpeedMult.Value : GameConstants.PlayerCarrySpeedMultiplier;
+
         /// <summary>Raised on the OWNER when a grab succeeds (HeldCargo none→held) — a cue for SFX.</summary>
         public static event System.Action<Vector3> OnGrab;
 
         private bool _grabLatched;
         private LineRenderer _aim;
+        private CargoItem _heldCargoItem;    // cached on HeldCargo change — avoids a per-frame GetComponent
+        private bool _censusCounted;
 
         private void Awake()
         {
@@ -130,10 +141,21 @@ namespace SlopCo.Player
             var cargo = cargoObj.GetComponent<CargoItem>();
             if (cargo == null) return;
 
+            // SERVER-AUTHORITATIVE proximity gate. TryGrabNearby only checks range on the owner, so without
+            // this the server would accept a grab on any spawned cargo from any distance — and because
+            // TryClaimAnyHandle falls back to the nearest FREE handle, such a call would usually SUCCEED
+            // rather than bounce off an occupied handle. See ServerGrabRangeSlack for why the bound is loose.
+            float maxDist = GameConstants.ServerGrabRangeSlack * GameConstants.CarryGrabRadius;
+            if ((cargo.transform.position - transform.position).sqrMagnitude > maxDist * maxDist) return;
+
             Transform handTarget = handAnchor != null ? handAnchor : transform;
             // Carrier id = this player's NetworkObjectId (unique per human AND per server-owned bot),
             // not OwnerClientId — bots share clientId 0 with the host.
-            if (cargo.TryClaimHandle(handleId, NetworkObjectId, handTarget))
+            // TryClaimAnyHandle falls back to the nearest FREE handle if the requested one is taken — a
+            // human holding the grab key gets exactly one attempt (the latch below doesn't retry until
+            // the key is released), so with four handles a taken "nearest" handle would otherwise be a
+            // silent dead input.
+            if (cargo.TryClaimAnyHandle(handleId, NetworkObjectId, handTarget))
                 HeldCargo.Value = cargoObj;
         }
 
@@ -174,11 +196,21 @@ namespace SlopCo.Player
         public override void OnNetworkSpawn()
         {
             HeldCargo.OnValueChanged += HandleHeldChanged;
+            // SEED the cache from the CURRENT value after subscribing — a late-joining client can spawn into
+            // a session where this player is already carrying, and OnValueChanged will never fire for that
+            // pre-existing state.
+            _heldCargoItem = HeldCargo.Value.TryGet(out var held) ? held.GetComponent<CargoItem>() : null;
+
+            // Counts humans AND bots — CrewCensus is what CoCarryMath.LoadCrew scales cargo by.
+            if (!_censusCounted) { CrewCensus.Register(); _censusCounted = true; }
         }
 
-        // Owner-local grab cue: when our HeldCargo flips none→held, a grab just succeeded server-side.
+        // Cache update runs on EVERY peer (before the IsOwner gate) so CurrentHaulSpeedMult is always fresh;
+        // the existing owner-only SFX cue is kept as-is below.
         private void HandleHeldChanged(NetworkObjectReference prev, NetworkObjectReference next)
         {
+            _heldCargoItem = next.TryGet(out var obj) ? obj.GetComponent<CargoItem>() : null;
+
             if (!IsOwner) return;
             bool wasHeld = prev.TryGet(out _);
             bool nowHeld = next.TryGet(out _);
@@ -188,6 +220,8 @@ namespace SlopCo.Player
         public override void OnNetworkDespawn()
         {
             HeldCargo.OnValueChanged -= HandleHeldChanged;
+            if (_censusCounted) { CrewCensus.Unregister(); _censusCounted = false; }
+            _heldCargoItem = null;
 
             // If a carrier disconnects mid-haul, the server frees its handle (item drops / staggers).
             if (IsServer && HeldCargo.Value.TryGet(out var cargoObj))

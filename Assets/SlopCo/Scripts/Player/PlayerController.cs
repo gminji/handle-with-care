@@ -217,10 +217,20 @@ namespace SlopCo.Player
             if (dir.sqrMagnitude > 1f) dir.Normalize();
 
             var aug = ServiceLocator.Get<SlopCo.Gameplay.AugmentSystem>();
-            float speed = GameConstants.PlayerMoveSpeed * (aug != null ? aug.MoveSpeedMult : 1f) *
-                          (carry != null && carry.IsCarrying
-                              ? GameConstants.PlayerCarrySpeedMultiplier * (aug != null ? aug.CarrySpeedMult : 1f)
-                              : 1f);
+            // Carry penalty is now per-cargo and crew-scaled (server-computed, replicated by CargoItem) instead
+            // of a flat 0.6 — more hands on the same item = a bigger factor for EVERY holder. Augments still
+            // compose multiplicatively, but the ceiling is applied HERE, after them: AugmentSystem.CarrySpeedMult
+            // has a lower bound only and can reach 2.15 with Light + Forklift + Mule, which without this clamp
+            // would make hauling faster than walking unencumbered. The ceiling is a RATIO (carryMult <= 0.9),
+            // not an absolute u/s — MoveSpeedMult multiplies both the carry and the walk speed below.
+            float carryMult = 1f;
+            if (carry != null && carry.IsCarrying)
+                carryMult = CoCarryMath.ComposedCarryMult(
+                    carry.CurrentHaulSpeedMult,
+                    aug != null ? aug.CarrySpeedMult : 1f,
+                    GameConstants.CoCarrySpeedMultMax);
+
+            float speed = GameConstants.PlayerMoveSpeed * (aug != null ? aug.MoveSpeedMult : 1f) * carryMult;
 
             // Dash: hold-to-sprint drains stamina; full depletion forces a brief exhausted stop (SpeedMult 0).
             bool moving = dir.sqrMagnitude > 0.0001f;

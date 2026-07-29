@@ -121,12 +121,48 @@ namespace SlopCo.Core
 
         // ── Carry / co-carry (PD force controller, server-side) ──
         public const float CarryGrabRadius = 1.6f;        // generous server grab tolerance
+        // Authoritative anti-teleport bound on RequestGrabRpc, as a multiple of CarryGrabRadius.
+        // TryGrabNearby's radius test runs owner-side only, so the server must not take "I am next to it"
+        // on trust — otherwise one crafted RPC claims a free handle on ANY spawned cargo from anywhere and
+        // drags it across the level via the PD drive. Deliberately loose: it exists to reject teleporting,
+        // NOT to police gameplay, so a false reject (a real grab refused under lag) is far worse than a
+        // griefer having to stand 5 u away instead of 30.
+        // Budget, measured to the cargo's ORIGIN because that is what the check compares. OverlapSphere
+        // can hit a collider CORNER, so the bound is the box half-diagonal, not the half-width:
+        //   Widest prefab is Cargo_Bed (BoxCollider 1.9545 x 2.3) -> half-diagonal 1.509 u. It never
+        //   scales; only CargoBomb takes the 1.25x Heavy multiplier, and even scaled the bomb is 1.06 u.
+        //   Legitimate worst case = 1.6 reach + 1.509 = 3.11 u.
+        //   3.2 x 1.6 = 5.12 u leaves ~2.0 u of headroom ~= 450 ms of run at PlayerMoveSpeed for the
+        //   server's view of the grabber to lag the owner's. Course is ~28 u (LEVEL_DESIGN.md), so the
+        //   cross-map claim this exists to stop is rejected by a factor of 5+.
+        //   All cargo colliders are centred at x=0,z=0 (y offset only), so the origin is a sound proxy.
+        public const float ServerGrabRangeSlack = 3.2f;
         public const float CarryPD_Spring = 600f;         // kp
         public const float CarryPD_Damper = 60f;          // kd (tuned toward critical damping)
         public const float CarryMaxForce = 4000f;         // clamp to prevent oscillation/launch
         public const float CarryAlignTorque = 35f;        // mild upright/align torque
-        // Single grabber on a TwoPerson item: weak partial drag (staggering = comedy).
+        // Single grabber on a TwoPerson item: the LOW ANCHOR of the continuous lift ramp in CoCarryMath
+        // (was a binary 0.28 / 1.0 switch). The first grabber still gets exactly 0.28 — every grabber
+        // after that ramps linearly up to 1.0 at full crew, so a forced drop mid-haul decelerates
+        // instead of falling off a cliff.
         public const float UnderCrewedLiftStrength = 0.28f;
+
+        // ── Crew-scaled co-carry (heavier with a bigger crew, faster with more hands on it) ──
+        // Load is measured in PERSON-UNITS. A TwoPerson item is "2 people heavy" in a 2-player lobby and
+        // gains CoCarryLoadPerExtraPlayer per live crew member beyond that, capped by the handle count.
+        // A load of 1 person-unit (solo mode, OneHand/Volatile cargo, last-player-standing) is pinned to the
+        // flat legacy PlayerCarrySpeedMultiplier — a one-person load has no co-carry economy to scale.
+        // NOTE: mass is deliberately NOT scaled. Nothing in the codebase reads Rigidbody.mass
+        // (rg '\.mass\b' Assets/ -> 0 hits), so a scaled mass would be unobservable; "heavier" is
+        // expressed as carry SPEED and REQUIRED HANDS instead.
+        public const float CoCarryLoadPerExtraPlayer = 0.65f;  // +0.65 person-units of load per crew member past baseCrew
+        public const float CoCarryFullGripSpeed      = 0.72f;  // carry-speed factor when hands exactly match the load (r = 1)
+        public const float CoCarryUnderCrewedFloor   = 0.30f;  // carry-speed factor as r -> 0
+        public const float CoCarryOverCrewBonus      = 0.15f;  // extra factor per +1.0 of r above 1
+        public const float CoCarryHaulRampPerSecond  = 1.2f;   // how fast the replicated factor slews to a new target (~0.45s full swing)
+        // Absolute ceiling applied ONCE at the composition site (PlayerController), AFTER augments:
+        // AugmentSystem.CarrySpeedMult has a lower bound only and can reach 2.15 (Light + Forklift + Mule).
+        public const float CoCarrySpeedMultMax       = 0.9f;   // hauling is never faster than unencumbered walking
 
         // ── Throw ───────────────────────────────────────────────
         public const float ThrowMinImpulse = 4f;

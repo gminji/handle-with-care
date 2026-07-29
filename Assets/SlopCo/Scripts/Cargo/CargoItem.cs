@@ -15,6 +15,12 @@ namespace SlopCo.Cargo
     /// NOT raw AddForce in RPC callbacks. A single grabber on a TwoPerson item gets a weak partial drag
     /// (staggering = comedy). Throw is sequenced to avoid the impulse being absorbed by the drive force.
     ///
+    /// Crew-scaled co-carry: load is measured in PERSON-UNITS (CoCarryMath.LoadCrew), scaling with the
+    /// live crew size (CrewCensus.Count) and capped by handle count. Both PD lift strength and haul speed
+    /// derive from grabbers/loadCrew, so "heavier with a bigger crew, faster with more hands" is one
+    /// knob set. Mass is deliberately NOT scaled — nothing in the codebase reads Rigidbody.mass, so a
+    /// scaled mass would be unobservable; "heavier" is expressed as carry speed and required hands only.
+    ///
     /// Required prefab components: Rigidbody + NetworkTransform(Server authority) + NetworkRigidbody
     /// (UseRigidBodyForMotion = true) + NetworkObject + CargoCondition.
     /// </summary>
@@ -28,18 +34,41 @@ namespace SlopCo.Cargo
         public IReadOnlyList<CarryHandle> Handles => handles;
 
         /// <summary>SERVER. Spawn-time archetype mass override (set by CargoSpawner right after spawn, before any
-        /// grab). RequiredGrabbers reads massClass live, so a single set here is enough. Solo keeps
-        /// RequiredGrabbers = 1, so a TwoPerson override still stays solo-carriable.</summary>
+        /// grab). BaseCrew reads massClass live, so a single set here is enough. Solo mode — and a OneHand
+        /// override such as the Volatile archetype — pins CoCarryMath.LoadCrew to 1 person-unit, which returns
+        /// the flat legacy carry multiplier at ANY number of grabbers, so a TwoPerson item still stays
+        /// solo-carriable at exactly today's speed and lift strength.</summary>
         public void SetMassClass(CargoMassClass m) { if (!IsServer) return; massClass = m; }
 
         public readonly NetworkVariable<CarryState> State =
             new NetworkVariable<CarryState>(CarryState.Loose, NetworkVariableReadPermission.Everyone, NetworkVariableWritePermission.Server);
 
+        /// <summary>Server-computed HAUL speed factor for whoever is holding this item right now (crew-scaled).
+        /// Everyone-read so the OWNER of a carrier can apply it to its own CharacterController — the same
+        /// server->client physics-parameter channel CargoBomb._archetype uses. Defaults to (and resets to) the
+        /// flat legacy constant so any transient read is exactly today's behaviour.
+        /// NOTE the name: this is NOT AugmentSystem.CarrySpeedMult — the two are multiplied together in
+        /// PlayerController and then clamped once by CoCarryMath.ComposedCarryMult.</summary>
+        public readonly NetworkVariable<float> HaulSpeedMult =
+            new NetworkVariable<float>(GameConstants.PlayerCarrySpeedMultiplier,
+                NetworkVariableReadPermission.Everyone, NetworkVariableWritePermission.Server);
+
         private Rigidbody _rb;
         private CargoCondition _condition;
-        // Solo mode: one player can carry anything (incl. two-person items) at full strength —
-        // RequiredGrabbers drops to 1, so the under-crewed weak-drag branch in DriveCarry never trips.
-        private int RequiredGrabbers => SlopCo.Core.GameModeState.Solo ? 1 : (massClass == CargoMassClass.TwoPerson ? 2 : 1);
+        private int BaseCrew => massClass == CargoMassClass.TwoPerson ? 2 : 1;
+
+        // Live, never cached at spawn: crew size changes mid-run (joins, leaves, bot despawn) and the
+        // speed must follow within one server tick. Cached ONCE per tick by UpdateHaulScaling — DriveCarry
+        // and NeedsMoreHands both read this field instead of recomputing.
+        private float _loadCrew = 1f;
+        private float _haulTarget = GameConstants.PlayerCarrySpeedMultiplier;
+        private bool[] _freeMask;
+        private float[] _sqrDist;
+
+#if UNITY_EDITOR || DEVELOPMENT_BUILD
+        private int _dbgCrew = -1, _dbgGrab = -1;
+        private float _dbgLoad = -1f;
+#endif
 
         // Server-only grab bookkeeping. CarrierId is the GRABBING PLAYER's NetworkObjectId (unique per
         // player AND per AI bot) — NOT the clientId, because server-owned bots all share clientId 0 with
@@ -66,6 +95,18 @@ namespace SlopCo.Cargo
             _rb.interpolation = RigidbodyInterpolation.Interpolate;
             if (handles == null || handles.Count == 0)
                 handles = new List<CarryHandle>(GetComponentsInChildren<CarryHandle>());
+
+            // handleId is used as a LIST INDEX on the server (TryClaimHandle's range check + _grabbers[handleId])
+            // while the client sends the SERIALIZED HandleId. Sort + assert that contract instead of trusting
+            // hand-authored prefab data — doubling the bomb's handles doubles the odds of getting it wrong.
+            handles.Sort((a, b) => (a == null ? int.MaxValue : a.HandleId).CompareTo(b == null ? int.MaxValue : b.HandleId));
+            for (int i = 0; i < handles.Count; i++)
+                if (handles[i] == null || handles[i].HandleId != i)
+                    Debug.LogError($"[CargoItem] {name}: handles[{i}] must have HandleId {i} " +
+                                   $"(got {(handles[i] == null ? "null" : handles[i].HandleId.ToString())}). Grabs will mis-route.");
+
+            _freeMask = new bool[handles.Count];      // scratch for PickFreeHandle — no per-grab allocation
+            _sqrDist  = new float[handles.Count];
         }
 
         // ── SERVER grab API (invoked by PlayerCarryController's server RPCs) ──
@@ -84,6 +125,54 @@ namespace SlopCo.Cargo
             State.Value = CarryState.Held;
             return true;
         }
+
+        /// <summary>SERVER. Claim <paramref name="preferredId"/>, or — if it is already occupied — the FREE
+        /// handle nearest this grabber's hand. Without the fallback a HUMAN who holds the grab key gets exactly
+        /// ONE attempt (the input latch stays true until the key is released, so with four handles "the nearest
+        /// handle happened to be taken" becomes a silent dead input. The one-handle-per-carrier rule is
+        /// preserved: a player already holding this item is rejected outright.</summary>
+        public bool TryClaimAnyHandle(int preferredId, ulong carrierId, Transform handTarget)
+        {
+            if (!IsServer) return false;
+            if (_grabberCarriers.ContainsValue(carrierId)) return false;   // one handle per carrier (CARRY-08)
+            if (handTarget == null) return false;
+
+            for (int i = 0; i < handles.Count; i++)
+            {
+                bool usable = handles[i] != null && handles[i].AttachPoint != null;
+                _freeMask[i] = usable && !_grabbers.ContainsKey(i);
+                _sqrDist[i]  = usable
+                    ? (handles[i].AttachPoint.position - handTarget.position).sqrMagnitude
+                    : float.PositiveInfinity;
+            }
+
+            int pick = CoCarryMath.PickFreeHandle(preferredId, _freeMask, _sqrDist, handles.Count);
+            return pick >= 0 && TryClaimHandle(pick, carrierId, handTarget);
+        }
+
+        // ── SERVER TRUTH, INERT OFF-SERVER. _grabbers only ever exists on the server, so a client asking
+        // these must get a value that means "I don't know" and reads as "do nothing" — not one that merely
+        // looks plausible. Without the guard IsHandleFree would answer TRUE for every handle on a client. ──
+
+        /// <summary>SERVER-TRUTH. How many hands are on this item right now (0 on non-server peers, where
+        /// _grabbers is never populated). Read by AiBrain, which only runs on the owner of a server-owned bot
+        /// (bots are spawned server-owned) — i.e. always the server.</summary>
+        public int GrabberCount => IsServer ? _grabbers.Count : 0;
+
+        /// <summary>SERVER-TRUTH. Is this handle index unclaimed? (Used by AiBrain to walk to a FREE handle
+        /// instead of a taken one.) Returns FALSE (not true) on a non-server peer: _grabbers is empty there, so
+        /// the naive answer would be "every handle is free" — an INERT default is required, not a plausible
+        /// one. Same contract as GrabberCount's 0.</summary>
+        public bool IsHandleFree(int handleId) =>
+            IsServer && handleId >= 0 && handleId < handles.Count && !_grabbers.ContainsKey(handleId);
+
+        /// <summary>SERVER-TRUTH. True when this item is already being carried but is still short of the hands
+        /// its current load asks for AND has a free handle. This is the AI "come help" signal.
+        /// Returns FALSE on a non-server peer — _grabbers is never populated there, so any answer computed off
+        /// it would be a plausible-looking lie rather than a missing value. Delegates to
+        /// CoCarryMath.NeedsMoreHands so the float boundary is EditMode-pinned.</summary>
+        public bool NeedsMoreHands =>
+            IsServer && CoCarryMath.NeedsMoreHands(_grabbers.Count, _loadCrew, handles.Count);
 
         public void ReleaseHandle(ulong carrierId)
         {
@@ -128,8 +217,43 @@ namespace SlopCo.Cargo
         {
             if (!IsServer) return;
 
+            UpdateHaulScaling();                         // the only place _loadCrew is computed this tick
             if (_pendingThrow) { ApplyThrow(); return; }
             if (State.Value == CarryState.Held && _grabbers.Count > 0) DriveCarry();
+        }
+
+        // Live, never cached at spawn: crew size changes mid-run (joins, leaves, bot despawn) and the
+        // speed must follow within one server tick. Called ONCE per tick from FixedUpdate.
+        private float ComputeLoadCrew() => CoCarryMath.LoadCrew(
+            BaseCrew, SlopCo.Core.CrewCensus.Count, handles.Count,
+            SlopCo.Core.GameModeState.Solo, GameConstants.MaxPlayers, GameConstants.CoCarryLoadPerExtraPlayer);
+
+        private void UpdateHaulScaling()
+        {
+            _loadCrew = ComputeLoadCrew();               // cached: DriveCarry and NeedsMoreHands read the field
+
+            // Replicate the movement factor for the OWNER of whoever is holding this (CharacterController
+            // movement is owner-authoritative, so the server cannot apply it directly). Reset to the flat
+            // legacy constant when nobody holds it, so a transient read is never wrong in a dangerous direction.
+            _haulTarget = _grabbers.Count > 0
+                ? CoCarryMath.HaulSpeedFactor(_grabbers.Count, _loadCrew,
+                      GameConstants.PlayerCarrySpeedMultiplier, GameConstants.CoCarryFullGripSpeed,
+                      GameConstants.CoCarryUnderCrewedFloor, GameConstants.CoCarryOverCrewBonus)
+                : GameConstants.PlayerCarrySpeedMultiplier;
+
+            // Slew, don't teleport: a mid-run join steps loadCrew for every in-flight carrier at once.
+            float next = _grabbers.Count > 0
+                ? CoCarryMath.RampToward(HaulSpeedMult.Value, _haulTarget, Time.fixedDeltaTime,
+                                         GameConstants.CoCarryHaulRampPerSecond)
+                : _haulTarget;                            // nobody is reading it — snap so the next grab starts clean
+
+            // Write on a real change OR on the SETTLING tick. RampToward returns exactly `target` once the
+            // remainder is <= one step, and that final remainder can be <= the epsilon — with a plain
+            // "> 0.001f" guard it would be skipped every tick, freezing the replicated value one rounding
+            // unit short of the table.
+            bool settling = next == _haulTarget && HaulSpeedMult.Value != next;
+            if (settling || Mathf.Abs(next - HaulSpeedMult.Value) > 0.001f) HaulSpeedMult.Value = next;
+            LogCoCarryIfChanged();                        // dev-only
         }
 
         private void DriveCarry()
@@ -141,10 +265,14 @@ namespace SlopCo.Cargo
             if (n == 0) return;
             target /= n;
 
-            // Under-crewed (e.g. 1 person on a 2-person piano) => weak drag = staggering comedy.
-            float strength = _grabbers.Count < RequiredGrabbers ? GameConstants.UnderCrewedLiftStrength : 1f;
+            // Continuous lift ramp: the first grabber still gets exactly UnderCrewedLiftStrength (0.28), each
+            // additional one ramps toward 1.0 at full crew. No more binary cliff on a forced mid-air drop.
+            // _loadCrew is the value UpdateHaulScaling already computed this tick — do not recompute.
+            float strength = CoCarryMath.LiftStrength(_grabbers.Count, _loadCrew,
+                                                      GameConstants.UnderCrewedLiftStrength);
 
-            // Critically-damped PD controller, force-clamped to prevent oscillation/launching.
+            // PD gains are UNCHANGED: mass is not scaled, so equilibrium sag (m*g/k) and damping ratio
+            // (kd / 2*sqrt(k*m)) are exactly what they were before this feature.
             Vector3 toTarget = target - _rb.worldCenterOfMass;
             Vector3 force = (GameConstants.CarryPD_Spring * toTarget) - (GameConstants.CarryPD_Damper * _rb.linearVelocity);
             force *= strength;
@@ -155,6 +283,23 @@ namespace SlopCo.Cargo
             Vector3 align = Vector3.Cross(transform.up, Vector3.up);
             _rb.AddTorque(align * (GameConstants.CarryAlignTorque * strength), ForceMode.Force);
         }
+
+#if UNITY_EDITOR || DEVELOPMENT_BUILD
+        /// <summary>DEV. One-line server-side readout so playtesters report NUMBERS, not adjectives.</summary>
+        public string CoCarryReadout =>
+            $"crew={SlopCo.Core.CrewCensus.Count} load={_loadCrew:0.00} hands={_grabbers.Count} " +
+            $"r={(_loadCrew > 0f ? _grabbers.Count / _loadCrew : 0f):0.000} haul={HaulSpeedMult.Value:0.000} " +
+            $"({HaulSpeedMult.Value * GameConstants.PlayerMoveSpeed:0.00} u/s)";
+
+        private void LogCoCarryIfChanged()
+        {
+            if (SlopCo.Core.CrewCensus.Count == _dbgCrew && _grabbers.Count == _dbgGrab && Mathf.Abs(_loadCrew - _dbgLoad) < 0.001f) return;
+            _dbgCrew = SlopCo.Core.CrewCensus.Count; _dbgGrab = _grabbers.Count; _dbgLoad = _loadCrew;
+            Debug.Log($"[CoCarry] {name}: {CoCarryReadout}");
+        }
+#else
+        private void LogCoCarryIfChanged() { }
+#endif
 
         private void ApplyThrow()
         {
