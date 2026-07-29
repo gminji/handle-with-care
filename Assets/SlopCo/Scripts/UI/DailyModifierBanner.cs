@@ -24,7 +24,7 @@ namespace SlopCo.UI
         private void OnEnable()
         {
             RoundManager.OnPhaseChanged += HandlePhase;
-            if (group != null) group.alpha = 0f;
+            UIMotion.SetAlpha(group, 0f);   // clears blocksRaycasts too — see UIMotion.ApplyVisibility
         }
 
         private void OnDisable() => RoundManager.OnPhaseChanged -= HandlePhase;

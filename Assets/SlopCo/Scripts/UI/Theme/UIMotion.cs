@@ -51,11 +51,47 @@ namespace SlopCo.UI
         public static float Fade(float current, float target, float duration = DurBanner)
             => Fade(current, target, duration, Time.unscaledDeltaTime);
 
-        /// <summary>Null-safe <see cref="CanvasGroup"/> convenience overload — unscaled time.</summary>
-        public static void Fade(CanvasGroup group, float target, float duration = DurBanner)
+        /// <summary>Below this alpha a group counts as invisible, and therefore as non-blocking.</summary>
+        public const float VisibleAlphaEpsilon = 0.001f;
+
+        /// <summary>Null-safe <see cref="CanvasGroup"/> fade, dt-injectable (see class remarks).
+        /// Also derives the raycast state — see <see cref="ApplyVisibility"/>.</summary>
+        public static void Fade(CanvasGroup group, float target, float duration, float dt)
         {
             if (group == null) return;
-            group.alpha = Fade(group.alpha, target, duration);
+            ApplyVisibility(group, Fade(group.alpha, target, duration, dt));
+        }
+
+        /// <summary>Null-safe <see cref="CanvasGroup"/> convenience overload — unscaled time.</summary>
+        public static void Fade(CanvasGroup group, float target, float duration = DurBanner)
+            => Fade(group, target, duration, Time.unscaledDeltaTime);
+
+        /// <summary>Null-safe direct alpha assignment that keeps the raycast state in sync. Use this
+        /// instead of writing <c>group.alpha</c> directly (e.g. from <c>OnEnable</c>) — otherwise the
+        /// group starts out invisible-but-blocking and eats clicks until the first fade tick.</summary>
+        public static void SetAlpha(CanvasGroup group, float alpha)
+        {
+            if (group == null) return;
+            ApplyVisibility(group, Mathf.Clamp01(alpha));
+        }
+
+        /// <summary>Writes alpha and derives <c>blocksRaycasts</c>/<c>interactable</c> from it.
+        ///
+        /// <para>A CanvasGroup at alpha 0 is invisible but STILL RECEIVES RAYCASTS — alpha only controls
+        /// what you see. That is how <c>MenuCanvas/HintRoot/HintPanel</c> (a 1100x90 strip of fully
+        /// transparent hint text across the lower centre of the screen) silently swallowed every click on
+        /// the Options BACK button, which sits inside its rect. The panel was "hidden" by fading alpha to
+        /// 0 while <c>blocksRaycasts</c> stayed true.</para>
+        ///
+        /// <para>Deriving both flags here means no future fade can reintroduce that class of bug. The
+        /// trade-off: a group that must be fully transparent AND clickable cannot use these helpers and
+        /// must write <c>alpha</c> itself. No such case exists in this project.</para></summary>
+        private static void ApplyVisibility(CanvasGroup group, float alpha)
+        {
+            group.alpha = alpha;
+            bool visible = alpha > VisibleAlphaEpsilon;
+            group.blocksRaycasts = visible;
+            group.interactable = visible;
         }
 
         /// <summary>0..1 pulse, e.g. the fuse-critical flash (<c>PulseHzCritical</c>).</summary>

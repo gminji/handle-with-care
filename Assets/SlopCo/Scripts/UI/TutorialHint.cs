@@ -17,7 +17,9 @@ namespace SlopCo.UI
         private void OnEnable()
         {
             RoundManager.OnPhaseChanged += HandlePhase;
-            if (group != null) group.alpha = 0f;
+            // Via SetAlpha, not a direct write: the hint's text rect spans the lower centre of the screen
+            // and would block clicks on whatever is under it until the first fade tick (UIMotion).
+            UIMotion.SetAlpha(group, 0f);
         }
 
         private void OnDisable() => RoundManager.OnPhaseChanged -= HandlePhase;

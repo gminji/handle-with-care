@@ -129,6 +129,13 @@ namespace SlopCo.Tests.EditMode
             // the only phase ShopRail is ever visible in — and the scene's serialized default is also
             // m_Alpha: 0. So the two rects are never simultaneously visible in practice. If TutorialHint's
             // phase branching ever changes to show the hint during Payout, this exclusion must be revisited.
+            //
+            // CAUTION — visibility is NOT the same as raycast blocking, and reasoning only about what is
+            // visible is exactly what let the Options BACK button bug ship: HintPanel sat at alpha 0 with
+            // blocksRaycasts still true, so its (invisible) HintText ate every click in its 1100×90 rect.
+            // UIMotion now derives blocksRaycasts/interactable from alpha, which is what makes the
+            // "never simultaneously visible" argument above sufficient. Do not weaken that derivation
+            // without revisiting this exclusion. See UIMotionRaycastTests.
         }
 
         [TestCase(1920f, 1080f)]
