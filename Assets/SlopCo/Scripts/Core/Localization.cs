@@ -59,6 +59,28 @@ namespace SlopCo.Core
             return key;
         }
 
+        /// <summary>All keys in the table (test-only — lets EditMode tests iterate every entry instead of
+        /// just the ones they already know the names of).</summary>
+        public static IEnumerable<string> Keys => T.Keys;
+
+        /// <summary>True if <paramref name="key"/> exists in the table (test-only convenience).</summary>
+        public static bool Has(string key) => T.ContainsKey(key);
+
+        /// <summary>Number of language variants stored for <paramref name="key"/>, or 0 if the key is
+        /// missing (test-only convenience — no side effects on <see cref="Current"/>).</summary>
+        public static int VariantCount(string key) => T.TryGetValue(key, out var arr) ? arr.Length : 0;
+
+        /// <summary>Raw variant string at <paramref name="index"/> for <paramref name="key"/>, bypassing
+        /// <see cref="Current"/> entirely — unlike <see cref="Get"/>/<see cref="SetLanguage"/> this never
+        /// touches <see cref="Current"/> or PlayerPrefs, so tests can iterate every language variant of
+        /// every key without mutating global language state.</summary>
+        public static string Variant(string key, int index)
+        {
+            if (!T.TryGetValue(key, out var arr)) return string.Empty;
+            if (index < 0 || index >= arr.Length) return string.Empty;
+            return arr[index] ?? string.Empty;
+        }
+
         // index order: { English, Korean, Japanese, Chinese }
         static readonly Dictionary<string, string[]> T = new()
         {
@@ -213,6 +235,7 @@ namespace SlopCo.Core
             { "shop.cash",       new[]{ "CASH ${cash}", "보유 ${cash}", "所持 ${cash}", "持有 ${cash}" } },
             { "shop.short",      new[]{ "(NOT ENOUGH)", "(잔액 부족)", "(残高不足)", "(余额不足)" } },
             { "shop.owned",      new[]{ "OWNED", "보유 중", "所持済み", "已拥有" } },
+            { "shop.buy",        new[]{ "BUY", "구매 가능", "購入可", "可购买" } },
 
             // ── Crew augment vote (online) ──
             { "vote.title",  new[]{ "CREW VOTE — AUGMENT", "크루 투표 — 증강", "クルー投票 — オーグメント", "队伍投票 — 增强" } },
@@ -250,6 +273,7 @@ namespace SlopCo.Core
 
             // ── Dash (stamina sprint) ──
             { "dash.label",     new[]{ "DASH", "대쉬", "ダッシュ", "冲刺" } },
+            { "dash.low",       new[]{ "LOW", "부족", "残りわずか", "不足" } },
             { "dash.exhausted", new[]{ "EXHAUSTED", "지침", "バテた", "力尽き" } },
 
             // ── Items (consumable + permanent) ──
@@ -267,6 +291,11 @@ namespace SlopCo.Core
             { "item.flask.desc",  new[]{ "Permanent: small stamina refill on use", "영구: 사용 시 소량 스태미나 회복", "恒久: 使用時に少量スタミナ回復", "永久: 使用时少量体力恢复" } },
             { "item.slot.empty",  new[]{ "Item: (empty)", "아이템: (없음)", "アイテム: (なし)", "道具: (空)" } },
             { "item.slot.none",   new[]{ "Perk: (none)", "특전: (없음)", "パーク: (なし)", "天赋: (无)" } },
+
+            // ── HUD (in-round bar — HudController literals, design.md §5.8) ──
+            { "hud.quota", new[]{ "QUOTA  ${quota}", "쿼터  ${quota}", "ノルマ  ${quota}", "配额  ${quota}" } },
+            { "hud.day",   new[]{ "DAY {day}", "{day}일차", "{day}日目", "第{day}天" } },
+            { "hud.chain", new[]{ "x{chain}  CHAIN!", "x{chain}  연쇄!", "x{chain} チェーン！", "x{chain}  连锁！" } },
 
             // ── Teammate loadout HUD ──
             { "hud.loadout.aug",  new[]{ "Augment", "증강", "オーグメント", "增强" } },
