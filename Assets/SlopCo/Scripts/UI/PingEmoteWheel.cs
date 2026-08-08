@@ -31,10 +31,6 @@ namespace SlopCo.UI
         private Canvas _canvas;
         private Text[] _labels;
 
-        // Cursor state saved on open, restored on close.
-        private bool _savedCursorVisible;
-        private CursorLockMode _savedCursorLock;
-
         private void Awake()
         {
             if (controller == null) controller = GetComponent<PingEmoteController>();
@@ -81,10 +77,8 @@ namespace SlopCo.UI
             if (_canvas != null) _canvas.gameObject.SetActive(true);
             RefreshLabels();
 
-            _savedCursorVisible = Cursor.visible;
-            _savedCursorLock = Cursor.lockState;
-            Cursor.visible = true;
-            Cursor.lockState = CursorLockMode.None;
+            if (_ui == null) _ui = Object.FindFirstObjectByType<UIManager>();
+            _ui?.SetFreeCursor(this, true);
 
             if (inputReader != null) inputReader.Suppressed = true;   // freeze move/throw (grab preserved → no cargo drop) while open
         }
@@ -98,8 +92,9 @@ namespace SlopCo.UI
             _selected = -1;
             if (_canvas != null) _canvas.gameObject.SetActive(false);
 
-            Cursor.visible = _savedCursorVisible;
-            Cursor.lockState = _savedCursorLock;
+            // Close() can run outside Update() (e.g. OnDisable), where _ui may not have been resolved yet.
+            if (_ui == null) _ui = Object.FindFirstObjectByType<UIManager>();
+            _ui?.SetFreeCursor(this, false);
 
             if (inputReader != null) inputReader.Suppressed = false;
         }

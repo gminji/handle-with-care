@@ -1,3 +1,4 @@
+using System.Collections.Generic;
 using Unity.Netcode;
 using UnityEngine;
 using UnityEngine.InputSystem;
@@ -11,8 +12,10 @@ namespace SlopCo.UI
     /// (MainMenu → Lobby → in-game HUD) plus the Options, Pause and Controls overlays. ESC opens/closes
     /// Pause while in a session. This is the single owner of panel visibility — LobbyUI no longer toggles
     /// its own panel, and the Payout/GameOver round overlays (results card, augment shop) are owned here too.
-    /// Buttons call the public methods here.
+    /// Buttons call the public methods here. Also the single owner of mouse-cursor capture: publishes
+    /// <see cref="CursorPolicy.MouseCaptured"/> from the same live screen-state reads Apply() already does.
     /// </summary>
+    [DefaultExecutionOrder(-50)]   // must run before PlayerInputReader so CursorPolicy.MouseCaptured is fresh
     public sealed class UIManager : MonoBehaviour
     {
         [Header("Screens")]
@@ -54,6 +57,23 @@ namespace SlopCo.UI
         private PendingMode _pending;
         private bool _autoStartSolo;
         private bool _lobbyIntent;   // online: keep the lobby visible while not yet connected (Host/Join here)
+
+        // Free-cursor holders (e.g. the ping/emote wheel) that veto mouse capture while open. Type MUST
+        // stay qualified as UnityEngine.Object — an unqualified `Object` here binds to UnityEngine.Object
+        // only because this file has no `using System;`. Adding one would silently rebind it to
+        // System.Object, which defeats the fake-null cleanup below with no compile error (design §4.4).
+        private readonly HashSet<UnityEngine.Object> _freeCursorHolders = new HashSet<UnityEngine.Object>();
+
+        /// <summary>Register/unregister a free-cursor request. Idempotent both ways. Owner-identified so a
+        /// mismatched pair from one holder can never cancel another holder's request (D3).</summary>
+        public void SetFreeCursor(UnityEngine.Object owner, bool free)
+        {
+            if (owner == null) return;
+            if (free) _freeCursorHolders.Add(owner); else _freeCursorHolders.Remove(owner);
+        }
+
+        /// <summary>Diagnostic/test read of the actual mouse-capture state Apply() last computed.</summary>
+        public bool CursorLocked { get; private set; }
 
         private void Start()
         {
@@ -290,6 +310,52 @@ namespace SlopCo.UI
                 resultsPanel.SetActive(roundOverlay && (phase == RoundPhase.Payout || phase == RoundPhase.GameOver));
             if (augmentShopPanel != null)
                 augmentShopPanel.SetActive(roundOverlay && phase == RoundPhase.Payout);
+
+            // ── Cursor lock / mouse capture (D3) ──────────────────────────────────
+            _freeCursorHolders.RemoveWhere(o => o == null);   // destroyed holders never unblock capture otherwise (§4.4 contract)
+
+            // Results card / augment shop / disconnect vote are mouse-only screens that InGameInteractive
+            // does not see. The map picker needs no term here — both its screens (mainMenu && _mapSelect,
+            // crewMapVote) are already _screen != InGame, which the inGame term below excludes.
+            bool roundOverlayUp = roundOverlay && (phase == RoundPhase.Payout || phase == RoundPhase.GameOver);
+            bool votePaused = SlopCo.Gameplay.DisconnectVote.GameFrozen;
+
+            bool want = CursorPolicy.WantLock(
+                inGame: _screen == Screen.InGame,
+                firstPerson: SettingsManager.FirstPerson,
+                pause: _pause, options: _options, controls: _controls, help: _help,
+                roundOverlayUp: roundOverlayUp,
+                votePaused: votePaused,
+                freeCursorHolders: _freeCursorHolders.Count);
+
+            // Do not lock without focus — otherwise an alt-tabbed player has the game yank the cursor back
+            // from whatever else they're using. ProjectSettings runInBackground: 1 means Apply() keeps
+            // running while unfocused, so this term is load-bearing.
+            bool capture = CursorPolicy.CaptureMouse(want, Application.isFocused);
+
+            // lockState and visible are treated as one target state and only written when they diverge from
+            // it. Gating visible only inside the lockState branch (an earlier draft) leaves neither branch
+            // firing during alt-tab (want=true, focused=false), so the cursor stays hidden over another app.
+            var wantLockMode = capture ? CursorLockMode.Locked : CursorLockMode.None;
+            if (Cursor.lockState != wantLockMode || Cursor.visible == capture)
+            {
+                Cursor.lockState = wantLockMode;
+                Cursor.visible = !capture;
+            }
+            CursorLocked = capture;
+            CursorPolicy.MouseCaptured = capture;   // the cursor gate and the look-input gate share this one value
+        }
+
+        // Re-evaluate on both directions of a focus change — hooking only the return leaves visible-state
+        // restoration a frame late on the way out.
+        private void OnApplicationFocus(bool _) => Apply();
+
+        private void OnDisable()
+        {
+            CursorLocked = false;                        // reset the cache too, or re-locking is blocked forever
+            CursorPolicy.MouseCaptured = false;
+            Cursor.lockState = CursorLockMode.None;
+            Cursor.visible = true;
         }
     }
 }

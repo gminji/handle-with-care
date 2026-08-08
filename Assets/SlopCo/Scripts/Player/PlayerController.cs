@@ -112,6 +112,8 @@ namespace SlopCo.Player
         private DashState _dash = DashStamina.Initial; // owner-local dash stamina (NetworkTransform replicates the resulting motion)
         private float _itemBuffMult = 1f, _itemBuffT = 0f; // owner-local temporary speed buff from items
         private bool _fpHidden;   // are our own renderers currently hidden for the first-person view?
+        private LookState _look;               // owner-local mouse-look state (yaw drives the body, pitch the camera only — D1)
+        private bool _wasFirstPerson;           // drives LookMath.OnViewpointChanged's transition seeding
 
         // ── UFO abduction (owner-local; the server only decides WHO gets taken) ──
         private Transform _abductor;     // the saucer we are hanging from (null = not abducted)
@@ -201,6 +203,23 @@ namespace SlopCo.Player
                 SettingsManager.Save();
             }
 
+            bool fp = SettingsManager.FirstPerson;
+            bool fpSelf = fp && !_isBot;
+
+            // Transition judged by the pure layer (EditMode-testable). The first frame has
+            // _wasFirstPerson == false, so starting in first person still reseeds from forward — without
+            // seeding the view would jump to world +Z.
+            _look = LookMath.OnViewpointChanged(_look, fpSelf, _wasFirstPerson, transform.forward);
+            _wasFirstPerson = fpSelf;
+
+            if (fpSelf)
+                // unscaledDeltaTime: Juice.cs:40 drops timeScale to 0.18 during the big-boom hitstop. A
+                // scaled dt would slow gamepad look to 18% speed for that 0.2s while the mouse stays full
+                // speed — the two devices would desync at the most chaotic moment (GameAudio.cs:84 uses
+                // unscaled for the same reason).
+                _look = LookMath.Step(_look, input.LookDelta, input.LookStick, Time.unscaledDeltaTime,
+                                      SettingsManager.LookSensitivity, SettingsManager.InvertLookY);
+
             // Off the ground in a tractor beam: the saucer owns our motion until it lets go.
             if (_abductor != null) { TickAbduction(); return; }
 
@@ -212,8 +231,12 @@ namespace SlopCo.Player
                 if (input.CyclePressed)         inventory.RequestCyclePermanentRpc();
             }
 
-            Vector2 m = input.Move;
-            Vector3 dir = new Vector3(m.x, 0f, m.y);
+            Vector2 m = input.Move;                        // WASD / arrow keys / left stick all land in this one value
+            // !_isBot guards against SettingsManager.FirstPerson being a GLOBAL value: on a host playing
+            // first person, every bot would otherwise move relative to the host's yaw (AC11, R5).
+            Vector3 dir = fpSelf
+                ? LookMath.MoveDirection(m, _look.Yaw)     // view-relative
+                : new Vector3(m.x, 0f, m.y);               // legacy world-fixed axes (third person + bots)
             if (dir.sqrMagnitude > 1f) dir.Normalize();
 
             var aug = ServiceLocator.Get<SlopCo.Gameplay.AugmentSystem>();
@@ -259,7 +282,13 @@ namespace SlopCo.Player
             PlanarVelocity = new Vector3(horizontal.x, 0f, horizontal.z);
             TrackLanding();
 
-            if (horizontal.sqrMagnitude > 0.01f)
+            if (fpSelf)
+            {
+                // Mouse look must be 1:1 — RotateTowards would lag the view behind the cursor and induce
+                // motion sickness.
+                transform.rotation = Quaternion.Euler(0f, _look.Yaw, 0f);
+            }
+            else if (horizontal.sqrMagnitude > 0.01f)
             {
                 Quaternion target = Quaternion.LookRotation(horizontal.normalized, Vector3.up);
                 transform.rotation = Quaternion.RotateTowards(transform.rotation, target, 720f * Time.deltaTime);
@@ -281,7 +310,8 @@ namespace SlopCo.Player
             // First person is rigid on purpose: smoothing the eye position lags the body and reads as drift.
             float k = fp ? 1f : 1f - Mathf.Exp(-10f * Time.deltaTime);
             _cam.transform.position = Vector3.Lerp(_cam.transform.position, desired, k);
-            Vector3 look = CameraRig.DesiredLookAt(fp, t.position, transform.forward) - _cam.transform.position;
+            float pitch = (fp && !_isBot) ? _look.Pitch : 0f;
+            Vector3 look = CameraRig.DesiredLookAt(fp, t.position, transform.forward, pitch) - _cam.transform.position;
             if (look.sqrMagnitude > 0.001f)
                 _cam.transform.rotation = Quaternion.Slerp(_cam.transform.rotation, Quaternion.LookRotation(look), k);
 

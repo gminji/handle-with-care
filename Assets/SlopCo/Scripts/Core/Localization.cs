@@ -109,6 +109,8 @@ namespace SlopCo.Core
             { "opt.resolution", new[]{ "Resolution", "해상도", "解像度", "分辨率" } },
             { "opt.language",   new[]{ "Language", "언어", "言語", "语言" } },
             { "opt.pov",        new[]{ "Camera", "시점", "視点", "视角" } },
+            { "opt.looksens",   new[]{ "LOOK SENSITIVITY", "시점 감도", "視点感度", "视角灵敏度" } },
+            { "opt.invy",       new[]{ "INVERT Y", "Y축 반전", "Y軸反転", "Y轴反转" } },
             { "pov.third",      new[]{ "THIRD", "3인칭", "三人称", "第三人称" } },
             { "pov.first",      new[]{ "FIRST", "1인칭", "一人称", "第一人称" } },
             { "opt.back",       new[]{ "BACK", "뒤로", "戻る", "返回" } },
@@ -121,10 +123,10 @@ namespace SlopCo.Core
             // ── Controls ──
             { "controls.title", new[]{ "CONTROLS", "조작법", "操作方法", "操作说明" } },
             { "controls.body",  new[]{
-                "WASD / Left Stick     Move\n\nE / Right Bumper     Grab & hold  (carry big items WITH a friend)\n\nLeft Mouse / Right Trigger     Throw  (hold to charge)\n\nRight Mouse / B     Kick  (shove a teammate, drive off hazards)\n\nSpace / A     Jump\n\nV / Right Stick Click     Camera  (third ⇄ first person)\n\nESC     Pause",
-                "WASD / 왼쪽 스틱     이동\n\nE / RB     잡기 (큰 짐은 친구와 함께)\n\n마우스 좌클릭 / RT     던지기 (꾹 눌러 차지)\n\n마우스 우클릭 / B     발차기 (동료 밀치기, 방해요소 퇴치)\n\nSpace / A     점프\n\nV / 오른쪽 스틱 클릭     시점 전환 (3인칭 ⇄ 1인칭)\n\nESC     일시정지",
-                "WASD / 左スティック     移動\n\nE / RB     つかむ（大きい荷物は仲間と一緒に）\n\n左クリック / RT     投げる（長押しでチャージ）\n\n右クリック / B     キック（仲間を押しのける・妨害を追い払う）\n\nSpace / A     ジャンプ\n\nV / 右スティック押し込み     視点切替（三人称 ⇄ 一人称）\n\nESC     ポーズ",
-                "WASD / 左摇杆     移动\n\nE / RB     抓取（大件物品需与队友合搬）\n\n左键 / RT     投掷（长按蓄力）\n\n右键 / B     踢击（推开队友、赶走妨碍者）\n\n空格 / A     跳跃\n\nV / 右摇杆按下     切换视角（第三人称 ⇄ 第一人称）\n\nESC     暂停" } },
+                "WASD / Arrows / Left Stick     Move  (relative to your view in first person)\n\nMouse / Right Stick     Look around  (first person)\n\nE / Right Bumper     Grab & hold  (carry big items WITH a friend)\n\nLeft Mouse / Right Trigger     Throw  (hold to charge)\n\nRight Mouse / B     Kick  (shove a teammate, drive off hazards)\n\nSpace / A     Jump\n\nV / Right Stick Click     Camera  (third ⇄ first person)\n\nESC     Pause",
+                "WASD / 방향키 / 왼쪽 스틱     이동 (1인칭에서는 보는 방향 기준)\n\n마우스 / 오른쪽 스틱     시점 회전 (1인칭)\n\nE / RB     잡기 (큰 짐은 친구와 함께)\n\n마우스 좌클릭 / RT     던지기 (꾹 눌러 차지)\n\n마우스 우클릭 / B     발차기 (동료 밀치기, 방해요소 퇴치)\n\nSpace / A     점프\n\nV / 오른쪽 스틱 클릭     시점 전환 (3인칭 ⇄ 1인칭)\n\nESC     일시정지",
+                "WASD / 矢印キー / 左スティック     移動（一人称ではカメラの向き基準）\n\nマウス / 右スティック     視点回転（一人称）\n\nE / RB     つかむ（大きい荷物は仲間と一緒に）\n\n左クリック / RT     投げる（長押しでチャージ）\n\n右クリック / B     キック（仲間を押しのける・妨害を追い払う）\n\nSpace / A     ジャンプ\n\nV / 右スティック押し込み     視点切替（三人称 ⇄ 一人称）\n\nESC     ポーズ",
+                "WASD / 方向键 / 左摇杆     移动（第一人称下以视角方向为准）\n\n鼠标 / 右摇杆     视角转动（第一人称）\n\nE / RB     抓取（大件物品需与队友合搬）\n\n左键 / RT     投掷（长按蓄力）\n\n右键 / B     踢击（推开队友、赶走妨碍者）\n\n空格 / A     跳跃\n\nV / 右摇杆按下     切换视角（第三人称 ⇄ 第一人称）\n\nESC     暂停" } },
 
             // ── Help (how-to-play overlay; opened from the HELP button on the menu and in the lobby) ──
             { "help.title", new[]{ "HOW TO PLAY", "게임 방법", "遊び方", "玩法说明" } },

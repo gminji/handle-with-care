@@ -32,6 +32,13 @@ namespace SlopCo.UI
         [Tooltip("THIRD/FIRST label on the camera-viewpoint toggle row.")]
         [SerializeField] private Text povValue;
 
+        [Header("Mouse look (scene wiring TBD — code hooks are null-safe, see design §5.7)")]
+        [Tooltip("Sensitivity slider, min 0.2 / max 3.0 — must match SettingsManager.LookSensitivityMin/Max.")]
+        [SerializeField] private Slider lookSensSlider;
+        [Tooltip("\"x1.4\"-style sensitivity readout, not a percentage.")]
+        [SerializeField] private Text lookSensValue;
+        [SerializeField] private Text invertYValue;
+
         private List<Vector2Int> _resolutions;
         private int _resIndex;
         private bool _wired;
@@ -47,6 +54,12 @@ namespace SlopCo.UI
             if (musicSlider  != null) musicSlider.onValueChanged.AddListener(v => { SettingsManager.SetMusic(v);  SetLabel(musicValue, v); });
             if (sfxSlider    != null) sfxSlider.onValueChanged.AddListener(v => { SettingsManager.SetSfx(v);    SetLabel(sfxValue, v); });
             if (voiceSlider  != null) voiceSlider.onValueChanged.AddListener(v => { SettingsManager.SetVoiceVolume(v); SetLabel(voiceValue, v); });
+            if (lookSensSlider != null)
+            {
+                lookSensSlider.minValue = SettingsManager.LookSensitivityMin;
+                lookSensSlider.maxValue = SettingsManager.LookSensitivityMax;
+                lookSensSlider.onValueChanged.AddListener(v => { SettingsManager.SetLookSensitivity(v); SetLookSensLabel(v); });
+            }
             BuildResolutionList();
         }
 
@@ -84,6 +97,9 @@ namespace SlopCo.UI
             SetLabel(sfxValue, SettingsManager.Sfx);
             SetLabel(voiceValue, SettingsManager.VoiceVolume);
             if (voiceEnabledValue != null) voiceEnabledValue.text = SettingsManager.VoiceEnabled ? "ON" : "OFF";
+            if (lookSensSlider != null) lookSensSlider.SetValueWithoutNotify(SettingsManager.LookSensitivity);
+            SetLookSensLabel(SettingsManager.LookSensitivity);
+            if (invertYValue != null) invertYValue.text = SettingsManager.InvertLookY ? "ON" : "OFF";
 
             if (fullscreenValue != null) fullscreenValue.text = SettingsManager.Fullscreen ? "ON" : "OFF";
             if (vsyncValue != null)      vsyncValue.text = SettingsManager.VSync ? "ON" : "OFF";
@@ -105,10 +121,14 @@ namespace SlopCo.UI
 
         private static void SetLabel(Text t, float v01) { if (t != null) t.text = Mathf.RoundToInt(v01 * 100f) + "%"; }
 
+        // Sensitivity is a multiplier, not a percentage — "x1.4" form instead of SetLabel's "%" form.
+        private void SetLookSensLabel(float v) { if (lookSensValue != null) lookSensValue.text = "x" + v.ToString("0.0"); }
+
         // ── Button hooks (◀▶ / toggles) ──
         public void ToggleFullscreen() { SettingsManager.SetFullscreen(!SettingsManager.Fullscreen); Sync(); }
         public void ToggleVSync()      { SettingsManager.SetVSync(!SettingsManager.VSync); Sync(); }
         public void ToggleVoice()      { SettingsManager.SetVoiceEnabled(!SettingsManager.VoiceEnabled); Sync(); }
+        public void ToggleInvertY()    { SettingsManager.SetInvertLookY(!SettingsManager.InvertLookY); Sync(); }
 
         /// <summary>Camera viewpoint row: third ⇄ first person (same toggle is bound to V / right-stick in game).</summary>
         public void ToggleFirstPerson() { SettingsManager.SetFirstPerson(!SettingsManager.FirstPerson); Sync(); }

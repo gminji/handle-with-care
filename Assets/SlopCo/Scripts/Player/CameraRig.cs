@@ -23,6 +23,12 @@ namespace SlopCo.Player
         public const float FirstEyeAhead  = 0.18f;  // nudge forward so the character's own head/torso is behind the near plane
         public const float FirstLookAhead = 10f;    // look point distance down the facing direction
 
+        // Mouse-look pitch range (gimbal/flip guard). Owned here, not referenced from LookMath — the
+        // two pure classes are siblings and must not depend on each other. Their agreement is pinned by
+        // CameraRigTests (the test assembly references both, which is the right place for that check).
+        public const float PitchMin = -85f;
+        public const float PitchMax = 85f;
+
         /// <summary>Where the camera wants to be for this viewpoint.</summary>
         public static Vector3 DesiredPosition(bool firstPerson, Vector3 target, Vector3 forward)
         {
@@ -31,12 +37,22 @@ namespace SlopCo.Player
             return target + Vector3.up * FirstEyeHeight + f * FirstEyeAhead;
         }
 
-        /// <summary>The world point the camera should aim at for this viewpoint.</summary>
+        /// <summary>The world point the camera should aim at for this viewpoint, looking level (pitch 0).</summary>
         public static Vector3 DesiredLookAt(bool firstPerson, Vector3 target, Vector3 forward)
+            => DesiredLookAt(firstPerson, target, forward, 0f);
+
+        /// <summary>The world point the camera should aim at for this viewpoint, with a first-person pitch
+        /// (degrees, positive = up) folded into the gaze direction. Third person ignores
+        /// <paramref name="pitchDegrees"/> entirely — its look point is always above the feet. At
+        /// pitch 0, Mathf.Cos(0)==1f and Mathf.Sin(0)==0f exactly, so this is bit-for-bit identical to
+        /// the legacy (pitch-less) formula.</summary>
+        public static Vector3 DesiredLookAt(bool firstPerson, Vector3 target, Vector3 forward, float pitchDegrees)
         {
             if (!firstPerson) return target + Vector3.up * ThirdLookUp;
             Vector3 f = Flatten(forward);
-            return target + Vector3.up * FirstEyeHeight + f * FirstLookAhead;
+            float p = Mathf.Clamp(pitchDegrees, PitchMin, PitchMax) * Mathf.Deg2Rad;
+            Vector3 gaze = f * Mathf.Cos(p) + Vector3.up * Mathf.Sin(p);   // unit length, from the eye point
+            return target + Vector3.up * FirstEyeHeight + gaze * FirstLookAhead;
         }
 
         /// <summary>Horizontal facing, normalized. Degenerate input (straight up/down, zero) falls back

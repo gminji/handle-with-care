@@ -15,6 +15,10 @@ namespace SlopCo.Core
         const string K_ResW = "opt_resw", K_ResH = "opt_resh";
         const string K_VoiceOn = "opt_voiceon", K_VoiceVol = "opt_voicevol";
         const string K_FirstPerson = "opt_firstperson";
+        const string K_LookSens = "opt_looksens", K_InvertY = "opt_invy";
+
+        public const float LookSensitivityMin = 0.2f, LookSensitivityMax = 3.0f;
+        public const float LookSensitivityDefault = 1.0f;   // also the fallback for a corrupted pref
 
         public static float Master { get; private set; } = 0.8f;
         public static float Music  { get; private set; } = 0.8f;
@@ -26,6 +30,12 @@ namespace SlopCo.Core
         /// <summary>Camera viewpoint: false = the default pulled-back third person, true = first person.
         /// Toggled in Options or with the in-game POV key; <see cref="SlopCo.Player.PlayerController"/> reads it live.</summary>
         public static bool  FirstPerson { get; private set; }
+        /// <summary>Mouse-look sensitivity multiplier, already clamped to [<see cref="LookSensitivityMin"/>,
+        /// <see cref="LookSensitivityMax"/>]. Read live by <c>SlopCo.Player.LookMath.Step</c>. Owned here
+        /// (not in LookMath) so SlopCo.Core never depends on SlopCo.Player — see design §3.3.</summary>
+        public static float LookSensitivity { get; private set; } = 1.0f;
+        /// <summary>Invert the pitch (Y) axis for mouse look.</summary>
+        public static bool  InvertLookY { get; private set; }
         public static bool  Fullscreen { get; private set; }
         public static int   QualityLevel { get; private set; }
         public static bool  VSync { get; private set; }
@@ -51,6 +61,8 @@ namespace SlopCo.Core
             VoiceEnabled = PlayerPrefs.GetInt(K_VoiceOn, 0) == 1;   // default OFF; a saved choice still wins
             VoiceVolume  = PlayerPrefs.GetFloat(K_VoiceVol, 0.8f);
             FirstPerson  = PlayerPrefs.GetInt(K_FirstPerson, 0) == 1;   // default: third person
+            LookSensitivity = ClampLookSensitivity(PlayerPrefs.GetFloat(K_LookSens, LookSensitivityDefault));
+            InvertLookY  = PlayerPrefs.GetInt(K_InvertY, 0) == 1;
 
             ApplyAll();
             Localization.Load();
@@ -70,6 +82,27 @@ namespace SlopCo.Core
         public static void SetVoiceVolume(float v)  { VoiceVolume = Mathf.Clamp01(v); PlayerPrefs.SetFloat(K_VoiceVol, VoiceVolume); }
 
         public static void SetFirstPerson(bool on) { FirstPerson = on; PlayerPrefs.SetInt(K_FirstPerson, on ? 1 : 0); }
+
+        /// <summary>Pure clamp — touches no PlayerPrefs, so it is safe to unit-test without side effects.
+        /// Rejects non-finite input FIRST: Mathf.Clamp is a pair of comparisons, and every comparison
+        /// against NaN is false, so it would hand NaN straight back. That matters because this value is
+        /// multiplied into the look delta every frame, 0 * NaN is NaN, and a NaN yaw reaches
+        /// <c>Quaternion.Euler</c> on an owner-authoritative transform — poisoning the pose that
+        /// ClientNetworkTransform replicates to the whole lobby, with no path back to a sane value.
+        /// A hand-edited or corrupted <c>opt_looksens</c> pref is enough to trigger it.</summary>
+        public static float ClampLookSensitivity(float v)
+        {
+            if (float.IsNaN(v) || float.IsInfinity(v)) return LookSensitivityDefault;
+            return Mathf.Clamp(v, LookSensitivityMin, LookSensitivityMax);
+        }
+
+        public static void SetLookSensitivity(float v)
+        {
+            LookSensitivity = ClampLookSensitivity(v);
+            PlayerPrefs.SetFloat(K_LookSens, LookSensitivity);
+        }
+
+        public static void SetInvertLookY(bool on) { InvertLookY = on; PlayerPrefs.SetInt(K_InvertY, on ? 1 : 0); }
 
         public static void SetFullscreen(bool f)
         {

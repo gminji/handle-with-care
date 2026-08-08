@@ -1,5 +1,6 @@
 using UnityEngine;
 using UnityEngine.InputSystem;
+using SlopCo.Core;
 
 namespace SlopCo.Player
 {
@@ -25,6 +26,13 @@ namespace SlopCo.Player
         /// <summary>Kick pressed this frame — shoves teammates and drives off hazards.</summary>
         public bool KickPressed { get; private set; }
 
+        /// <summary>Raw per-frame mouse pointer delta in pixels — NOT scaled by dt (LookMath.Step expects
+        /// an already-accumulated per-frame value). Zeroed whenever the cursor is not captured.</summary>
+        public Vector2 LookDelta { get; private set; }
+        /// <summary>Gamepad right stick axis position (-1..1) — an angular RATE, scaled by
+        /// Time.unscaledDeltaTime by the caller (LookMath.Step), not here.</summary>
+        public Vector2 LookStick { get; private set; }
+
         /// <summary>When true, movement/jump/throw are zeroed but GRAB is preserved — lets a transient overlay
         /// (e.g. the ping/emote wheel) freeze the player WITHOUT dropping carried cargo. Owner-local.</summary>
         public bool Suppressed { get; set; }
@@ -37,8 +45,13 @@ namespace SlopCo.Player
         private const float MaxThrowChargeTime = 1.2f;
 
         private InputAction _move, _jump, _grab, _throw, _dash, _useItem, _usePerm, _discard, _cycle, _pov, _kick;
+        private InputAction _lookMouse, _lookStick;
         private bool _enabled;
         private float _throwHeldTime;
+        // Rising-edge guard for CursorPolicy.ShouldReadLook — the frame capture STARTS (false -> true) has
+        // a warp-tainted delta (OS pointer snapped to center by Cursor.lockState = Locked) mixed with
+        // whatever accumulated while the cursor was free. Owner-local, mirrors _wasCaptured usage in §5.1.
+        private bool _wasCaptured;
 
         // AI mode: an AiBrain drives this reader instead of physical devices (bots reuse the human pipeline).
         private AiBrain _ai;
@@ -86,6 +99,9 @@ namespace SlopCo.Player
             _pov.AddBinding("<Gamepad>/rightStickPress");
             _kick = new InputAction("Kick", InputActionType.Button, "<Mouse>/rightButton");
             _kick.AddBinding("<Gamepad>/buttonEast");
+
+            _lookMouse = new InputAction("LookMouse", InputActionType.Value, "<Mouse>/delta");
+            _lookStick = new InputAction("LookStick", InputActionType.Value, "<Gamepad>/rightStick");
         }
 
         public void Enable()
@@ -93,6 +109,7 @@ namespace SlopCo.Player
             if (_enabled) return;
             _move.Enable(); _jump.Enable(); _grab.Enable(); _throw.Enable(); _dash.Enable();
             _useItem.Enable(); _usePerm.Enable(); _discard.Enable(); _cycle.Enable(); _pov.Enable(); _kick.Enable();
+            _lookMouse.Enable(); _lookStick.Enable();
             _enabled = true;
         }
 
@@ -101,6 +118,7 @@ namespace SlopCo.Player
             if (!_enabled) return;
             _move.Disable(); _jump.Disable(); _grab.Disable(); _throw.Disable(); _dash.Disable();
             _useItem.Disable(); _usePerm.Disable(); _discard.Disable(); _cycle.Disable(); _pov.Disable(); _kick.Disable();
+            _lookMouse.Disable(); _lookStick.Disable();
             _enabled = false;
         }
 
@@ -108,6 +126,7 @@ namespace SlopCo.Player
         {
             _move?.Dispose(); _jump?.Dispose(); _grab?.Dispose(); _throw?.Dispose(); _dash?.Dispose();
             _useItem?.Dispose(); _usePerm?.Dispose(); _discard?.Dispose(); _cycle?.Dispose(); _pov?.Dispose(); _kick?.Dispose();
+            _lookMouse?.Dispose(); _lookStick?.Dispose();
         }
 
         private void Update()
@@ -119,6 +138,8 @@ namespace SlopCo.Player
                 UseConsumablePressed = false; UsePermanentPressed = false; DiscardPressed = false; CyclePressed = false;
                 TogglePovPressed = false; KickPressed = false;
                 ThrowReleasedThisFrame = false; ThrowCharge01 = 0f; _throwHeldTime = 0f;
+                LookDelta = Vector2.zero; LookStick = Vector2.zero;
+                _wasCaptured = false;   // force a rising-edge discard on the frame we resume
                 return;
             }
 
@@ -131,6 +152,8 @@ namespace SlopCo.Player
                 DashHeld = false;
                 UseConsumablePressed = false; UsePermanentPressed = false; DiscardPressed = false; CyclePressed = false;
                 ThrowReleasedThisFrame = false; ThrowCharge01 = 0f; TogglePovPressed = false; KickPressed = false;
+                LookDelta = Vector2.zero; LookStick = Vector2.zero;
+                _wasCaptured = false;
                 return;
             }
 
@@ -139,6 +162,8 @@ namespace SlopCo.Player
                 Move = Vector2.zero; JumpPressed = false; GrabHeld = false; DashHeld = false;
                 UseConsumablePressed = false; UsePermanentPressed = false; DiscardPressed = false; CyclePressed = false;
                 ThrowReleasedThisFrame = false; ThrowCharge01 = 0f; _throwHeldTime = 0f; TogglePovPressed = false; KickPressed = false;
+                LookDelta = Vector2.zero; LookStick = Vector2.zero;
+                _wasCaptured = false;
                 return;
             }
 
@@ -152,6 +177,20 @@ namespace SlopCo.Player
             CyclePressed = _cycle.WasPressedThisFrame();
             TogglePovPressed = _pov.WasPressedThisFrame();
             KickPressed = _kick.WasPressedThisFrame();
+
+            // Reset paths 5 (cursor not captured — pause/options/controls/help/results/shop/vote overlays)
+            // and 6 (capture rising edge — the frame Cursor.lockState snaps to Locked warps the OS pointer,
+            // tainting whatever delta accumulated while the cursor was free) both collapse into one predicate.
+            // Read-but-discard (not skip) on the rejected frames so the underlying InputAction never carries
+            // a value over to the next frame.
+            bool captured = CursorPolicy.MouseCaptured;
+            Vector2 mouse = _lookMouse.ReadValue<Vector2>();
+            Vector2 stick = _lookStick.ReadValue<Vector2>();
+            bool accept = CursorPolicy.ShouldReadLook(captured, _wasCaptured);
+            _wasCaptured = captured;
+
+            LookDelta = accept ? mouse : Vector2.zero;
+            LookStick = accept ? stick : Vector2.zero;
 
             ThrowReleasedThisFrame = _throw.WasReleasedThisFrame();
             if (_throw.IsPressed())
@@ -183,6 +222,9 @@ namespace SlopCo.Player
                 ThrowReleasedThisFrame = false;
                 ThrowCharge01 = 0f;
                 _throwHeldTime = 0f;
+                // Look input would fight the wheel's own cursor aiming (R9) — kill it while suppressed.
+                LookDelta = Vector2.zero;
+                LookStick = Vector2.zero;
             }
         }
     }
