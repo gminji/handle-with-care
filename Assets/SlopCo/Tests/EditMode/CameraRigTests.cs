@@ -89,5 +89,94 @@ namespace SlopCo.Tests.EditMode
             Assert.AreNotEqual(CameraRig.DesiredPosition(true, Target, Vector3.forward),
                                CameraRig.DesiredPosition(false, Target, Vector3.forward));
         }
+
+        // ── Pitch overload (mouse look) ──────────────────────────────────────────────────────
+
+        [Test]
+        public void First_ZeroPitch_MatchesLegacyOverload()
+        {
+            var legacy = CameraRig.DesiredLookAt(true, Target, Vector3.forward);
+            var withPitch = CameraRig.DesiredLookAt(true, Target, Vector3.forward, 0f);
+            Assert.AreEqual(legacy, withPitch); // bit-for-bit: Cos(0)==1f, Sin(0)==0f exactly (R4)
+        }
+
+        [Test]
+        public void First_PositivePitch_LooksUp()
+        {
+            var level = CameraRig.DesiredLookAt(true, Target, Vector3.forward, 0f);
+            var up = CameraRig.DesiredLookAt(true, Target, Vector3.forward, 30f);
+            Assert.Greater(up.y, level.y);
+        }
+
+        [Test]
+        public void First_NegativePitch_LooksDown()
+        {
+            var level = CameraRig.DesiredLookAt(true, Target, Vector3.forward, 0f);
+            var down = CameraRig.DesiredLookAt(true, Target, Vector3.forward, -30f);
+            Assert.Less(down.y, level.y);
+        }
+
+        [Test]
+        public void First_Pitch_KeepsHorizontalBearing()
+        {
+            var eye = Target + Vector3.up * CameraRig.FirstEyeHeight;
+            var look = CameraRig.DesiredLookAt(true, Target, Vector3.forward, 40f);
+            Vector3 horizontal = look - eye;
+            horizontal.y = 0f;
+            Assert.AreEqual(0f, horizontal.x, 1e-4f);
+            Assert.Greater(horizontal.z, 0f); // still pointed down +Z, just angled up
+        }
+
+        [Test]
+        public void First_PitchAtClampLimit_IsUnitFromTheEye()
+        {
+            // Anchor at the EYE point, not DesiredPosition — DesiredPosition adds f * FirstEyeAhead
+            // (0.18), which would make the magnitude 9.9859 instead of FirstLookAhead (10). See §5.4.
+            Vector3 eye = Target + Vector3.up * CameraRig.FirstEyeHeight;
+            foreach (float pitch in new[] { CameraRig.PitchMax, CameraRig.PitchMin })
+            {
+                Vector3 look = CameraRig.DesiredLookAt(true, Target, Vector3.forward, pitch);
+                Vector3 gaze = look - eye;
+                Assert.AreEqual(CameraRig.FirstLookAhead, gaze.magnitude, 1e-3f, "pitch " + pitch);
+                Assert.AreEqual(Mathf.Sin(pitch * Mathf.Deg2Rad), gaze.normalized.y, 1e-4f, "pitch " + pitch);
+            }
+        }
+
+        [Test]
+        public void First_PitchAffectsOnlyTheAimPoint()
+        {
+            var lookNeg = CameraRig.DesiredLookAt(true, Target, Vector3.forward, -85f);
+            var look0 = CameraRig.DesiredLookAt(true, Target, Vector3.forward, 0f);
+            var lookPos = CameraRig.DesiredLookAt(true, Target, Vector3.forward, 85f);
+            Assert.AreNotEqual(lookNeg, look0);
+            Assert.AreNotEqual(look0, lookPos);
+            Assert.AreNotEqual(lookNeg, lookPos);
+
+            // DesiredPosition takes no pitch argument at all — pitch must never leak into eye placement.
+            var posNeg = CameraRig.DesiredPosition(true, Target, Vector3.forward);
+            var pos0 = CameraRig.DesiredPosition(true, Target, Vector3.forward);
+            var posPos = CameraRig.DesiredPosition(true, Target, Vector3.forward);
+            Assert.AreEqual(posNeg, pos0);
+            Assert.AreEqual(pos0, posPos);
+        }
+
+        [Test]
+        public void Third_IgnoresPitch()
+        {
+            var a = CameraRig.DesiredLookAt(false, Target, Vector3.forward, -85f);
+            var b = CameraRig.DesiredLookAt(false, Target, Vector3.forward, 0f);
+            var c = CameraRig.DesiredLookAt(false, Target, Vector3.forward, 85f);
+            Assert.AreEqual(a, b);
+            Assert.AreEqual(b, c);
+        }
+
+        [Test]
+        public void PitchLimits_AgreeWithLookMath()
+        {
+            // Two independent siblings own the same range on purpose — pinned here so an asymmetric
+            // retune of one silently drifting from the other fails loudly instead of only in-game.
+            Assert.AreEqual(LookMath.PitchMax, CameraRig.PitchMax);
+            Assert.AreEqual(LookMath.PitchMin, CameraRig.PitchMin);
+        }
     }
 }
