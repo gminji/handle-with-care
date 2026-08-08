@@ -62,14 +62,14 @@ namespace SlopCo.Player
             if ((origin - transform.position).sqrMagnitude > 9f) origin = transform.position;
 
             bool connected = false;
-            var seen = new HashSet<int>();
+            var seen = new HashSet<EntityId>();
             var hits = Physics.OverlapSphere(origin, GameConstants.KickRange);
             foreach (var col in hits)
             {
                 if (col == null) continue;
 
                 var victim = col.GetComponentInParent<PlayerController>();
-                if (victim != null && victim != controller && seen.Add(victim.GetInstanceID()))
+                if (victim != null && victim != controller && seen.Add(victim.GetEntityId()))
                 {
                     if (!KickMath.InCone(origin, forward, victim.transform.position,
                                          GameConstants.KickRange, GameConstants.KickHalfAngle)) continue;
@@ -85,7 +85,7 @@ namespace SlopCo.Player
                 if (hazard != null)
                 {
                     var mb = hazard as MonoBehaviour;
-                    if (mb == null || !seen.Add(mb.GetInstanceID())) continue;
+                    if (mb == null || !seen.Add(mb.GetEntityId())) continue;
                     if (!KickMath.InCone(origin, forward, mb.transform.position,
                                          GameConstants.KickRange, GameConstants.KickHalfAngle)) continue;
                     hazard.OnKicked(origin);
