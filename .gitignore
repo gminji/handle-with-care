@@ -56,3 +56,6 @@ steam_appid.txt
 /[Aa]ssets/_Recovery/
 /[Aa]ssets/_Recovery.meta
 crashlytics-build.properties
+
+# ── Working notes (local only) ──────────────────────────
+/docs/
