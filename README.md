@@ -96,16 +96,16 @@
 
 | 분야 | 사용 기술 |
 |---|---|
-| **엔진** | Unity 6 (6000.0.x LTS) |
-| **멀티플레이어** | Netcode for GameObjects 2.8 — 서버 권위(server-authoritative) 협동 네트워킹 |
+| **엔진** | Unity 6.5 (**6000.5.7f1** — 이 버전으로 열어야 합니다) |
+| **멀티플레이어** | Netcode for GameObjects 2.13 — 서버 권위(server-authoritative) 협동 네트워킹 |
 | **음성 채팅** | NGO 기반 **커스텀 3D 근접 보이스 챗** (16kHz PCM, VAD 게이트, 거리 감쇠) |
-| **렌더링** | Universal Render Pipeline (URP) 17.3 |
-| **입력** | Unity Input System 1.18 (키보드·게임패드) |
-| **UI** | uGUI 2.0 |
+| **렌더링** | Universal Render Pipeline (URP) 17.5 |
+| **입력** | Unity Input System 1.20 (키보드·게임패드·마우스 룩) |
+| **UI** | uGUI 2.5 |
 | **물리** | Unity Physics — PD 힘 제어 기반 협동 운반, 런타임 표면 재질(마찰/반발) |
 | **매치메이킹** | LAN UDP 브로드캐스트 빠른 매칭 + IP 직접 접속, **Steam** 로비/초대(옵션) |
 | **테스트** | Unity Test Framework — 순수 게임 로직 EditMode 유닛 테스트 |
-| **아트/사운드** | Kenney **CC0** 에셋 (캐릭터·가구·음식·도시·차량 킷) |
+| **아트/사운드** | **CC0** 에셋 — Kenney(캐릭터·가구·음식·차량 킷·효과음) + PolyHaven·AmbientCG(PBR 텍스처·HDRI). 저장소에 포함되어 별도 다운로드가 필요 없습니다 |
 
 ### 설계 하이라이트
 - **결정론적 규칙**: 데일리 모디파이어·화물 아키타입·콤보 계산 등 핵심 규칙은 UnityEngine에 의존하지 않는 **순수 로직**으로 분리 — 별도 네트워크 동기화 없이 서버·클라이언트가 같은 결과를 계산하고, 단위 테스트로 검증됩니다.
@@ -116,7 +116,7 @@
 
 ## 📜 크레딧 & 라이선스
 
-- **아트·오디오**: [Kenney](https://kenney.nl) 의 **CC0 1.0**(퍼블릭 도메인) 에셋 — 상업적 이용·수정·재배포 자유, 출처 표기 불필요.
+- **아트·오디오**: [Kenney](https://kenney.nl)(모델·효과음), [PolyHaven](https://polyhaven.com)·[AmbientCG](https://ambientcg.com)(PBR 텍스처·HDRI) 의 **CC0 1.0**(퍼블릭 도메인) 에셋 — 상업적 이용·수정·재배포 자유, 출처 표기 불필요. 전체 목록은 [`ASSET_MANIFEST.md`](ASSET_MANIFEST.md) 참고.
 - **네트워킹**: Unity Netcode for GameObjects (Unity Companion / 패키지 라이선스).
 - **게임 코드**: 프로젝트 소유자 지정.
 
