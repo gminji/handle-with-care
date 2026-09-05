@@ -87,7 +87,7 @@ namespace SlopCo.Core
             // ── Main menu ──
             // The Korean variant carries a second, smaller line: "handle with care" is a shipping-label
             // phrase that already reads as a joke in English, so KO gets the local gloss under it.
-            { "menu.title",    new[]{ "HANDLE WITH CARE", "HANDLE WITH CARE\n<size=40>~던지지 마시오~</size>", "HANDLE WITH CARE", "HANDLE WITH CARE" } },
+            { "menu.title",    new[]{ "HANDLE WITH CARE", "HANDLE WITH CARE\n<size=30>~던지지 마시오~</size>", "HANDLE WITH CARE", "HANDLE WITH CARE" } },
             { "menu.subtitle", new[]{ "co-op delivery chaos", "협동 배달 카오스", "協力配達カオス", "合作快递大乱斗" } },
             { "menu.solo",     new[]{ "PLAY SOLO", "솔로 플레이", "ソロプレイ", "单人游戏" } },
             { "menu.withai",   new[]{ "PLAY WITH AI", "AI와 플레이", "AIとプレイ", "与AI游玩" } },
