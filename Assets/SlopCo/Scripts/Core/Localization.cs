@@ -85,6 +85,9 @@ namespace SlopCo.Core
         static readonly Dictionary<string, string[]> T = new()
         {
             // ── Main menu ──
+            // The Korean variant carries a second, smaller line: "handle with care" is a shipping-label
+            // phrase that already reads as a joke in English, so KO gets the local gloss under it.
+            { "menu.title",    new[]{ "HANDLE WITH CARE", "HANDLE WITH CARE\n<size=40>~던지지 마시오~</size>", "HANDLE WITH CARE", "HANDLE WITH CARE" } },
             { "menu.subtitle", new[]{ "co-op delivery chaos", "협동 배달 카오스", "協力配達カオス", "合作快递大乱斗" } },
             { "menu.solo",     new[]{ "PLAY SOLO", "솔로 플레이", "ソロプレイ", "单人游戏" } },
             { "menu.withai",   new[]{ "PLAY WITH AI", "AI와 플레이", "AIとプレイ", "与AI游玩" } },
@@ -92,6 +95,7 @@ namespace SlopCo.Core
             { "menu.tutorial", new[]{ "TUTORIAL", "튜토리얼", "チュートリアル", "教程" } },
             { "menu.options",  new[]{ "OPTIONS", "옵션", "オプション", "选项" } },
             { "menu.help",     new[]{ "HELP", "도움말", "ヘルプ", "帮助" } },
+            { "menu.upgrades", new[]{ "UPGRADES", "강화", "強化", "强化" } },
             { "menu.controls", new[]{ "CONTROLS", "조작법", "操作方法", "操作说明" } },
             { "menu.quit",     new[]{ "QUIT", "종료", "終了", "退出" } },
             { "menu.footer",   new[]{ "vertical slice", "버티컬 슬라이스", "バーティカルスライス", "垂直切片" } },
@@ -193,6 +197,10 @@ namespace SlopCo.Core
             { "res.what.rank",    new[]{ "RANK {letter}", "등급 {letter}", "ランク {letter}", "等级 {letter}" } },
             { "res.what.day",     new[]{ "DAY {day} SURVIVED", "{day}일차 생존", "{day}日目 生還", "第{day}天 幸存" } },
             { "res.what.chain",   new[]{ "x{chain} CHAIN", "x{chain} 연쇄", "x{chain} チェーン", "x{chain} 连锁" } },
+            { "res.banked",       new[]{ "Banked for upgrades:  +${amount}   (bank ${bank})",
+                                         "강화 적립:  +${amount}   (보유 ${bank})",
+                                         "強化に貯金:  +${amount}   (所持 ${bank})",
+                                         "存入强化:  +${amount}   (持有 ${bank})" } },
             { "share.button",     new[]{ "SHARE", "공유", "シェア", "分享" } },
             { "share.copy",       new[]{ "COPY", "복사", "コピー", "复制" } },
             { "share.saved",      new[]{ "Saved to Clips ✓", "Clips에 저장됨 ✓", "Clipsに保存 ✓", "已保存到 Clips ✓" } },
@@ -238,6 +246,26 @@ namespace SlopCo.Core
             { "shop.short",      new[]{ "(NOT ENOUGH)", "(잔액 부족)", "(残高不足)", "(余额不足)" } },
             { "shop.owned",      new[]{ "OWNED", "보유 중", "所持済み", "已拥有" } },
             { "shop.buy",        new[]{ "BUY", "구매 가능", "購入可", "可购买" } },
+
+            // ── Permanent upgrades (title-screen 강화 menu; bought with cash banked from finished runs) ──
+            { "meta.title",      new[]{ "PERMANENT UPGRADES", "영구 강화", "永続強化", "永久强化" } },
+            { "meta.bank",       new[]{ "BANK ${bank}", "보유 ${bank}", "所持 ${bank}", "持有 ${bank}" } },
+            { "meta.level",      new[]{ "Lv {lv}/{max}", "Lv {lv}/{max}", "Lv {lv}/{max}", "Lv {lv}/{max}" } },
+            { "meta.max",        new[]{ "MAX", "최대", "最大", "已满" } },
+            { "meta.hint",       new[]{ "Banked from the cash each run earns — every level costs more than the last.",
+                                        "매 판 벌어들인 돈이 적립됩니다 — 레벨이 오를수록 비싸집니다.",
+                                        "各ランで稼いだ金額が貯まります — レベルが上がるほど高くなります。",
+                                        "每局赚到的钱会存入 — 等级越高越贵。" } },
+            { "meta.cash.name",   new[]{ "Pay Bonus", "급여 보너스", "給与ボーナス", "工资奖金" } },
+            { "meta.cash.desc",   new[]{ "Bank more cash from every run.", "매 판 적립되는 돈이 늘어납니다.", "毎ランの貯金額が増えます。", "每局存入的钱增加。" } },
+            { "meta.speed.name",  new[]{ "Trained Legs", "단련된 다리", "鍛えた脚", "锻炼双腿" } },
+            { "meta.speed.desc",  new[]{ "Permanently move faster.", "이동 속도가 영구히 빨라집니다.", "移動速度が永続的に上がります。", "永久提升移动速度。" } },
+            { "meta.debuff.name", new[]{ "Tough Skin", "강인한 체질", "強靭な体質", "强韧体质" } },
+            { "meta.debuff.desc", new[]{ "Bad effects wear off sooner.", "해로운 효과의 지속시간이 짧아집니다.", "有害な効果の持続時間が短くなります。", "有害效果持续时间缩短。" } },
+            { "meta.buff.name",   new[]{ "Staying Power", "지속력", "持続力", "持久力" } },
+            { "meta.buff.desc",   new[]{ "Good effects last longer.", "이로운 효과의 지속시간이 길어집니다.", "有益な効果の持続時間が延びます。", "有益效果持续时间延长。" } },
+            { "meta.dash.name",   new[]{ "Second Wind", "회복력", "回復力", "恢复力" } },
+            { "meta.dash.desc",   new[]{ "Dash stamina refills faster.", "대시 지구력 회복이 빨라집니다.", "ダッシュスタミナの回復が速くなります。", "冲刺耐力恢复更快。" } },
 
             // ── Crew augment vote (online) ──
             { "vote.title",  new[]{ "CREW VOTE — AUGMENT", "크루 투표 — 증강", "クルー投票 — オーグメント", "队伍投票 — 增强" } },

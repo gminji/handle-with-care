@@ -34,6 +34,8 @@ namespace SlopCo.UI
         private string _shareSummary = "";
         private string _gradeLetter = "";
         private bool _crewAwarded;   // crew XP is banked once per run (on GameOver), reset when a new run starts
+        private bool _metaBanked;    // ditto for the permanent-upgrade wallet (MetaUpgrades.Deposit)
+        private int _metaCredited;   // what that deposit actually credited, so a re-shown card repeats it
         private RoundPhase _shown = (RoundPhase)255;   // sentinel — never a real phase, forces first sync
 
         private void Awake()
@@ -80,6 +82,8 @@ namespace SlopCo.UI
             {
                 SetButtons(false);
                 _crewAwarded = false; // a new run is under way — allow the next GameOver to bank crew XP
+                _metaBanked = false;  // …and the next run's earnings into the permanent-upgrade wallet
+                _metaCredited = 0;
             }
         }
 
@@ -200,6 +204,21 @@ namespace SlopCo.UI
                         ScreenShake.Add(UIMotion.ShakeRecord);
                         BestRecords.RaiseNewRecord(); // reuse the record stinger for the rank-up moment
                     }
+
+                    // --- Permanent upgrades: bank what this run EARNED, once, on the terminal card ---
+                    // TotalDelivered (every payout the crew took all run), not QuotaSystem.Cash: cash is
+                    // zeroed by EscalateQuota on each cleared day, so banking it would pay out only the
+                    // partial day the crew got fired on — the better the run, the smaller the reward.
+                    // Local and per-player by design (MetaUpgrades §remarks): each crew member banks the
+                    // same run into their own savings and spends their own Pay Bonus level on it.
+                    if (!_metaBanked)
+                    {
+                        _metaBanked = true;
+                        _metaCredited = MetaUpgrades.Deposit(stats != null ? stats.TotalDelivered : 0);
+                    }
+                    b += "\n" + Localization.Get("res.banked")
+                                    .Replace("{amount}", _metaCredited.ToString())
+                                    .Replace("{bank}", MetaUpgrades.Bank.ToString());
                 }
 
                 // --- Crew MVP: per-player glory/shame (co-op replay hook). Hidden below 2 participants

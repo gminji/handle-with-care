@@ -45,6 +45,14 @@ namespace SlopCo.UI
         public static Color Info { get; set; }
         public static Color Gold { get; set; }
         public static string GoldHex { get; set; }
+        /// <summary>Face colour of every button in the title-screen 강화 menu (<c>UpgradeShopUI</c>) and of
+        /// the UPGRADES button that opens it — the one menu with its own button colour by design.
+        /// Deliberately its own token rather than an alias of <see cref="Gold"/>: gold means "record /
+        /// celebration" everywhere else, and re-tuning one must never silently re-tune the other.</summary>
+        public static Color UpgradeYellow { get; set; }
+        /// <summary>Ink colour for labels sitting ON <see cref="UpgradeYellow"/>. White-on-yellow fails
+        /// contrast, so the yellow buttons are the one place text goes dark.</summary>
+        public static Color UpgradeYellowInk { get; set; }
         public static Color SelectionTint { get; set; }
         public static Color ComboLow { get; set; }
         public static Color ComboHigh { get; set; }
@@ -120,6 +128,8 @@ namespace SlopCo.UI
             Info = new Color(0.35f, 0.80f, 1.00f, 1f);
             GoldHex = "#FFD24A";
             Gold = HexColor(GoldHex);
+            UpgradeYellow = new Color(1.00f, 0.82f, 0.20f, 1f);
+            UpgradeYellowInk = new Color(0.10f, 0.09f, 0.05f, 1f);
             SelectionTint = new Color(1.00f, 0.90f, 0.35f, 1f);
             ComboLow = new Color(1.00f, 0.85f, 0.20f, 1f);
             ComboHigh = new Color(1.00f, 0.35f, 0.20f, 1f);

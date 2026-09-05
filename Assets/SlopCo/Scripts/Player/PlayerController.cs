@@ -36,6 +36,18 @@ namespace SlopCo.Player
         public float DashGauge01 => _dash.gauge;
         public bool DashExhausted => _dash.exhausted;
 
+        // ── Permanent (cross-run) upgrades bought on the title screen ──────────────────────────────
+        // Every one of these is owner-local, which is the only reason a PlayerPrefs-backed value may be
+        // read here at all: each player's own machine applies their own purchases and the resulting motion
+        // replicates through ClientNetworkTransform like any other owner-side effect.
+        // The _isBot gate is load-bearing, not defensive. On a host the server OWNS every AI teammate, so
+        // an ungated read would silently hand the host's savings to all three bots — see the same guard on
+        // SettingsManager.FirstPerson in Update().
+        private float MetaMoveSpeedMult => _isBot ? 1f : MetaUpgrades.MoveSpeedMult;
+        private float MetaDebuffDurationMult => _isBot ? 1f : MetaUpgrades.DebuffDurationMult;
+        private float MetaBuffDurationMult => _isBot ? 1f : MetaUpgrades.BuffDurationMult;
+        private float MetaDashRegenMult => _isBot ? 1f : MetaUpgrades.DashRegenMult;
+
         // ── Item effects (owner-local; PlayerInventory fires the owner-targeted RPC below) ──
         public void ApplyTempSpeedBuff(float mult, float seconds) { _itemBuffMult = mult; _itemBuffT = seconds; }
         public void RefillStamina(float amount01) { _dash = DashStamina.Refill(_dash, amount01); }
@@ -87,7 +99,9 @@ namespace SlopCo.Player
         [Rpc(SendTo.Owner)]
         public void ApplyItemEffectRpc(bool isSpeed, float magnitude, float duration)
         {
-            if (isSpeed) ApplyTempSpeedBuff(1f + magnitude, duration);
+            // The Staying Power track stretches the timed half of an item only — an instant stamina refill
+            // has no duration to lengthen, so scaling it there would be a silent no-op dressed as an effect.
+            if (isSpeed) ApplyTempSpeedBuff(1f + magnitude, duration * MetaBuffDurationMult);
             else RefillStamina(magnitude);
         }
 
@@ -253,12 +267,20 @@ namespace SlopCo.Player
                     aug != null ? aug.CarrySpeedMult : 1f,
                     GameConstants.CoCarrySpeedMultMax);
 
-            float speed = GameConstants.PlayerMoveSpeed * (aug != null ? aug.MoveSpeedMult : 1f) * carryMult;
+            // The permanent Trained Legs factor rides alongside the augment multiplier — both scale the walk
+            // AND the carry speed, so the CoCarrySpeedMultMax ceiling applied to carryMult above stays a
+            // ratio between the two rather than an absolute u/s the meta upgrade could climb past.
+            float speed = GameConstants.PlayerMoveSpeed * (aug != null ? aug.MoveSpeedMult : 1f)
+                        * MetaMoveSpeedMult * carryMult;
 
             // Dash: hold-to-sprint drains stamina; full depletion forces a brief exhausted stop (SpeedMult 0).
+            // Second Wind speeds the refill; Tough Skin shortens the forced stop (drain rate is untouched —
+            // shortening the punishment is the upgrade, making the gauge deeper is not).
             bool moving = dir.sqrMagnitude > 0.0001f;
             _dash = DashStamina.Step(_dash, Time.deltaTime, input.DashHeld, moving,
-                        GameConstants.DashDrainPerSecond, GameConstants.DashRegenPerSecond, GameConstants.DashExhaustSeconds);
+                        GameConstants.DashDrainPerSecond,
+                        GameConstants.DashRegenPerSecond * MetaDashRegenMult,
+                        GameConstants.DashExhaustSeconds * MetaDebuffDurationMult);
             speed *= DashStamina.SpeedMult(_dash, GameConstants.DashSpeedMultiplier);
             if (_itemBuffT > 0f) { _itemBuffT -= Time.deltaTime; speed *= _itemBuffMult; }   // item speed buff (Fancy Shoes / Hype Horn)
 
@@ -327,7 +349,12 @@ namespace SlopCo.Player
             if (input != null) { input.Suppressed = true; _beamSuppressedInput = true; }
             _abductT += Time.deltaTime;
 
-            var phase = SlopCo.Gameplay.AbductionMath.Phase(_abductT, GameConstants.UfoLiftSeconds, GameConstants.UfoHoldSeconds);
+            // Tough Skin shortens the HOLD (the dangling), not the lift: the lift is the saucer's animation
+            // and cutting it would drop us out of a beam we are still visibly rising through. Releasing
+            // early is safe against the server's own timer — UfoHazard fires EndAbductionRpc at the full
+            // lift+hold and ReleaseFromBeam() early-outs on an already-released victim.
+            var phase = SlopCo.Gameplay.AbductionMath.Phase(_abductT, GameConstants.UfoLiftSeconds,
+                                                            GameConstants.UfoHoldSeconds * MetaDebuffDurationMult);
             if (phase == SlopCo.Gameplay.AbductPhase.Done) { ReleaseFromBeam(); return; }
 
             Vector3 hang = _abductor.position - Vector3.up * GameConstants.UfoCarryGap;
@@ -355,7 +382,7 @@ namespace SlopCo.Player
             float cost = SlopCo.Gameplay.AbductionMath.StaminaPenalty(drop, GameConstants.FallFreeHeight,
                              GameConstants.FallStaminaPerMetre, GameConstants.FallStaminaMax);
             if (cost <= 0f) return;
-            _dash = DashStamina.Drain(_dash, cost, GameConstants.DashExhaustSeconds);
+            _dash = DashStamina.Drain(_dash, cost, GameConstants.DashExhaustSeconds * MetaDebuffDurationMult);
             ScreenShake.Add(Mathf.Clamp(cost, 0.2f, 0.8f));
         }
 

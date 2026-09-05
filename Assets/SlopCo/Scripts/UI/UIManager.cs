@@ -29,6 +29,9 @@ namespace SlopCo.UI
         [SerializeField] private GameObject controlsPanel;
         [Tooltip("How-to-play overlay opened by the HELP button (menu + lobby).")]
         [SerializeField] private GameObject helpPanel;
+        [Tooltip("Permanent-upgrade shop opened by the UPGRADES button. Title screen only — it spends the " +
+                 "cross-run bank, which no longer means anything once a session has started.")]
+        [SerializeField] private GameObject upgradePanel;
         [Header("Round overlays (Payout / GameOver)")]
         [SerializeField] private GameObject resultsPanel;      // ResultsRoot/ResultsPanel
         [SerializeField] private GameObject augmentShopPanel;  // AugmentShop/ShopPanel
@@ -44,7 +47,7 @@ namespace SlopCo.UI
         private enum Screen { MainMenu, Lobby, InGame }
         private enum PendingMode { None, Solo, Ai, Online }
         private Screen _screen = Screen.MainMenu;
-        private bool _options, _pause, _controls, _help;
+        private bool _options, _pause, _controls, _help, _upgrades;
 
         /// <summary>True while the front-end is on the title (MainMenu) screen — the menu flyby (MenuFlyby)
         /// runs only then, and yields the camera to PlayerController once a session/round begins.</summary>
@@ -52,7 +55,8 @@ namespace SlopCo.UI
 
         /// <summary>True while the live in-game HUD is up and no blocking overlay/pause is open — the
         /// ping/emote wheel reads this to decide whether it may open (and force-closes if it goes false).</summary>
-        public bool InGameInteractive => _screen == Screen.InGame && !_pause && !_options && !_controls && !_help;
+        public bool InGameInteractive => _screen == Screen.InGame && !_pause && !_options && !_controls && !_help
+                                        && !_upgrades;
         private bool _mapSelect;
         private PendingMode _pending;
         private bool _autoStartSolo;
@@ -200,6 +204,12 @@ namespace SlopCo.UI
         /// underneath, exactly like the Controls card, and ESC backs out of it first.</summary>
         public void OpenHelp()      { _help = true; Apply(); }
         public void CloseHelp()     { _help = false; Apply(); }
+
+        /// <summary>UPGRADES button (title screen) — the permanent 강화 shop. Gated to the MainMenu screen
+        /// on purpose: the bank it spends is cross-run savings, and Apply() force-closes it the moment a
+        /// session starts, so opening it from anywhere else would only ever flash and vanish.</summary>
+        public void OpenUpgrades()  { if (_screen != Screen.MainMenu) return; _upgrades = true; Apply(); }
+        public void CloseUpgrades() { _upgrades = false; Apply(); }
         public void ResumeGame()    { _pause = false; Apply(); }
 
         public void OnBackToMenu()
@@ -218,7 +228,7 @@ namespace SlopCo.UI
             _autoStartSolo = false;
             _lobbyIntent = false;
             _screen = Screen.MainMenu;
-            _pause = _options = _controls = _help = _mapSelect = false;
+            _pause = _options = _controls = _help = _upgrades = _mapSelect = false;
             _pending = PendingMode.None;
             Apply();
         }
@@ -264,6 +274,7 @@ namespace SlopCo.UI
                 if (_options) _options = false;
                 else if (_help) _help = false;
                 else if (_controls) _controls = false;
+                else if (_upgrades) _upgrades = false;
                 else if (_mapSelect) { _mapSelect = false; _pending = PendingMode.None; }
                 else if (_lobbyIntent) { _lobbyIntent = false; _screen = Screen.MainMenu; } // back out of online lobby
                 else if (connected) _pause = !_pause;
@@ -279,7 +290,11 @@ namespace SlopCo.UI
             // Online lobby: the same picker doubles as the crew's map vote, so it is also up on the Lobby
             // screen (MapSelectUI moves itself out of the lobby card's way while voting).
             bool crewMapVote = _screen == Screen.Lobby && ServiceLocator.Get<MapManager>()?.CrewVoteActive == true;
-            bool overlayUp = _options || _controls || _help;
+            // The 강화 shop is a title-screen-only overlay: leaving MainMenu (solo auto-start, a join
+            // landing in the lobby, a dropped session) force-closes it here rather than leaving a stale
+            // panel to reappear the next time the menu comes back.
+            if (!mainMenu) _upgrades = false;
+            bool overlayUp = _options || _controls || _help || _upgrades;
             if (mainMenuPanel != null) mainMenuPanel.SetActive(mainMenu && !overlayUp && !_mapSelect);
             if (mapSelectPanel != null) mapSelectPanel.SetActive(!overlayUp && ((mainMenu && _mapSelect) || crewMapVote));
             // The AI-teammate-count row is only meaningful while the map picker is up for PLAY WITH AI.
@@ -289,6 +304,7 @@ namespace SlopCo.UI
             if (optionsPanel != null)  optionsPanel.SetActive(_options);
             if (controlsPanel != null) controlsPanel.SetActive(_controls && !_help);
             if (helpPanel != null)     helpPanel.SetActive(_help && !_options);
+            if (upgradePanel != null)  upgradePanel.SetActive(_upgrades && !_options && !_controls && !_help);
             if (pausePanel != null)    pausePanel.SetActive(_pause && !_options && !_controls && !_help);
 
             // Round overlays — Payout/GameOver card and the Payout shop. Only SetActive site for either panel root.
