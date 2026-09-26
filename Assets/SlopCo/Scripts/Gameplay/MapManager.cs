@@ -214,8 +214,18 @@ namespace SlopCo.Gameplay
         // scratch on every apply, which is also how they get cleaned up when the map or seed changes.
         private void BuildObstacles(Transform rootT)
         {
-            var existing = rootT.Find(ObstacleRootName);
-            if (existing != null) DestroyImmediateSafe(existing.gameObject);
+            // Remove EVERY previous holder and make it unfindable at once. Destroy() only lands at the end of the
+            // frame, but the host can apply several times in ONE frame (ActiveMap/LayoutSeed OnValueChanged fire
+            // synchronously on the writer, RollMap re-applies, a re-seed follows): Find() kept returning the same
+            // dying holder, so a stale-seed layout survived next to the new one.
+            for (int i = rootT.childCount - 1; i >= 0; i--)
+            {
+                var old = rootT.GetChild(i);
+                if (old.name != ObstacleRootName) continue;
+                old.gameObject.SetActive(false);   // stops rendering/colliding this instant
+                old.SetParent(null, false);        // a later same-frame apply can no longer see it
+                DestroyImmediateSafe(old.gameObject);
+            }
 
             var slots = rootT.Find("ObstacleSlots");
             if (slots == null || slots.childCount == 0) return;
