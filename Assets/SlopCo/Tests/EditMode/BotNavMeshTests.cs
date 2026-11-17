@@ -242,6 +242,21 @@ namespace SlopCo.Tests.EditMode
                 "the bots' live mesh must be left as it was");
             Object.DestroyImmediate(plug);
         }
+
+        [Test]
+        public void RouteExists_LeavesNoAgentTypeBehind()
+        {
+            // Each check bakes under an agent type of its own. In the editor a leftover type is saved into
+            // NavMeshAreas.asset, so every check must remove the one it made — open gap and blocked gap alike.
+            var root = WallWithGap();
+            int before = NavMesh.GetSettingsCount();
+            for (int i = 0; i < 3; i++)
+                Assert.That(BotNavMesh.RouteExists(root, At(new Vector3(-5f, 0f, 0f)), Origin + new Vector3(5f, 0f, 0f)), Is.True);
+            BoxUnder(root, "Plug", new Vector3(0f, 1f, 5.7f), new Vector3(0.6f, 2f, 1.6f));
+            for (int i = 0; i < 3; i++)
+                Assert.That(BotNavMesh.RouteExists(root, At(new Vector3(-5f, 0f, 0f)), Origin + new Vector3(5f, 0f, 0f)), Is.False);
+            Assert.That(NavMesh.GetSettingsCount(), Is.EqualTo(before));
+        }
     }
 
     /// <summary>

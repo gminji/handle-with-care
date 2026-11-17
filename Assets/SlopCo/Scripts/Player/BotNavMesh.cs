@@ -141,8 +141,6 @@ namespace SlopCo.Player
         public const float RouteSnapFlat = 0.8f;
         public const float RouteSnapUp = 1.2f;
 
-        private static int _checkAgentType = -1;
-
         /// <summary>
         /// Can a crew walk from every point in <paramref name="from"/> to <paramref name="to"/> on
         /// <paramref name="mapRoot"/> as it stands right now (obstacles included)? Bakes a throwaway mesh under a
@@ -160,11 +158,13 @@ namespace SlopCo.Player
             if (sources.Count == 0) return true;
 
             var settings = CheckSettings();
-            var data = NavMeshBuilder.BuildNavMeshData(settings, sources, bounds, Vector3.zero, Quaternion.identity);
-            if (data == null) return true;
-            var handle = NavMesh.AddNavMeshData(data);
+            NavMeshData data = null;
+            var handle = default(NavMeshDataInstance);
             try
             {
+                data = NavMeshBuilder.BuildNavMeshData(settings, sources, bounds, Vector3.zero, Quaternion.identity);
+                if (data == null) return true;
+                handle = NavMesh.AddNavMeshData(data);
                 if (!handle.valid) return true;
                 var filter = new NavMeshQueryFilter { agentTypeID = settings.agentTypeID, areaMask = NavMesh.AllAreas };
                 if (!SnapOnto(to, filter, out var end)) return false;
@@ -180,7 +180,8 @@ namespace SlopCo.Player
             finally
             {
                 if (handle.valid) handle.Remove();
-                if (Application.isPlaying) Destroy(data); else DestroyImmediate(data);
+                if (data != null) { if (Application.isPlaying) Destroy(data); else DestroyImmediate(data); }
+                NavMesh.RemoveSettings(settings.agentTypeID);
             }
         }
 
@@ -192,12 +193,14 @@ namespace SlopCo.Player
             return BotPathMath.IsOnPoint(point, hit.position, RouteSnapFlat, RouteSnapUp);
         }
 
-        // Same agent dimensions as Settings(), under an agent type of its own (created once per domain).
+        // Same agent dimensions as Settings(), under a fresh agent type of its own that RouteExists removes again
+        // when it is done. Caching the type id once per domain went wrong twice: ids can be negative, so a "< 0 means
+        // none yet" sentinel created a new type on every call (in the editor each one was saved into
+        // NavMeshAreas.asset as "New Agent N"), and a cached id whose type had since been removed looked up as -1, the
+        // throwaway bake failed and the check answered "route exists" for a blocked layout.
         private static NavMeshBuildSettings CheckSettings()
         {
-            NavMeshBuildSettings s;
-            if (_checkAgentType < 0) { s = NavMesh.CreateSettings(); _checkAgentType = s.agentTypeID; }
-            else s = NavMesh.GetSettingsByID(_checkAgentType);
+            var s = NavMesh.CreateSettings();
             var bot = Settings();
             s.agentRadius = bot.agentRadius;
             s.agentHeight = bot.agentHeight;
