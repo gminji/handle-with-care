@@ -1,0 +1,14 @@
+{
+  "commands": [
+    {
+      "name": "unity-compile",
+      "run": "node ci/unity_gate.mjs compile",
+      "timeoutMs": 480000
+    },
+    {
+      "name": "unity-editmode-tests",
+      "run": "node ci/unity_gate.mjs tests",
+      "timeoutMs": 480000
+    }
+  ]
+}
