@@ -54,6 +54,10 @@ namespace SlopCo.Gameplay
             return min + (max - min) * t;
         }
 
+        /// <summary>Which entry of a map's obstacle list sits in this slot, in [0, count). A salt of its own, so it
+        /// is independent of <see cref="KindFor"/> — maps without a list keep exactly the field they always had.</summary>
+        public static int EntryFor(int seed, int slot, int count) => Pick(seed, 4129 + slot, count);
+
         /// <summary>Y rotation in degrees so identical props don't line up like a shop display.</summary>
         public static float YawFor(int seed, int slot) => Hash(seed, 3313 + slot) / (float)uint.MaxValue * 360f;
 

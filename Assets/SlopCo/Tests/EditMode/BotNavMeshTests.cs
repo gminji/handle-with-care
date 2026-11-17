@@ -29,7 +29,11 @@ namespace SlopCo.Tests.EditMode
             _data = null;
             foreach (var go in _made) if (go != null) Object.DestroyImmediate(go);
             _made.Clear();
+            foreach (var a in _assets) if (a != null) Object.DestroyImmediate(a);
+            _assets.Clear();
         }
+
+        private readonly List<Object> _assets = new List<Object>();   // obstacle lists and meshes made in code
 
         // The bake collects EVERY collider inside the bounds, including those of whatever scene is open in the
         // editor when the tests run (Bootstrap's Ground sits at y = 0). Build the test geometry far above it so
@@ -257,6 +261,257 @@ namespace SlopCo.Tests.EditMode
                 Assert.That(BotNavMesh.RouteExists(root, At(new Vector3(-5f, 0f, 0f)), Origin + new Vector3(5f, 0f, 0f)), Is.False);
             Assert.That(NavMesh.GetSettingsCount(), Is.EqualTo(before));
         }
+
+        // ── A map's own obstacle list (ObstacleSet) ──
+
+        private static readonly string[] TemplateNames = { "Crate", "Drum", "Offset", "Fbx" };
+
+        // Four templates that each break a naive spawn: a body that would fall (Rigidbody, no collider), a trigger-
+        // only prop, a pivot far off the mesh, and an FBX-style root (X -90°, scale 100, Z-up centimetre mesh)
+        // whose only collider uses an unreadable mesh. Parked far above the test floor so they never get baked.
+        private ObstacleSet MakeSet()
+        {
+            var up = Origin + Vector3.up * 50f;
+
+            var crate = GameObject.CreatePrimitive(PrimitiveType.Cube);
+            crate.name = "Crate";
+            Object.DestroyImmediate(crate.GetComponent<Collider>());
+            crate.AddComponent<Rigidbody>();
+            crate.transform.position = up;
+            crate.transform.localScale = new Vector3(2f, 2f, 2f);
+
+            var drum = GameObject.CreatePrimitive(PrimitiveType.Cylinder);
+            drum.name = "Drum";
+            drum.GetComponent<Collider>().isTrigger = true;
+            drum.transform.position = up + Vector3.right * 5f;
+            drum.transform.localScale = new Vector3(0.5f, 0.3f, 0.5f);
+
+            var offset = new GameObject("Offset");
+            offset.transform.position = up + Vector3.right * 10f;
+            var part = GameObject.CreatePrimitive(PrimitiveType.Cube);
+            part.name = "Part";
+            part.transform.SetParent(offset.transform, false);
+            part.transform.localPosition = new Vector3(3f, 1f, -2f);
+            part.transform.localScale = new Vector3(0.6f, 1.2f, 0.4f);
+
+            var fbx = new GameObject("Fbx");
+            fbx.transform.position = up + Vector3.right * 15f;
+            fbx.transform.rotation = Quaternion.Euler(-90f, 0f, 0f);
+            fbx.transform.localScale = Vector3.one * 100f;
+            var mesh = FlatBoxMesh(new Vector3(0.01f, 0.006f, 0.004f));   // Z-up: 1 m × 0.6 m, 0.4 m tall once stood
+            fbx.AddComponent<MeshFilter>().sharedMesh = mesh;
+            fbx.AddComponent<MeshRenderer>();
+            fbx.AddComponent<MeshCollider>().sharedMesh = mesh;
+            mesh.UploadMeshData(true);   // like an imported model without Read/Write
+
+            _made.AddRange(new[] { crate, drum, offset, fbx });
+
+            var set = ScriptableObject.CreateInstance<ObstacleSet>();
+            _assets.Add(set);
+            set.SetEntries(new[]
+            {
+                new ObstacleSet.Entry { prefab = crate, footprint = 0.9f },
+                new ObstacleSet.Entry { prefab = drum, footprint = 0.6f },
+                new ObstacleSet.Entry { prefab = offset, footprint = 1.1f },
+                new ObstacleSet.Entry { prefab = fbx, footprint = 1.0f },
+            });
+            return set;
+        }
+
+        private Mesh FlatBoxMesh(Vector3 size)
+        {
+            var cube = GameObject.CreatePrimitive(PrimitiveType.Cube);
+            var mesh = Object.Instantiate(cube.GetComponent<MeshFilter>().sharedMesh);
+            Object.DestroyImmediate(cube);
+            _assets.Add(mesh);
+            var v = mesh.vertices;
+            for (int i = 0; i < v.Length; i++) v[i] = Vector3.Scale(v[i], size);
+            mesh.vertices = v;
+            mesh.RecalculateBounds();
+            return mesh;
+        }
+
+        // Twelve slots on the test floor, some raised, so "stands on the slot" means more than y = 0.
+        private Transform SlotsUnder(Transform root)
+        {
+            var slots = new GameObject("ObstacleSlots").transform;
+            slots.SetParent(root, false);
+            for (int i = 0; i < 12; i++)
+            {
+                var s = new GameObject("Slot" + i).transform;
+                s.SetParent(slots, false);
+                s.localPosition = new Vector3((i % 4) * 4f - 6f, (i % 3) * 0.25f, (i / 4) * 4f - 4f);
+            }
+            return slots;
+        }
+
+        private static int SlotOf(Transform prop) => int.Parse(prop.name.Substring(prop.name.LastIndexOf('_') + 1));
+
+        // The prop's mesh corners in holder space with this slot's yaw taken back out: the size the footprint rule
+        // talks about, and where its floor is.
+        private static Bounds Upright(Transform prop, int seed)
+        {
+            var unyaw = Quaternion.Inverse(Quaternion.Euler(0f, MapLayout.YawFor(seed, SlotOf(prop)), 0f));
+            var toHolder = prop.parent.worldToLocalMatrix;
+            bool any = false;
+            var b = new Bounds();
+            foreach (var mf in prop.GetComponentsInChildren<MeshFilter>())
+            {
+                var m = toHolder * mf.transform.localToWorldMatrix;
+                var mb = mf.sharedMesh.bounds;
+                for (int k = 0; k < 8; k++)
+                {
+                    var p = new Vector3((k & 1) == 0 ? mb.min.x : mb.max.x, (k & 2) == 0 ? mb.min.y : mb.max.y, (k & 4) == 0 ? mb.min.z : mb.max.z);
+                    var q = unyaw * m.MultiplyPoint3x4(p);
+                    if (!any) { b = new Bounds(q, Vector3.zero); any = true; } else b.Encapsulate(q);
+                }
+            }
+            Assert.That(any, Is.True, $"{prop.name} has no mesh");
+            return b;
+        }
+
+        private static List<(string name, Vector3 pos, Quaternion rot, Vector3 scale)> Snapshot(GameObject field)
+        {
+            var list = new List<(string, Vector3, Quaternion, Vector3)>();
+            foreach (Transform c in field.transform) list.Add((c.name, c.localPosition, c.localRotation, c.localScale));
+            return list;
+        }
+
+        private static void AssertSameField(List<(string name, Vector3 pos, Quaternion rot, Vector3 scale)> a,
+                                            List<(string name, Vector3 pos, Quaternion rot, Vector3 scale)> b)
+        {
+            Assert.That(b.Count, Is.EqualTo(a.Count));
+            for (int i = 0; i < a.Count; i++)
+            {
+                Assert.That(b[i].name, Is.EqualTo(a[i].name));
+                Assert.That(b[i].pos == a[i].pos, Is.True, $"{a[i].name} position");
+                Assert.That(b[i].rot == a[i].rot, Is.True, $"{a[i].name} rotation");
+                Assert.That(b[i].scale == a[i].scale, Is.True, $"{a[i].name} scale");
+            }
+        }
+
+        [Test]
+        public void ObstacleSet_Field_UsesOnlyListedEntries_AndRepeatsPerSeed()
+        {
+            var set = MakeSet();
+            var root = Root();
+            var slots = SlotsUnder(root);
+
+            var first = Snapshot(MapManager.BuildObstacleField(root, slots, 7, 100, null, set));
+            var again = Snapshot(MapManager.BuildObstacleField(root, slots, 7, 100, null, set));
+            Assert.That(first.Count, Is.EqualTo(12));
+            AssertSameField(first, again);
+
+            var seen = new HashSet<string>();
+            for (int seed = 1; seed <= 30; seed++)
+            {
+                var field = MapManager.BuildObstacleField(root, slots, seed, 100, null, set);
+                foreach (Transform c in field.transform)
+                {
+                    string kind = System.Array.Find(TemplateNames, n => c.name.StartsWith(n + "_"));
+                    Assert.That(kind, Is.Not.Null, $"{c.name} is not from the list");
+                    seen.Add(kind);
+                }
+            }
+            Assert.That(seen.Count, Is.EqualTo(TemplateNames.Length), "every listed prop must come up");
+        }
+
+        [Test]
+        public void ObstacleSet_FbxStyleRoot_StaysUpright()
+        {
+            var set = MakeSet();
+            var root = Root();
+            var slots = SlotsUnder(root);
+
+            int checkedProps = 0;
+            for (int seed = 1; seed <= 10; seed++)
+            {
+                var field = MapManager.BuildObstacleField(root, slots, seed, 100, null, set);
+                foreach (Transform c in field.transform)
+                {
+                    if (!c.name.StartsWith("Fbx_")) continue;
+                    checkedProps++;
+                    var u = Upright(c, seed);
+                    Assert.That(u.size.y, Is.LessThan(Mathf.Min(u.size.x, u.size.z)), $"{c.name} lies on its side");
+                    float expected = 1.0f * MapLayout.ScaleFor(seed, SlotOf(c), 0.7f, 1.35f);
+                    Assert.That(Mathf.Max(u.size.x, u.size.z), Is.EqualTo(expected).Within(1e-3f), $"{c.name} footprint");
+                    Assert.That(c.GetComponent<BoxCollider>(), Is.Not.Null, $"{c.name}: the unreadable MeshCollider needs a BoxCollider beside it");
+                }
+            }
+            Assert.That(checkedProps, Is.GreaterThan(0), "no seed placed the FBX-style prop");
+        }
+
+        [Test]
+        public void ObstacleSet_Props_AreSolidBakeSources()
+        {
+            var set = MakeSet();
+            var root = Root();
+            Box("Floor", new Vector3(0f, -0.1f, 0f), new Vector3(24f, 0.2f, 24f)).transform.SetParent(root, true);
+            var slots = SlotsUnder(root);
+            // Seed 7 places all four templates, including the Rigidbody crate this test is about.
+            var field = MapManager.BuildObstacleField(root, slots, 7, 100, null, set);
+            Physics.SyncTransforms();
+            var placed = new HashSet<string>();
+            foreach (Transform c in field.transform) placed.Add(c.name.Substring(0, c.name.LastIndexOf('_')));
+            Assert.That(placed, Is.SupersetOf(TemplateNames), "seed 7 must place every template");
+
+            var sources = new List<NavMeshBuildSource>();
+            BotNavMesh.CollectLevelSources(TestBounds, new List<NavMeshBuildMarkup>(), sources);
+            var baked = new HashSet<Object>();
+            foreach (var s in sources) baked.Add(s.component);
+
+            Assert.That(field.transform.childCount, Is.EqualTo(12));
+            foreach (Transform c in field.transform)
+            {
+                Assert.That(c.GetComponentsInChildren<Rigidbody>(true), Is.Empty, $"{c.name} still has a Rigidbody");
+                bool solid = false;
+                foreach (var col in c.GetComponentsInChildren<Collider>())
+                {
+                    if (!col.enabled || !BotPathMath.IsBakeSource(col.isTrigger, col.attachedRigidbody != null, col is CharacterController)) continue;
+                    if (col is MeshCollider mc && (mc.sharedMesh == null || !mc.sharedMesh.isReadable)) continue;
+                    Assert.That(baked.Contains(col), Is.True, $"{c.name}: {col.GetType().Name} missing from the bake");
+                    solid = true;
+                }
+                Assert.That(solid, Is.True, $"{c.name} has no solid collider for the route check");
+            }
+        }
+
+        [Test]
+        public void ObstacleSet_Props_SitOnTheSlot_WithinTheFootprintRule()
+        {
+            var set = MakeSet();
+            var root = Root();
+            var slots = SlotsUnder(root);
+            for (int seed = 1; seed <= 10; seed++)
+            {
+                var field = MapManager.BuildObstacleField(root, slots, seed, 100, null, set);
+                foreach (Transform c in field.transform)
+                {
+                    var u = Upright(c, seed);
+                    Assert.That(Mathf.Max(u.size.x, u.size.z), Is.LessThanOrEqualTo(ObstacleSet.MaxFootprint * 1.35f + 1e-3f), $"{c.name} too wide");
+                    Vector3 slotAt = field.transform.InverseTransformPoint(slots.GetChild(SlotOf(c)).position);
+                    Assert.That(u.min.y, Is.EqualTo(slotAt.y).Within(1e-3f), $"{c.name} floats or sinks");
+                    // Upright() takes the yaw back out, so compare against the slot turned the same way.
+                    Vector3 slotUnyawed = Quaternion.Inverse(Quaternion.Euler(0f, MapLayout.YawFor(seed, SlotOf(c)), 0f)) * slotAt;
+                    Assert.That(u.center.x, Is.EqualTo(slotUnyawed.x).Within(1e-3f), $"{c.name} off the slot (x)");
+                    Assert.That(u.center.z, Is.EqualTo(slotUnyawed.z).Within(1e-3f), $"{c.name} off the slot (z)");
+                }
+            }
+        }
+
+        [Test]
+        public void EmptyOrMissingSet_BuildsTheSamePrimitiveField()
+        {
+            var root = Root();
+            var slots = SlotsUnder(root);
+            var empty = ScriptableObject.CreateInstance<ObstacleSet>();
+            _assets.Add(empty);
+
+            var none = Snapshot(MapManager.BuildObstacleField(root, slots, 42, 55, null));
+            var blank = Snapshot(MapManager.BuildObstacleField(root, slots, 42, 55, null, empty));
+            Assert.That(none.Count, Is.GreaterThan(0));
+            AssertSameField(none, blank);
+        }
     }
 
     /// <summary>
@@ -422,7 +677,8 @@ namespace SlopCo.Tests.EditMode
             try
             {
                 parent = new GameObject("FieldParent");
-                var field = MapManager.BuildObstacleField(parent.transform, map.Find("ObstacleSlots"), seed, mm.ObstacleDensity, null);
+                var field = MapManager.BuildObstacleField(parent.transform, map.Find("ObstacleSlots"), seed, mm.ObstacleDensity, null,
+                                                           mm.ObstacleSetFor(map));
                 Assert.That(field, Is.Not.Null, $"{mapName} has no obstacle slots");
                 bool ok = BotNavMesh.RouteExists(map, PointsUnder(map, "DepotSpawns"), docks.GetChild(0).position);
                 Assert.That(ok, Is.EqualTo(deliverable), $"{mapName} seed {seed}");

@@ -133,6 +133,40 @@ namespace SlopCo.Tests.EditMode
             Assert.Less(active, 12);
         }
 
+        // ── EntryFor: which prop of a map's obstacle list fills a slot ──
+
+        [Test]
+        public void EntryFor_StaysInRange_AndIsDeterministic()
+        {
+            foreach (int count in new[] { 1, 3, 5 })
+                for (int seed = 1; seed <= 300; seed++)
+                {
+                    int e = MapLayout.EntryFor(seed, seed % 12, count);
+                    Assert.GreaterOrEqual(e, 0);
+                    Assert.Less(e, count);
+                    Assert.AreEqual(e, MapLayout.EntryFor(seed, seed % 12, count));
+                }
+        }
+
+        [Test]
+        public void EntryFor_CoversEveryEntry()
+        {
+            foreach (int count in new[] { 3, 5 })
+            {
+                var seen = new bool[count];
+                for (int seed = 1; seed <= 300; seed++) seen[MapLayout.EntryFor(seed, 0, count)] = true;
+                for (int i = 0; i < count; i++) Assert.IsTrue(seen[i], $"entry {i} of {count} never rolled");
+            }
+        }
+
+        [Test]
+        public void EntryFor_DegenerateCounts_AreSafe()
+        {
+            Assert.AreEqual(0, MapLayout.EntryFor(123, 2, 1));
+            Assert.AreEqual(0, MapLayout.EntryFor(123, 2, 0));
+            Assert.AreEqual(0, MapLayout.EntryFor(123, 2, -3));
+        }
+
         // ── TryPickSeed: the host's "only replicate a deliverable layout" loop ──
 
         private static System.Func<int> Rolls(params int[] seeds)

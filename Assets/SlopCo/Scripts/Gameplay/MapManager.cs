@@ -15,6 +15,7 @@ namespace SlopCo.Gameplay
     {
         public string nameKey;     // localization key (e.g. "map.0")
         public GameObject root;     // Map_i geometry root (toggled active)
+        public ObstacleSet obstacles; // props for this map's obstacle slots; empty = the four default primitives
     }
 
     /// <summary>
@@ -240,7 +241,7 @@ namespace SlopCo.Gameplay
             if (van != null && vanAnchor != null)
                 van.SetPositionAndRotation(vanAnchor.position, vanAnchor.rotation);
 
-            BuildObstacles(rootT);
+            BuildObstacles(rootT, m.obstacles);
 
             var depot = ChildrenOf(rootT, "DepotSpawns");
             if (cargoSpawner != null && depot != null) cargoSpawner.SetDepotSpawnPoints(depot);
@@ -262,11 +263,21 @@ namespace SlopCo.Gameplay
         // Fill a seeded subset of the map's candidate obstacle slots. Identical on every client (same seed →
         // same result), so these are plain scene props: no NetworkObjects, no spawn traffic. Rebuilt from
         // scratch on every apply, which is also how they get cleaned up when the map or seed changes.
-        private void BuildObstacles(Transform rootT) =>
-            BuildObstacleField(rootT, rootT.Find("ObstacleSlots"), LayoutSeed.Value, obstacleDensity, obstacleMaterial);
+        private void BuildObstacles(Transform rootT, ObstacleSet set) =>
+            BuildObstacleField(rootT, rootT.Find("ObstacleSlots"), LayoutSeed.Value, obstacleDensity, obstacleMaterial, set);
 
         /// <summary>Share of obstacle slots that fill each run, in percent (scene-tuned).</summary>
         public int ObstacleDensity => obstacleDensity;
+
+        /// <summary>The obstacle list of the map whose root is <paramref name="mapRoot"/>, or null (no such map, or
+        /// it uses the default primitives).</summary>
+        public ObstacleSet ObstacleSetFor(Transform mapRoot)
+        {
+            if (maps == null || mapRoot == null) return null;
+            foreach (var m in maps)
+                if (m != null && m.root != null && m.root.transform == mapRoot) return m.obstacles;
+            return null;
+        }
 
         /// <summary>
         /// Build the obstacle field <paramref name="seed"/> puts in <paramref name="slots"/>, under a fresh
@@ -274,7 +285,8 @@ namespace SlopCo.Gameplay
         /// Static and scene-free so the EditMode tests can rebuild exactly the field a given seed produces in play.
         /// Returns the holder, or null when there are no slots.
         /// </summary>
-        public static GameObject BuildObstacleField(Transform parent, Transform slots, int seed, int density, Material material)
+        public static GameObject BuildObstacleField(Transform parent, Transform slots, int seed, int density, Material material,
+                                                    ObstacleSet set = null)
         {
             // Remove EVERY previous holder and make it unfindable at once. Destroy() only lands at the end of the
             // frame, but the host can apply several times in ONE frame (ActiveMap/LayoutSeed OnValueChanged fire
@@ -294,6 +306,16 @@ namespace SlopCo.Gameplay
             var holder = new GameObject(ObstacleRootName);
             holder.transform.SetParent(parent, false);
             holder.hideFlags = HideFlags.DontSave;   // runtime-only: never leaks into the saved scene
+
+            if (set != null && set.HasEntries)
+            {
+                for (int i = 0; i < slots.childCount; i++)
+                {
+                    if (!MapLayout.SlotActive(seed, i, density)) continue;
+                    BuildListedProp(holder.transform, slots.GetChild(i), seed, i, set);
+                }
+                return holder;
+            }
 
             for (int i = 0; i < slots.childCount; i++)
             {
@@ -331,6 +353,109 @@ namespace SlopCo.Gameplay
             ObstacleKind.Cone    => new Vector3(0.45f, 0.4f, 0.45f),
             _                    => new Vector3(1.1f, 0.5f, 0.35f),   // low barrier — hop it or go around
         };
+
+        // One prop from the map's list in this slot. Sized so its longest horizontal side is the entry's footprint
+        // (≤ 1.1 m, the same rule as the primitives) times the seeded size roll, stood on the slot, and made solid
+        // for the route check. Models arrive in any unit and pivot (FBX roots can carry X -90° and scale 100), so the
+        // root's own rotation and scale are kept and everything is measured from the meshes.
+        private static void BuildListedProp(Transform holder, Transform slot, int seed, int i, ObstacleSet set)
+        {
+            var entry = set.Get(MapLayout.EntryFor(seed, i, set.Count));
+            if (entry == null || entry.prefab == null)
+            {
+                Debug.LogWarning($"[MapManager] Obstacle list '{set.name}' has an empty entry; slot {i} stays clear.");
+                return;
+            }
+
+            var go = UnityEngine.Object.Instantiate(entry.prefab, holder, false);
+            go.name = entry.prefab.name + "_" + i;
+            var t = go.transform;
+            Quaternion rot0 = t.localRotation;
+            Vector3 scale0 = t.localScale;
+
+            // ① in the root's own space (for a fallback BoxCollider); ② upright: root rotation and scale applied, no
+            // yaw, in holder axes (for sizing and standing it on the slot). Read from the meshes, not the renderers,
+            // whose bounds may not have caught up with a transform set this frame.
+            var upright = Matrix4x4.TRS(Vector3.zero, rot0, scale0);
+            var toRoot = t.worldToLocalMatrix;
+            bool any = false;
+            Bounds local = default, stood = default;
+            foreach (var mf in go.GetComponentsInChildren<MeshFilter>(true))
+                if (ActiveUnder(mf.transform, t)) Encapsulate(mf.sharedMesh, toRoot * mf.transform.localToWorldMatrix, upright, ref any, ref local, ref stood);
+            foreach (var sk in go.GetComponentsInChildren<SkinnedMeshRenderer>(true))
+                if (ActiveUnder(sk.transform, t)) Encapsulate(sk.sharedMesh, toRoot * sk.transform.localToWorldMatrix, upright, ref any, ref local, ref stood);
+
+            float side = any ? Mathf.Max(stood.size.x, stood.size.z) : 0f;
+            if (side <= 1e-6f)
+            {
+                Debug.LogWarning($"[MapManager] Obstacle '{entry.prefab.name}' has no mesh to measure; slot {i} stays clear.");
+                go.SetActive(false);   // out of this frame's route check even when the destroy is deferred
+                DestroyImmediateSafe(go);
+                return;
+            }
+
+            float f = Mathf.Min(entry.footprint, ObstacleSet.MaxFootprint) / side * MapLayout.ScaleFor(seed, i, 0.7f, 1.35f);
+            var yaw = Quaternion.Euler(0f, MapLayout.YawFor(seed, i), 0f);
+            t.localScale = scale0 * f;
+            t.localRotation = yaw * rot0;
+            // Yaw turns about Y, so the scaled upright box keeps its floor; centre it on the slot and stand it there.
+            Vector3 c = yaw * (stood.center * f);
+            Vector3 at = holder.InverseTransformPoint(slot.position);
+            t.localPosition = new Vector3(at.x - c.x, at.y - stood.min.y * f, at.z - c.z);
+
+            // The host bakes the route check in this same frame, and the bake skips bodies with a Rigidbody (they
+            // move). A deferred Destroy would land too late, so strip them now, joints first (they require bodies).
+            foreach (var j in go.GetComponentsInChildren<Joint>(true)) UnityEngine.Object.DestroyImmediate(j);
+            foreach (var rb in go.GetComponentsInChildren<Rigidbody>(true)) UnityEngine.Object.DestroyImmediate(rb);
+            if (go.GetComponentInChildren<Rigidbody>(true) != null)
+                Debug.LogWarning($"[MapManager] Obstacle '{go.name}' kept a Rigidbody; the route check will not see it.");
+
+            bool solid = false;
+            foreach (var col in go.GetComponentsInChildren<Collider>(true))
+                if (IsUsableCollider(col, t)) { solid = true; break; }
+            if (!solid)
+            {
+                var box = go.AddComponent<BoxCollider>();
+                box.center = local.center;
+                box.size = local.size;
+            }
+        }
+
+        private static void Encapsulate(Mesh mesh, Matrix4x4 toRoot, Matrix4x4 upright, ref bool any, ref Bounds local, ref Bounds stood)
+        {
+            if (mesh == null) return;
+            var b = mesh.bounds;
+            Vector3 min = b.min, max = b.max;
+            for (int k = 0; k < 8; k++)
+            {
+                var p = new Vector3((k & 1) == 0 ? min.x : max.x, (k & 2) == 0 ? min.y : max.y, (k & 4) == 0 ? min.z : max.z);
+                Vector3 r = toRoot.MultiplyPoint3x4(p);
+                Vector3 u = upright.MultiplyPoint3x4(r);
+                if (!any) { local = new Bounds(r, Vector3.zero); stood = new Bounds(u, Vector3.zero); any = true; }
+                else { local.Encapsulate(r); stood.Encapsulate(u); }
+            }
+        }
+
+        // Active within the prop itself (the holder's own state doesn't matter: the field is built before it shows).
+        private static bool ActiveUnder(Transform t, Transform root)
+        {
+            for (; t != null; t = t.parent)
+            {
+                if (!t.gameObject.activeSelf) return false;
+                if (t == root) return true;
+            }
+            return true;
+        }
+
+        // A collider the route check's bake can stand on: enabled, solid, not a player, and — for a MeshCollider —
+        // a readable mesh, because the runtime NavMesh bake in a player build drops unreadable meshes and would
+        // then wave a blocked layout through.
+        private static bool IsUsableCollider(Collider col, Transform root)
+        {
+            if (!col.enabled || col.isTrigger || col is CharacterController || !ActiveUnder(col.transform, root)) return false;
+            if (col is MeshCollider mc) return mc.sharedMesh != null && mc.sharedMesh.isReadable;
+            return true;
+        }
 
         private static void DestroyImmediateSafe(GameObject go)
         {
