@@ -58,7 +58,7 @@ namespace SlopCo.Items
 
         /// <summary>SERVER (via the augment shop). Buy a permanent item with crew Cash if affordable and unowned.
         /// Mirrors <see cref="SlopCo.Gameplay.AugmentSystem"/>'s purchase flow.</summary>
-        [Rpc(SendTo.Server)]
+        [Rpc(SendTo.Server, InvokePermission = RpcInvokePermission.Owner)]
         public void RequestBuyPermanentRpc(int itemId)
         {
             if (!ItemCatalog.IsPermanent(itemId) || InventoryLogic.OwnsPermanent(PermanentMask.Value, itemId)) return;
@@ -72,21 +72,21 @@ namespace SlopCo.Items
         // ── Client requests (owner-driven, server-validated) ──
 
         /// <summary>Discard the held consumable to make room for another (permanently gone).</summary>
-        [Rpc(SendTo.Server)]
+        [Rpc(SendTo.Server, InvokePermission = RpcInvokePermission.Owner)]
         public void RequestDiscardConsumableRpc()
         {
             if (HasConsumable) ConsumableId.Value = InventoryLogic.DiscardConsumable(ConsumableId.Value);
         }
 
         /// <summary>Cycle the selected permanent item among owned ones.</summary>
-        [Rpc(SendTo.Server)]
+        [Rpc(SendTo.Server, InvokePermission = RpcInvokePermission.Owner)]
         public void RequestCyclePermanentRpc()
         {
             SelectedPermanent.Value = InventoryLogic.CycleSelected(PermanentMask.Value, SelectedPermanent.Value, InventoryLogic.MaskWidth);
         }
 
         /// <summary>SERVER. Use the held consumable: apply its effect, then consume it.</summary>
-        [Rpc(SendTo.Server)]
+        [Rpc(SendTo.Server, InvokePermission = RpcInvokePermission.Owner)]
         public void RequestUseConsumableRpc()
         {
             if (!HasConsumable) return;
@@ -96,7 +96,7 @@ namespace SlopCo.Items
         }
 
         /// <summary>SERVER. Use the selected permanent item (reusable — no consume).</summary>
-        [Rpc(SendTo.Server)]
+        [Rpc(SendTo.Server, InvokePermission = RpcInvokePermission.Owner)]
         public void RequestUsePermanentRpc()
         {
             int id = SelectedPermanent.Value;

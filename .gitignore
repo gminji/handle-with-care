@@ -41,7 +41,7 @@ sysinfo.txt
 # ── Project-specific ────────────────────────────────────
 # Kenney CC0 art IS committed: prefabs/scenes reference these meshes by GUID, and the
 # CC0 license permits redistribution, so the repo stays clone-and-play.
-# Steam SDK / Facepunch.Steamworks DLLs are dev-supplied (see README "Enabling Steam").
+# Steam SDK / Facepunch.Steamworks DLLs are dev-supplied (see the guide atop Networking/SteamNetworkSession.cs).
 /[Aa]ssets/SlopCo/ThirdParty/
 /[Aa]ssets/SlopCo/ThirdParty.meta
 steam_appid.txt

@@ -28,6 +28,32 @@ namespace SlopCo.Player
         public bool GrabHeld { get; private set; }
         public bool WantJump { get; private set; }
 
+        // ── Read-only view for the debug overlay and Scene-view gizmos (host only: bots think on the owner) ──
+        /// <summary>What the bot is doing this frame.</summary>
+        public BotIntent Intent { get; private set; }
+        /// <summary>Where it is ultimately heading (a cargo handle or the van).</summary>
+        public Vector3 Goal { get; private set; }
+        /// <summary>Seconds it has been blocked; it hops at <see cref="BotPathMath.StallSeconds"/>.</summary>
+        public float StallClock => _stuckTimer;
+        /// <summary>Unstuck hops so far.</summary>
+        public int Hops { get; private set; }
+        /// <summary>The planned route: corners [<see cref="RouteCornerIndex"/>, <see cref="RouteCornerCount"/>) are
+        /// still ahead.</summary>
+        public int RouteCornerCount => _onRoute ? _cornerCount : 0;   // an idle bot keeps its old corners but isn't following them
+        public int RouteCornerIndex => _cornerIndex;
+        public Vector3 RouteCorner(int i) => _corners[i];
+        /// <summary>The bot's NetworkObjectId (0 before spawn).</summary>
+        public ulong Id => SelfId;
+
+        /// <summary>Enabled brains, i.e. the bots on this peer (the component is off on human players).</summary>
+        public static readonly LiveSet<AiBrain> Live = new LiveSet<AiBrain>();
+
+        [RuntimeInitializeOnLoadMethod(RuntimeInitializeLoadType.SubsystemRegistration)]
+        private static void ResetStatics() => Live.Clear();   // play mode without a domain reload
+
+        private void OnEnable() => Live.Add(this);
+        private void OnDisable() => Live.Remove(this);
+
         private NetworkObject _no;
         private PlayerCarryController _carry;
         private PlayerController _controller;   // for the speed it is asking for (stall check)
@@ -49,6 +75,7 @@ namespace SlopCo.Player
         private readonly Vector3[] _corners = new Vector3[MaxCorners];
         private int _cornerCount;
         private int _cornerIndex;
+        private bool _onRoute;   // this frame steered along the route (read-only view only)
         private bool _planned;
         private int _plannedVersion;
         private Vector3 _plannedGoal;
@@ -114,6 +141,11 @@ namespace SlopCo.Player
                 else { goal = pos; GrabHeld = false; hasGoal = false; }
             }
 
+            bool carrying = _carry != null && _carry.IsCarrying;
+            Intent = BotIntents.Classify(carrying, !carrying && _target != null, _targetIsJoin);
+            Goal = goal;
+            _onRoute = hasGoal;
+
             Vector3 steer = hasGoal ? NextWaypoint(pos, goal) : goal;
             Vector2 flat = new Vector2(steer.x - pos.x, steer.z - pos.z);
             Move = flat.sqrMagnitude > 0.04f ? flat.normalized : Vector2.zero;
@@ -125,7 +157,7 @@ namespace SlopCo.Player
             {
                 float asked = _controller != null ? _controller.PlanarVelocity.magnitude : 0f;
                 _stuckTimer = BotPathMath.StepStallClock(_stuckTimer, _lastPos, pos, asked, Time.deltaTime);
-                if (_stuckTimer > BotPathMath.StallSeconds) { WantJump = true; _stuckTimer = 0f; _target = null; _planned = false; }
+                if (_stuckTimer > BotPathMath.StallSeconds) { WantJump = true; Hops++; _stuckTimer = 0f; _target = null; _planned = false; }
             }
             _lastPos = pos;
         }
@@ -186,18 +218,35 @@ namespace SlopCo.Player
         /// instead of picking something up. Single sweep, two winners.
         private static CargoItem PickTarget(Vector3 from, ulong selfId)
         {
-            var all = Object.FindObjectsByType<CargoItem>(FindObjectsSortMode.None);
+            var all = CargoItem.Live;   // spawned cargo, not a scene scan (every bot, twice a second)
             CargoItem bestLoose = null; float bestLooseSqr = float.MaxValue;
             CargoItem bestJoin = null;  float bestJoinSqr = float.MaxValue;
 
-            foreach (var c in all)
+            for (int i = 0; i < all.Count; i++)
             {
+                var c = all[i];
                 if (c == null) continue;
                 float d = (c.transform.position - from).sqrMagnitude;
                 if (IsClaimable(c)) { if (d < bestLooseSqr) { bestLooseSqr = d; bestLoose = c; } }
                 else if (IsJoinable(c, selfId)) { if (d < bestJoinSqr) { bestJoinSqr = d; bestJoin = c; } }
             }
             return bestLoose != null ? bestLoose : bestJoin;   // PASS 1 wins outright
+        }
+
+        // Select a bot in the Scene view during Play: the rest of its route (cyan) and its goal (yellow).
+        private void OnDrawGizmosSelected()
+        {
+            if (!Application.isPlaying) return;
+            Gizmos.color = Color.cyan;
+            Vector3 prev = transform.position;
+            for (int i = _cornerIndex; i < RouteCornerCount; i++)
+            {
+                Gizmos.DrawLine(prev, _corners[i]);
+                Gizmos.DrawSphere(_corners[i], 0.12f);
+                prev = _corners[i];
+            }
+            Gizmos.color = Color.yellow;
+            Gizmos.DrawWireSphere(Goal, 0.35f);
         }
 
         // Walk to a FREE handle, not merely the nearest one — otherwise two bots converge on the same grip.

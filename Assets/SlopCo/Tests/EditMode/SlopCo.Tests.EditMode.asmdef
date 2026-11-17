@@ -3,6 +3,7 @@
   "rootNamespace": "SlopCo.Tests",
   "references": [
     "SlopCo",
+    "Unity.Netcode.Runtime",
     "UnityEngine.TestRunner",
     "UnityEditor.TestRunner"
   ],

@@ -131,9 +131,9 @@ namespace SlopCo.Gameplay
             if (IsServer)
             {
                 ActiveMap.Value = ResolveInitialMap();
-                LayoutSeed.Value = NewSeed();
+                RollLayout();               // applies the accepted layout
             }
-            Apply(ActiveMap.Value); // initial apply (also covers late-join clients)
+            else Apply(ActiveMap.Value);    // initial apply (also covers late-join clients)
         }
 
         public override void OnNetworkDespawn()
@@ -150,11 +150,51 @@ namespace SlopCo.Gameplay
         {
             if (!IsServer) return;
             ActiveMap.Value = ResolveInitialMap();
-            LayoutSeed.Value = NewSeed();
-            Apply(ActiveMap.Value);   // same-map restarts don't fire OnValueChanged, so re-apply explicitly
+            RollLayout();
         }
 
         private static int NewSeed() => UnityEngine.Random.Range(1, int.MaxValue);
+
+        /// <summary>Seeds the host tries before accepting a layout it could not prove deliverable. Roughly one
+        /// raised-dock roll in eight blocks the route (measured over 500 seeds), so eight tries leave a blocked run
+        /// at about one in ten million.</summary>
+        public const int MaxLayoutTries = 8;
+
+        /// <summary>SERVER. Roll the run's layout and keep only one whose obstacle field leaves every depot spawn
+        /// a walkable route to the van (<see cref="MapLayout.PickSeed"/>). Each candidate is applied and checked
+        /// within this frame; only the accepted seed reaches the clients, so they still rebuild it from one int.</summary>
+        private void RollLayout()
+        {
+            bool ok = MapLayout.TryPickSeed(NewSeed, TryLayout, MaxLayoutTries, out int seed, out int tries);
+            LayoutRerolls = tries - 1;
+            if (!ok)
+                Debug.LogWarning($"[MapManager] No deliverable layout in {tries} seeds on {MapNameKey(ActiveMap.Value)}; keeping seed {seed}.");
+            else if (tries > 1)
+                Debug.Log($"[MapManager] Layout re-rolled {tries - 1}x (seed {seed}): the obstacle field cut the depot off from the van.");
+        }
+
+        /// <summary>SERVER. How many candidate seeds the last roll threw away (shown by the debug overlay).</summary>
+        public int LayoutRerolls { get; private set; }
+
+        private bool TryLayout(int seed)
+        {
+            LayoutSeed.Value = seed;
+            Apply(ActiveMap.Value);   // same-seed and same-map rolls don't fire OnValueChanged, so apply explicitly
+            return LayoutIsDeliverable();
+        }
+
+        /// <summary>SERVER. Does every depot spawn of the applied layout reach the van? True when the map has
+        /// nothing to check (no depot or dock authored).</summary>
+        private bool LayoutIsDeliverable()
+        {
+            if (ActiveRoot == null) return true;
+            var depot = ActiveRoot.Find("DepotSpawns");
+            var dock = PickVanAnchor(ActiveRoot);
+            if (depot == null || depot.childCount == 0 || dock == null) return true;
+            var starts = new Vector3[depot.childCount];
+            for (int i = 0; i < starts.Length; i++) starts[i] = depot.GetChild(i).position;
+            return SlopCo.Player.BotNavMesh.RouteExists(ActiveRoot, starts, dock.position);
+        }
 
         private int ResolveInitialMap()
         {
@@ -222,32 +262,42 @@ namespace SlopCo.Gameplay
         // Fill a seeded subset of the map's candidate obstacle slots. Identical on every client (same seed →
         // same result), so these are plain scene props: no NetworkObjects, no spawn traffic. Rebuilt from
         // scratch on every apply, which is also how they get cleaned up when the map or seed changes.
-        private void BuildObstacles(Transform rootT)
+        private void BuildObstacles(Transform rootT) =>
+            BuildObstacleField(rootT, rootT.Find("ObstacleSlots"), LayoutSeed.Value, obstacleDensity, obstacleMaterial);
+
+        /// <summary>Share of obstacle slots that fill each run, in percent (scene-tuned).</summary>
+        public int ObstacleDensity => obstacleDensity;
+
+        /// <summary>
+        /// Build the obstacle field <paramref name="seed"/> puts in <paramref name="slots"/>, under a fresh
+        /// "ObstaclesRuntime" holder parented to <paramref name="parent"/> (replacing any previous holder there).
+        /// Static and scene-free so the EditMode tests can rebuild exactly the field a given seed produces in play.
+        /// Returns the holder, or null when there are no slots.
+        /// </summary>
+        public static GameObject BuildObstacleField(Transform parent, Transform slots, int seed, int density, Material material)
         {
             // Remove EVERY previous holder and make it unfindable at once. Destroy() only lands at the end of the
             // frame, but the host can apply several times in ONE frame (ActiveMap/LayoutSeed OnValueChanged fire
-            // synchronously on the writer, RollMap re-applies, a re-seed follows): Find() kept returning the same
+            // synchronously on the writer, the layout roll tries several seeds): Find() kept returning the same
             // dying holder, so a stale-seed layout survived next to the new one.
-            for (int i = rootT.childCount - 1; i >= 0; i--)
+            for (int i = parent.childCount - 1; i >= 0; i--)
             {
-                var old = rootT.GetChild(i);
+                var old = parent.GetChild(i);
                 if (old.name != ObstacleRootName) continue;
                 old.gameObject.SetActive(false);   // stops rendering/colliding this instant
                 old.SetParent(null, false);        // a later same-frame apply can no longer see it
                 DestroyImmediateSafe(old.gameObject);
             }
 
-            var slots = rootT.Find("ObstacleSlots");
-            if (slots == null || slots.childCount == 0) return;
+            if (slots == null || slots.childCount == 0) return null;
 
             var holder = new GameObject(ObstacleRootName);
-            holder.transform.SetParent(rootT, false);
+            holder.transform.SetParent(parent, false);
             holder.hideFlags = HideFlags.DontSave;   // runtime-only: never leaks into the saved scene
 
-            int seed = LayoutSeed.Value;
             for (int i = 0; i < slots.childCount; i++)
             {
-                if (!MapLayout.SlotActive(seed, i, obstacleDensity)) continue;
+                if (!MapLayout.SlotActive(seed, i, density)) continue;
                 var slot = slots.GetChild(i);
                 var kind = MapLayout.KindFor(seed, i);
                 float s = MapLayout.ScaleFor(seed, i, 0.7f, 1.35f);
@@ -261,16 +311,19 @@ namespace SlopCo.Gameplay
                 go.transform.localScale = SizeOf(kind) * s;
                 go.transform.position += Vector3.up * (go.transform.localScale.y * 0.5f);
 
-                if (obstacleMaterial != null)
+                if (material != null)
                 {
                     var r = go.GetComponent<Renderer>();
-                    if (r != null) r.sharedMaterial = obstacleMaterial;
+                    if (r != null) r.sharedMaterial = material;
                 }
             }
+            return holder;
         }
 
-        // Footprints chosen so nothing can fully plug the 1.5-wide bridge: everything is at most ~1.1 across
-        // at base scale, and the slots themselves are authored clear of the gate and bridge centreline.
+        // Footprints chosen so no single obstacle can fully plug the 1.5-wide bridge: everything is at most ~1.1
+        // across at base scale, and the slots are authored clear of the gate and bridge centreline. Two NEIGHBOURING
+        // slots can still close a platform lane between them (a scaled-up crate and barrel leave ~0.78 m against
+        // the 0.8 m capsule) — that is what RollLayout's route check rejects.
         private static Vector3 SizeOf(ObstacleKind kind) => kind switch
         {
             ObstacleKind.Crate   => new Vector3(0.9f, 0.9f, 0.9f),

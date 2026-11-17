@@ -18,18 +18,21 @@ namespace SlopCo.UI
 
         private void Update()
         {
-            var bombs = Object.FindObjectsByType<CargoBomb>(FindObjectsSortMode.None);
-            if (bombs.Length == 0)
+            // The spawned-bomb list, not a scene scan: this runs every frame on every client.
+            var bombs = CargoBomb.Live;
+            float min = 1f;
+            int live = 0;
+            for (int i = 0; i < bombs.Count; i++)
+            {
+                var b = bombs[i];
+                if (b == null) continue;
+                live++;
+                min = Mathf.Min(min, b.Fuse);
+            }
+            if (live == 0)
             {
                 if (root != null && root.activeSelf) root.SetActive(false);
                 return;
-            }
-
-            float min = 1f;
-            foreach (var b in bombs)
-            {
-                var c = b.GetComponent<CargoCondition>();
-                if (c != null) min = Mathf.Min(min, c.Condition.Value);
             }
             float fuse = Mathf.Clamp01(min);
 

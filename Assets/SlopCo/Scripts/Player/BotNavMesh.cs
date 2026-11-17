@@ -53,6 +53,9 @@ namespace SlopCo.Player
         /// <summary>Bumps on every bake, so a route planned on the previous map/layout is known to be stale.</summary>
         public int Version { get; private set; }
 
+        /// <summary>The live instance if a bot has asked for one, without creating it (debug overlay).</summary>
+        public static BotNavMesh Current => _instance;
+
         public static BotNavMesh Get()
         {
             if (_instance == null) _instance = new GameObject("BotNavMesh").AddComponent<BotNavMesh>();
@@ -129,6 +132,78 @@ namespace SlopCo.Player
             NavMeshBuilder.CollectSources(bounds, ~0, NavMeshCollectGeometry.PhysicsColliders, 0, markups, results);
             results.RemoveAll(s => s.component is Collider c
                                    && !BotPathMath.IsBakeSource(c.isTrigger, c.attachedRigidbody != null, c is CharacterController));
+        }
+
+        /// <summary>How far a route's end may land from the point it was asked for and still count as reaching
+        /// it. Beyond this, SamplePosition has quietly picked somewhere else — the ground beside the raised dock
+        /// (2.6 m away, 1.6 m down) instead of its top — and a "complete" route would lead to the wrong place.
+        /// Depot points sit up to one agent radius inside an eroded edge; spawn points float up to 1 m up.</summary>
+        public const float RouteSnapFlat = 0.8f;
+        public const float RouteSnapUp = 1.2f;
+
+        private static int _checkAgentType = -1;
+
+        /// <summary>
+        /// Can a crew walk from every point in <paramref name="from"/> to <paramref name="to"/> on
+        /// <paramref name="mapRoot"/> as it stands right now (obstacles included)? Bakes a throwaway mesh under a
+        /// private agent type so the bots' live mesh (agent type 0, possibly of the previous layout) can neither
+        /// answer the query nor be disturbed by it. Host-only, a few milliseconds, once per rolled layout
+        /// (<see cref="MapManager"/>). Returns true when there is nothing to judge by (no geometry, bake failure),
+        /// so a broken check can never stall a run start.
+        /// </summary>
+        public static bool RouteExists(Transform mapRoot, Vector3[] from, Vector3 to)
+        {
+            Physics.SyncTransforms();   // the van and the new obstacles were moved/created this frame
+            Bounds bounds = MapBounds(mapRoot);
+            var sources = new List<NavMeshBuildSource>();
+            CollectLevelSources(bounds, new List<NavMeshBuildMarkup>(), sources);
+            if (sources.Count == 0) return true;
+
+            var settings = CheckSettings();
+            var data = NavMeshBuilder.BuildNavMeshData(settings, sources, bounds, Vector3.zero, Quaternion.identity);
+            if (data == null) return true;
+            var handle = NavMesh.AddNavMeshData(data);
+            try
+            {
+                if (!handle.valid) return true;
+                var filter = new NavMeshQueryFilter { agentTypeID = settings.agentTypeID, areaMask = NavMesh.AllAreas };
+                if (!SnapOnto(to, filter, out var end)) return false;
+                var path = new NavMeshPath();
+                foreach (var start in from)
+                {
+                    if (!SnapOnto(start, filter, out var begin)) return false;
+                    if (!NavMesh.CalculatePath(begin, end, filter, path) || path.status != NavMeshPathStatus.PathComplete)
+                        return false;
+                }
+                return true;
+            }
+            finally
+            {
+                if (handle.valid) handle.Remove();
+                if (Application.isPlaying) Destroy(data); else DestroyImmediate(data);
+            }
+        }
+
+        private static bool SnapOnto(Vector3 point, NavMeshQueryFilter filter, out Vector3 onMesh)
+        {
+            onMesh = point;
+            if (!NavMesh.SamplePosition(point, out var hit, SnapRadius, filter)) return false;
+            onMesh = hit.position;
+            return BotPathMath.IsOnPoint(point, hit.position, RouteSnapFlat, RouteSnapUp);
+        }
+
+        // Same agent dimensions as Settings(), under an agent type of its own (created once per domain).
+        private static NavMeshBuildSettings CheckSettings()
+        {
+            NavMeshBuildSettings s;
+            if (_checkAgentType < 0) { s = NavMesh.CreateSettings(); _checkAgentType = s.agentTypeID; }
+            else s = NavMesh.GetSettingsByID(_checkAgentType);
+            var bot = Settings();
+            s.agentRadius = bot.agentRadius;
+            s.agentHeight = bot.agentHeight;
+            s.agentClimb = bot.agentClimb;
+            s.agentSlope = bot.agentSlope;
+            return s;
         }
 
         /// <summary>The map's footprint: its solid colliders plus every authored point under it (spawns, depot,

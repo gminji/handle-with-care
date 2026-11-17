@@ -56,5 +56,27 @@ namespace SlopCo.Gameplay
 
         /// <summary>Y rotation in degrees so identical props don't line up like a shop display.</summary>
         public static float YawFor(int seed, int slot) => Hash(seed, 3313 + slot) / (float)uint.MaxValue * 360f;
+
+        /// <summary>
+        /// The host's seed pick: roll until <paramref name="deliverable"/> accepts a seed, at most
+        /// <paramref name="maxTries"/> times (at least once). Slots fill independently, so now and then two
+        /// neighbours close the only lane between them; the host checks each candidate and only the accepted
+        /// seed is ever replicated, so clients still rebuild the field from one int. If every try fails the last
+        /// seed is kept — a run that might be blocked beats a run that never starts.
+        /// Returns whether <paramref name="seed"/> was accepted; <paramref name="tries"/> is how many were rolled.
+        /// </summary>
+        public static bool TryPickSeed(System.Func<int> roll, System.Func<int, bool> deliverable, int maxTries,
+                                       out int seed, out int tries)
+        {
+            if (maxTries < 1) maxTries = 1;
+            seed = 0;
+            for (tries = 1; tries <= maxTries; tries++)
+            {
+                seed = roll();
+                if (deliverable(seed)) return true;
+            }
+            tries = maxTries;
+            return false;
+        }
     }
 }

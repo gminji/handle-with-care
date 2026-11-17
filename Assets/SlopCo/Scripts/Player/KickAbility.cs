@@ -52,7 +52,7 @@ namespace SlopCo.Player
         /// <summary>SERVER. Resolve one swing. Position/facing come from the owner (it owns the transform), but
         /// the reach is re-derived here from constants, so a client can only pick WHERE it stands, not how far
         /// its leg goes. A stale/teleported origin is rejected against the server's copy of the transform.</summary>
-        [Rpc(SendTo.Server)]
+        [Rpc(SendTo.Server, InvokePermission = RpcInvokePermission.Owner)]
         private void RequestKickRpc(Vector3 origin, Vector3 forward)
         {
             if (_serverCooldown > 0f) return;

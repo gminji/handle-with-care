@@ -327,8 +327,13 @@ namespace SlopCo.UI
             if (shareStatus != null) shareStatus.text = Localization.Get(ok ? "share.copied" : "share.failed");
         }
 
-        // Host-only path; RequestStartRpc is server-gated so a stray client click is a harmless no-op.
-        private void OnRestart() => ServiceLocator.Get<RoundManager>()?.RequestStartRpc();
+        // Host only: the button is shown to the host alone, and RequestStartRpc carries InvokePermission.Server, which
+        // would throw on a client — so a stray client click is checked here and does nothing.
+        private void OnRestart()
+        {
+            var nm = NetworkManager.Singleton;
+            if (nm != null && nm.IsServer) ServiceLocator.Get<RoundManager>()?.RequestStartRpc();
+        }
 
         // Leave() disconnects only this peer. Panel-root hiding is UIManager's job (it polls connected/phase
         // every frame); content reset is our polling Update()/SyncPhase() picking up rm == null → Lobby.

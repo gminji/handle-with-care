@@ -58,8 +58,9 @@ namespace SlopCo.Gameplay
                 BeginPayout();
         }
 
-        /// <summary>Host/lobby → begin (or restart after GameOver) a run.</summary>
-        [Rpc(SendTo.Server)]
+        /// <summary>Host/lobby → begin (or restart after GameOver) a run. Host only: NGO drops a client's call on
+        /// the server (and refuses to send it from the client), so starting is never up to a joiner.</summary>
+        [Rpc(SendTo.Server, InvokePermission = RpcInvokePermission.Server)]
         public void RequestStartRpc()
         {
             if (Phase.Value == RoundPhase.Lobby || Phase.Value == RoundPhase.GameOver)

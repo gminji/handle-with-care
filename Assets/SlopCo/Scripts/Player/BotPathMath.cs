@@ -88,6 +88,12 @@ namespace SlopCo.Player
         public static bool IsBakeSource(bool isTrigger, bool hasRigidbody, bool isCharacterController) =>
             !isTrigger && !hasRigidbody && !isCharacterController;
 
+        /// <summary>Did snapping <paramref name="asked"/> onto the mesh land close enough to count as that point:
+        /// within <paramref name="maxFlat"/> on the ground plane and <paramref name="maxUp"/> vertically?
+        /// Farther means the point itself is off the mesh and the snap picked somewhere else.</summary>
+        public static bool IsOnPoint(Vector3 asked, Vector3 snapped, float maxFlat, float maxUp) =>
+            FlatSqr(snapped - asked) <= maxFlat * maxFlat && Mathf.Abs(snapped.y - asked.y) <= maxUp;
+
         private static float FlatSqr(Vector3 v) => v.x * v.x + v.z * v.z;
     }
 }

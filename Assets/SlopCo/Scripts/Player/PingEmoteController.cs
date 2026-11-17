@@ -88,10 +88,10 @@ namespace SlopCo.Player
             SubmitServerRpc((byte)index, worldPos);
         }
 
-        [Rpc(SendTo.Server)]
-        private void SubmitServerRpc(byte index, Vector3 worldPos, RpcParams rpc = default)
+        // Owner only (anti-spoof): NGO drops a ping sent on someone else's behalf before it gets here.
+        [Rpc(SendTo.Server, InvokePermission = RpcInvokePermission.Owner)]
+        private void SubmitServerRpc(byte index, Vector3 worldPos)
         {
-            if (rpc.Receive.SenderClientId != OwnerClientId) return;                    // anti-spoof (PlayerVoice)
             if (Time.time - _lastServerSend < GameConstants.PingEmoteCooldown) return;  // authoritative rate limit
             _lastServerSend = Time.time;
             if (index >= Items.Length) return;

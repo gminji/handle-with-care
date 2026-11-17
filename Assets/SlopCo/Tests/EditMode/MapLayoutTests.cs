@@ -132,5 +132,51 @@ namespace SlopCo.Tests.EditMode
             Assert.Greater(active, 0);
             Assert.Less(active, 12);
         }
+
+        // ── TryPickSeed: the host's "only replicate a deliverable layout" loop ──
+
+        private static System.Func<int> Rolls(params int[] seeds)
+        {
+            int i = 0;
+            return () => seeds[i++];   // throws if the picker rolls more often than the test allows
+        }
+
+        [Test]
+        public void TryPickSeed_TakesTheFirstDeliverableSeed()
+        {
+            bool ok = MapLayout.TryPickSeed(Rolls(11, 22, 33), s => s == 22, 8, out int seed, out int tries);
+            Assert.IsTrue(ok);
+            Assert.AreEqual(22, seed);
+            Assert.AreEqual(2, tries);
+        }
+
+        [Test]
+        public void TryPickSeed_FirstRollAccepted_RollsOnce()
+        {
+            bool ok = MapLayout.TryPickSeed(Rolls(7), _ => true, 8, out int seed, out int tries);
+            Assert.IsTrue(ok);
+            Assert.AreEqual(7, seed);
+            Assert.AreEqual(1, tries);
+        }
+
+        [Test]
+        public void TryPickSeed_NothingDeliverable_KeepsTheLastSeedAfterMaxTries()
+        {
+            int checks = 0;
+            bool ok = MapLayout.TryPickSeed(Rolls(1, 2, 3), _ => { checks++; return false; }, 3, out int seed, out int tries);
+            Assert.IsFalse(ok);
+            Assert.AreEqual(3, seed, "the last candidate is the one already applied, so it is the one kept");
+            Assert.AreEqual(3, tries);
+            Assert.AreEqual(3, checks, "never rolls past maxTries");
+        }
+
+        [Test]
+        public void TryPickSeed_NonPositiveMaxTries_StillRollsOnce()
+        {
+            bool ok = MapLayout.TryPickSeed(Rolls(5), _ => false, 0, out int seed, out int tries);
+            Assert.IsFalse(ok);
+            Assert.AreEqual(5, seed);
+            Assert.AreEqual(1, tries);
+        }
     }
 }

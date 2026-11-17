@@ -330,8 +330,17 @@ namespace SlopCo.Cargo
             State.Value = CarryState.Delivered;
         }
 
+        /// <summary>Spawned cargo on this peer — bots picking a target walk this instead of scanning the scene.</summary>
+        public static readonly LiveSet<CargoItem> Live = new LiveSet<CargoItem>();
+
+        [RuntimeInitializeOnLoadMethod(RuntimeInitializeLoadType.SubsystemRegistration)]
+        private static void ResetStatics() => Live.Clear();   // play mode without a domain reload
+
+        public override void OnNetworkSpawn() => Live.Add(this);
+
         public override void OnNetworkDespawn()
         {
+            Live.Remove(this);
             _grabbers.Clear();
             _grabberCarriers.Clear();
         }

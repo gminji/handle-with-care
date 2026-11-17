@@ -222,11 +222,11 @@ namespace SlopCo.Audio
         }
 
         // ── Transport (NGO 2.x universal RPC, unreliable) ───────
-        [Rpc(SendTo.Server, Delivery = RpcDelivery.Unreliable)]
+        // Owner only (anti-spoof): NGO drops an upload sent on someone else's behalf before it gets here.
+        [Rpc(SendTo.Server, Delivery = RpcDelivery.Unreliable, InvokePermission = RpcInvokePermission.Owner)]
         private void UploadVoiceServerRpc(byte[] pcm16, RpcParams rpc = default)
         {
-            ulong speaker = rpc.Receive.SenderClientId;
-            if (speaker != OwnerClientId) return;          // anti-spoof: only the owner may upload
+            ulong speaker = rpc.Receive.SenderClientId;    // == OwnerClientId, enforced by InvokePermission
 
             // Relay to everyone EXCEPT the speaker (host included) — the correct echo-free target.
             var target = RpcTarget.Not(speaker, RpcTargetUse.Temp);

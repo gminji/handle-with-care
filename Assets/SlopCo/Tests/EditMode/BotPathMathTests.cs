@@ -166,5 +166,42 @@ namespace SlopCo.Tests.EditMode
             Assert.IsFalse(BotPathMath.IsBakeSource(isTrigger: false, hasRigidbody: true,  isCharacterController: false), "cargo");
             Assert.IsFalse(BotPathMath.IsBakeSource(isTrigger: false, hasRigidbody: false, isCharacterController: true),  "players and bots");
         }
+
+        // ── IsOnPoint ──
+
+        [Test]
+        public void IsOnPoint_SnapWithinTolerance_Counts()
+        {
+            var asked = new Vector3(9.2f, 1.6f, 2f);
+            Assert.IsTrue(BotPathMath.IsOnPoint(asked, asked + new Vector3(0.5f, 0.06f, 0.5f), 0.8f, 1.2f));
+            Assert.IsTrue(BotPathMath.IsOnPoint(asked, asked + new Vector3(0f, -1.2f, 0f), 0.8f, 1.2f), "edges are inclusive");
+        }
+
+        [Test]
+        public void IsOnPoint_GroundBesideTheRaisedDock_DoesNotCount()
+        {
+            // The raised dock's top is off the mesh when its ramp is cut off; the nearest mesh is then the ground
+            // 2.6 m away and 1.6 m down — a "complete" route there would lead to the wrong place.
+            var dockTop = new Vector3(9.2f, 1.6f, 2f);
+            Assert.IsFalse(BotPathMath.IsOnPoint(dockTop, new Vector3(9.2f, 0f, -0.6f), 0.8f, 1.2f));
+            Assert.IsFalse(BotPathMath.IsOnPoint(dockTop, new Vector3(9.2f, 0.3f, 2f), 0.8f, 1.2f), "straight below, too far down");
+        }
+
+        // ── BotIntents.Classify (the overlay's name for AiBrain's priority loop) ──
+
+        [Test]
+        public void Intent_CarryingWinsOverAnyTarget()
+        {
+            Assert.AreEqual(BotIntent.Haul, BotIntents.Classify(carrying: true, hasTarget: true, targetIsJoin: false));
+            Assert.AreEqual(BotIntent.Haul, BotIntents.Classify(carrying: true, hasTarget: false, targetIsJoin: true));
+        }
+
+        [Test]
+        public void Intent_TargetKindPicksClaimOrJoin()
+        {
+            Assert.AreEqual(BotIntent.Claim, BotIntents.Classify(carrying: false, hasTarget: true, targetIsJoin: false));
+            Assert.AreEqual(BotIntent.Join, BotIntents.Classify(carrying: false, hasTarget: true, targetIsJoin: true));
+            Assert.AreEqual(BotIntent.Idle, BotIntents.Classify(carrying: false, hasTarget: false, targetIsJoin: true));
+        }
     }
 }

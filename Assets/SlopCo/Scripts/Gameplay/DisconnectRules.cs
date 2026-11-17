@@ -2,7 +2,7 @@ namespace SlopCo.Gameplay
 {
     /// <summary>
     /// Which disconnects stop a run for a crew vote (<see cref="DisconnectVote"/>). Pure (no NetworkManager),
-    /// so it is EditMode-testable — the test assembly does not reference Netcode.
+    /// so it is EditMode-testable without starting a session.
     /// </summary>
     public static class DisconnectRules
     {

@@ -43,8 +43,18 @@ namespace SlopCo.Cargo
         private readonly NetworkVariable<byte> _archetype =
             new NetworkVariable<byte>(0, NetworkVariableReadPermission.Everyone, NetworkVariableWritePermission.Server);
 
+        /// <summary>Spawned bombs on this peer (HUD fuse meter, debug overlay) — no per-frame scene scans.</summary>
+        public static readonly LiveSet<CargoBomb> Live = new LiveSet<CargoBomb>();
+
+        [RuntimeInitializeOnLoadMethod(RuntimeInitializeLoadType.SubsystemRegistration)]
+        private static void ResetStatics() => Live.Clear();   // play mode without a domain reload
+
+        /// <summary>Remaining fuse, 1 = calm → 0 = boom (the replicated Condition).</summary>
+        public float Fuse => _condition != null ? _condition.Condition.Value : 1f;
+
         public override void OnNetworkSpawn()
         {
+            Live.Add(this);
             _condition = GetComponent<CargoCondition>();
             _cargoItem = GetComponent<CargoItem>();
             _rb = GetComponent<Rigidbody>();
@@ -57,6 +67,7 @@ namespace SlopCo.Cargo
 
         public override void OnNetworkDespawn()
         {
+            Live.Remove(this);
             _archetype.OnValueChanged -= OnArchetypeChanged;
         }
 

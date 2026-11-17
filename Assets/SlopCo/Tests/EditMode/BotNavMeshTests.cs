@@ -5,6 +5,7 @@ using UnityEngine;
 using UnityEngine.AI;
 using UnityEngine.SceneManagement;
 using SlopCo.Core;
+using SlopCo.Gameplay;
 using SlopCo.Player;
 
 namespace SlopCo.Tests.EditMode
@@ -159,14 +160,97 @@ namespace SlopCo.Tests.EditMode
             Assert.That(baked.Contains(zone.GetComponent<Collider>()), Is.False, "triggers aren't solid");
             Assert.That(baked.Contains(player.GetComponent<CharacterController>()), Is.False, "players move");
         }
+
+        // ── RouteExists: the host's layout check ──
+
+        private Transform Root()
+        {
+            var root = new GameObject("TestMapRoot").transform;
+            root.position = Origin;
+            _made.Add(root.gameObject);
+            return root;
+        }
+
+        private GameObject BoxUnder(Transform root, string name, Vector3 center, Vector3 size)
+        {
+            var go = Box(name, center, size);
+            go.transform.SetParent(root, true);
+            return go;
+        }
+
+        // A wall across the floor with one 1.4 m gap at z ∈ [5, 6.4].
+        private Transform WallWithGap()
+        {
+            var root = Root();
+            BoxUnder(root, "Floor", new Vector3(0f, -0.1f, 0f), new Vector3(24f, 0.2f, 24f));
+            BoxUnder(root, "WallLow", new Vector3(0f, 1.5f, -3.5f), new Vector3(0.5f, 3f, 17f));    // z -12..5
+            BoxUnder(root, "WallHigh", new Vector3(0f, 1.5f, 9.2f), new Vector3(0.5f, 3f, 5.6f));   // z 6.4..12
+            return root;
+        }
+
+        private static Vector3[] At(Vector3 p) => new[] { Origin + p };
+
+        [Test]
+        public void RouteExists_GapOpen_True()
+        {
+            var root = WallWithGap();
+            Assert.That(BotNavMesh.RouteExists(root, At(new Vector3(-5f, 0f, 0f)), Origin + new Vector3(5f, 0f, 0f)), Is.True);
+        }
+
+        [Test]
+        public void RouteExists_TwoPropsCloseTheGap_False()
+        {
+            var root = WallWithGap();
+            // Neither prop fills the 1.4 m gap alone; together they leave 0.7 m — less than the 0.8 m capsule.
+            BoxUnder(root, "Crate", new Vector3(0f, 0.5f, 5.3f), new Vector3(0.6f, 1f, 0.6f));
+            BoxUnder(root, "Barrel", new Vector3(0f, 0.5f, 6.4f), new Vector3(0.6f, 1f, 0.2f));
+            Assert.That(BotNavMesh.RouteExists(root, At(new Vector3(-5f, 0f, 0f)), Origin + new Vector3(5f, 0f, 0f)), Is.False);
+        }
+
+        [Test]
+        public void RouteExists_GoalOnUnreachableTop_False()
+        {
+            var root = Root();
+            BoxUnder(root, "Floor", new Vector3(0f, -0.1f, 0f), new Vector3(24f, 0.2f, 24f));
+            BoxUnder(root, "Dock", new Vector3(6f, 0.8f, 0f), new Vector3(4f, 1.6f, 4f));   // no ramp: walls all round
+            Assert.That(BotNavMesh.RouteExists(root, At(new Vector3(-5f, 0f, 0f)), Origin + new Vector3(6f, 1.6f, 0f)), Is.False);
+        }
+
+        [Test]
+        public void RouteExists_GoalOffTheMesh_IsNotAnsweredWithTheGroundBelow()
+        {
+            // A pillar top too narrow to carry any mesh: the nearest mesh to the goal is the floor round its foot,
+            // 1.6 m down. Snapping there would make the route "complete" — to the wrong place.
+            var root = Root();
+            BoxUnder(root, "Floor", new Vector3(0f, -0.1f, 0f), new Vector3(24f, 0.2f, 24f));
+            BoxUnder(root, "Pillar", new Vector3(6f, 0.8f, 0f), new Vector3(0.6f, 1.6f, 0.6f));
+            Assert.That(BotNavMesh.RouteExists(root, At(new Vector3(-5f, 0f, 0f)), Origin + new Vector3(6f, 1.6f, 0f)), Is.False);
+        }
+
+        [Test]
+        public void RouteExists_IgnoresAndKeepsTheBotsLiveMesh()
+        {
+            // The bots' live mesh still shows the OLD, open layout when the host checks a new one. The check must
+            // judge the new layout, and must leave the live mesh answering as before.
+            var root = WallWithGap();
+            Bake(TestBounds);   // live agent-type-0 mesh with the gap open
+            var plug = BoxUnder(root, "Plug", new Vector3(0f, 1f, 5.7f), new Vector3(0.6f, 2f, 1.6f));
+
+            Assert.That(BotNavMesh.RouteExists(root, At(new Vector3(-5f, 0f, 0f)), Origin + new Vector3(5f, 0f, 0f)), Is.False,
+                "the plugged gap must be judged on a fresh bake, not on the live mesh");
+            Assert.That(Route(new Vector3(-5f, 0f, 0f), new Vector3(5f, 0f, 0f)).status, Is.EqualTo(NavMeshPathStatus.PathComplete),
+                "the bots' live mesh must be left as it was");
+            Object.DestroyImmediate(plug);
+        }
     }
 
     /// <summary>
     /// Both shipped maps, opened from Bootstrap.unity: every player spawn must reach every depot spawn, and every
     /// depot spawn must reach every van dock — with the controller-sized agent, not the default one. This is the
     /// route the bots used to lose against the course walls. The raised dock (VanDock0) sits behind the course's
-    /// last-yard ledge, so this is also what holds BotNavMesh.AgentClimb high enough to cross it. (The per-run
-    /// obstacle slots are authored clear of the gate and bridge, so the bare course is what has to connect.)
+    /// last-yard ledge, so this is also what holds BotNavMesh.AgentClimb high enough to cross it. The bare course
+    /// has to connect on its own; the per-run obstacle field CAN cut it (two neighbouring slots), which the host's
+    /// layout roll rejects — the last tests here pin that with a seed that blocked a real play session.
     /// </summary>
     public class BotNavMeshMapTests
     {
@@ -225,9 +309,8 @@ namespace SlopCo.Tests.EditMode
             return pts;
         }
 
-        [TestCase("Map_0")]
-        [TestCase("Map_1")]
-        public void EveryHaulLeg_IsConnected(string mapName)
+        // Only the map in play is active (and baked), as at runtime. Undone in RemoveMesh.
+        private Transform ActivateOnly(string mapName)
         {
             var maps = Maps();
             Transform map = null;
@@ -235,11 +318,19 @@ namespace SlopCo.Tests.EditMode
             {
                 var m = maps.GetChild(i);
                 _mapsBefore.Add((m.gameObject, m.gameObject.activeSelf));
-                m.gameObject.SetActive(m.name == mapName);   // only the map in play is baked, as at runtime
+                m.gameObject.SetActive(m.name == mapName);
                 if (m.name == mapName) map = m;
             }
             Assert.That(map, Is.Not.Null, $"{mapName} missing");
             Physics.SyncTransforms();
+            return map;
+        }
+
+        [TestCase("Map_0")]
+        [TestCase("Map_1")]
+        public void EveryHaulLeg_IsConnected(string mapName)
+        {
+            var map = ActivateOnly(mapName);
 
             var bounds = BotNavMesh.MapBounds(map);
             var sources = new List<NavMeshBuildSource>();
@@ -281,6 +372,55 @@ namespace SlopCo.Tests.EditMode
             var path = new NavMeshPath();
             NavMesh.CalculatePath(a.position, b.position, NavMesh.AllAreas, path);
             if (path.status != NavMeshPathStatus.PathComplete) broken.Add($"{leg} {from} → {to}: {path.status}");
+        }
+
+        // ── The per-run obstacle field against the host's route check ──
+
+        // 1428223278 is the layout that ended a play session on 2026-11-17: Map_0, raised dock, and a scaled-up
+        // crate and barrel on the first platform leaving 0.775 m between them — the bots carried the bomb to the
+        // foot of the dock wall and hopped there until it blew. The host's roll must see it as blocked; seed 5
+        // (same dock) was played to delivery on both maps and must pass.
+        [TestCase("Map_0", 1428223278, false)]
+        [TestCase("Map_0", 5, true)]
+        [TestCase("Map_1", 5, true)]
+        public void ObstacleField_RouteCheck_MatchesPlay(string mapName, int seed, bool deliverable)
+        {
+            var map = ActivateOnly(mapName);
+            var docks = map.Find("VanAnchors");
+            Assert.That(MapLayout.VanAnchorIndex(seed, docks.childCount), Is.EqualTo(0),
+                "precondition: these seeds park the van on the raised dock");
+            MapManager mm = null;
+            foreach (var go in _scene.GetRootGameObjects())
+                if (mm == null) mm = go.GetComponentInChildren<MapManager>(true);
+            Assert.That(mm, Is.Not.Null, "MapManager missing from Bootstrap.unity");
+
+            // Build the field outside Bootstrap, so the scene being edited is never touched: in the scratch scene
+            // the test runner made active, or — when Bootstrap itself is active — in a throwaway scene of our own.
+            var before = SceneManager.GetActiveScene();
+            Scene temp = default;
+            if (before == _scene)
+            {
+                temp = EditorSceneManager.NewScene(NewSceneSetup.EmptyScene, NewSceneMode.Additive);
+                SceneManager.SetActiveScene(temp);
+            }
+            GameObject parent = null;
+            try
+            {
+                parent = new GameObject("FieldParent");
+                var field = MapManager.BuildObstacleField(parent.transform, map.Find("ObstacleSlots"), seed, mm.ObstacleDensity, null);
+                Assert.That(field, Is.Not.Null, $"{mapName} has no obstacle slots");
+                bool ok = BotNavMesh.RouteExists(map, PointsUnder(map, "DepotSpawns"), docks.GetChild(0).position);
+                Assert.That(ok, Is.EqualTo(deliverable), $"{mapName} seed {seed}");
+            }
+            finally
+            {
+                if (parent != null) Object.DestroyImmediate(parent);
+                if (temp.IsValid())
+                {
+                    SceneManager.SetActiveScene(before);
+                    EditorSceneManager.CloseScene(temp, true);
+                }
+            }
         }
     }
 }

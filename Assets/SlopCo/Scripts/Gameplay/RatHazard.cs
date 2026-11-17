@@ -74,8 +74,10 @@ namespace SlopCo.Gameplay
         {
             PlayerCarryController best = null;
             float bestSqr = float.MaxValue;
-            foreach (var c in Object.FindObjectsByType<PlayerCarryController>(FindObjectsSortMode.None))
+            var carriers = PlayerCarryController.Live;   // every frame, per rat: a list walk, not a scene scan
+            for (int i = 0; i < carriers.Count; i++)
             {
+                var c = carriers[i];
                 if (c == null || !c.IsCarrying) continue;
                 float d = (c.transform.position - transform.position).sqrMagnitude;
                 if (d < bestSqr) { bestSqr = d; best = c; }

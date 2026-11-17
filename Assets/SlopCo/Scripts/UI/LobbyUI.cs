@@ -94,7 +94,12 @@ namespace SlopCo.UI
             ServiceLocator.Get<NetworkSessionManager>()?.JoinGame(code);
         }
 
-        private void OnStart() => ServiceLocator.Get<RoundManager>()?.RequestStartRpc();
+        // Host only (the button is shown to the host alone; RequestStartRpc would throw on a client).
+        private void OnStart()
+        {
+            var nm = NetworkManager.Singleton;
+            if (nm != null && nm.IsServer) ServiceLocator.Get<RoundManager>()?.RequestStartRpc();
+        }
 
         private void OnLeave() => ServiceLocator.Get<NetworkSessionManager>()?.Leave();
 

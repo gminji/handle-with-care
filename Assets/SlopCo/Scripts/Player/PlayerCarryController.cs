@@ -134,7 +134,7 @@ namespace SlopCo.Player
             if (netObj != null) RequestGrabRpc(netObj, best.HandleId);
         }
 
-        [Rpc(SendTo.Server)]
+        [Rpc(SendTo.Server, InvokePermission = RpcInvokePermission.Owner)]
         private void RequestGrabRpc(NetworkObjectReference cargoRef, int handleId)
         {
             if (!cargoRef.TryGet(out var cargoObj)) return;
@@ -171,7 +171,7 @@ namespace SlopCo.Player
             HeldCargo.Value = default;
         }
 
-        [Rpc(SendTo.Server)]
+        [Rpc(SendTo.Server, InvokePermission = RpcInvokePermission.Owner)]
         private void RequestReleaseRpc()
         {
             if (HeldCargo.Value.TryGet(out var cargoObj))
@@ -182,7 +182,7 @@ namespace SlopCo.Player
             HeldCargo.Value = default;
         }
 
-        [Rpc(SendTo.Server)]
+        [Rpc(SendTo.Server, InvokePermission = RpcInvokePermission.Owner)]
         private void RequestThrowRpc(Vector3 dir, float charge01)
         {
             if (HeldCargo.Value.TryGet(out var cargoObj))
@@ -193,8 +193,16 @@ namespace SlopCo.Player
             HeldCargo.Value = default;
         }
 
+        /// <summary>Spawned carriers (humans and bots) on this peer — hazards hunting the nearest carrier walk this
+        /// instead of scanning the scene every frame.</summary>
+        public static readonly LiveSet<PlayerCarryController> Live = new LiveSet<PlayerCarryController>();
+
+        [RuntimeInitializeOnLoadMethod(RuntimeInitializeLoadType.SubsystemRegistration)]
+        private static void ResetStatics() => Live.Clear();   // play mode without a domain reload
+
         public override void OnNetworkSpawn()
         {
+            Live.Add(this);
             HeldCargo.OnValueChanged += HandleHeldChanged;
             // SEED the cache from the CURRENT value after subscribing — a late-joining client can spawn into
             // a session where this player is already carrying, and OnValueChanged will never fire for that
@@ -219,6 +227,7 @@ namespace SlopCo.Player
 
         public override void OnNetworkDespawn()
         {
+            Live.Remove(this);
             HeldCargo.OnValueChanged -= HandleHeldChanged;
             if (_censusCounted) { CrewCensus.Unregister(); _censusCounted = false; }
             _heldCargoItem = null;
