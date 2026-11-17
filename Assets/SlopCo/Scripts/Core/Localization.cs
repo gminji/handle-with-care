@@ -342,6 +342,7 @@ namespace SlopCo.Core
             { "map.0",      new[]{ "DEPOT", "디포", "デポ", "仓库" } },
             { "map.1",      new[]{ "YARD", "야드", "ヤード", "货场" } },
             { "map.2",      new[]{ "HARBOR", "항구", "ハーバー", "港口" } },
+            { "map.3",      new[]{ "ROOFTOP", "옥상", "ルーフトップ", "屋顶" } },
 
             // ── Fuse ──
             { "fuse.label",    new[]{ "FUSE", "도화선", "導火線", "导火索" } },

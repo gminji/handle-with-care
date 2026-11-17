@@ -13,7 +13,7 @@ namespace SlopCo.Tests.EditMode
     /// <summary>
     /// Bakes real NavMeshes through the same calls the host makes at runtime (BotNavMesh.CollectLevelSources /
     /// Settings) and checks the routes bots would get. First on small hand-built geometry — a wall with a gap,
-    /// ledges a bot can and can't get onto, cargo that must not carve the floor — then on both shipped maps.
+    /// ledges a bot can and can't get onto, cargo that must not carve the floor — then on every shipped map.
     /// </summary>
     public class BotNavMeshTests
     {
@@ -599,6 +599,7 @@ namespace SlopCo.Tests.EditMode
         [TestCase("Map_0")]
         [TestCase("Map_1")]
         [TestCase("Map_2")]
+        [TestCase("Map_3")]
         public void EveryHaulLeg_IsConnected(string mapName)
         {
             var map = ActivateOnly(mapName);
@@ -672,20 +673,22 @@ namespace SlopCo.Tests.EditMode
             });
         }
 
-        // The harbor has no played seed to pin yet, so this runs the host's own roll (MapManager.RollLayout) on
-        // Map_2 ten times from a fixed stream of seeds: each roll must find a layout whose field leaves every depot
-        // spawn a route to the dock that seed picks. The total of seeds rolled shows how often the field cut the
-        // course — a slot layout that blocks often would still pass on retries, so watch that number.
-        [Test]
-        public void Map2_LayoutRoll_FindsADeliverableSeed()
+        // The harbor and the rooftop have no played seed to pin yet, so this runs the host's own roll
+        // (MapManager.RollLayout) on the map ten times from a fixed stream of seeds: each roll must find a layout
+        // whose field leaves every depot spawn a route to the dock that seed picks. The total of seeds rolled shows
+        // how often the field cut the course — a slot layout that blocks often would still pass on retries, so
+        // watch that number.
+        [TestCase("Map_2")]
+        [TestCase("Map_3")]
+        public void LayoutRoll_FindsADeliverableSeed(string mapName)
         {
-            var map = ActivateOnly("Map_2");
+            var map = ActivateOnly(mapName);
             var mm = Manager();
             var docks = map.Find("VanAnchors");
             var depot = PointsUnder(map, "DepotSpawns");
             var slots = map.Find("ObstacleSlots");
-            Assert.That(slots != null && slots.childCount > 0, Is.True, "Map_2 has no obstacle slots");
-            Assert.That(mm.ObstacleSetFor(map), Is.Not.Null, "Map_2 has no obstacle list");
+            Assert.That(slots != null && slots.childCount > 0, Is.True, $"{mapName} has no obstacle slots");
+            Assert.That(mm.ObstacleSetFor(map), Is.Not.Null, $"{mapName} has no obstacle list");
             Transform van = null;
             foreach (var go in _scene.GetRootGameObjects())
                 if (go.name == "Van") van = go.transform;
@@ -714,7 +717,7 @@ namespace SlopCo.Tests.EditMode
                         bool ok = MapLayout.TryPickSeed(() => rng.Next(1, int.MaxValue), Deliverable, MapManager.MaxLayoutTries,
                                                         out int seed, out int tries);
                         rolled += tries;
-                        Assert.That(ok, Is.True, $"roll {run}: no deliverable Map_2 layout in {tries} seeds (last {seed})");
+                        Assert.That(ok, Is.True, $"roll {run}: no deliverable {mapName} layout in {tries} seeds (last {seed})");
                     }
                 });
             }
@@ -722,18 +725,22 @@ namespace SlopCo.Tests.EditMode
             {
                 van.SetPositionAndRotation(vanPos, vanRot);
             }
-            TestContext.WriteLine($"Map_2: 10 rolls took {rolled} seeds in total");
+            TestContext.WriteLine($"{mapName}: 10 rolls took {rolled} seeds in total");
         }
 
-        // The harbor's north half (forecourt, warehouse, every van dock) must hang off the one narrow bridge. The
-        // sea pool and both land halves share Bootstrap's Ground at y = 0, so a gap in the perimeter walls would
-        // open a walk round the bridge that the haul-leg test above can't see.
-        [Test]
-        public void Map2_Bridge_IsTheOnlyWayNorth()
+        // Each of these maps hangs on one narrow bridge, and the haul-leg test above can't see a walk round it. On
+        // the harbor the north half (forecourt, warehouse, every van dock) is reached only over the bridge: the sea
+        // pool and both land halves share Bootstrap's Ground at y = 0, so a gap in the perimeter walls would open a
+        // way round. On the rooftop the cargo roof (height 4) is joined to the rest only by the bridge: a ledge or
+        // ramp a bot can climb would open a way down to the ground and the alley docks. A gap in the roof's rail is
+        // not caught here (the NavMesh has no drop-down links), only a walkable way round.
+        [TestCase("Map_2")]
+        [TestCase("Map_3")]
+        public void Bridge_IsTheOnlyWay(string mapName)
         {
-            var map = ActivateOnly("Map_2");
+            var map = ActivateOnly(mapName);
             var bridge = map.Find("Course/Bridge");
-            Assert.That(bridge, Is.Not.Null, "Map_2/Course/Bridge missing");
+            Assert.That(bridge, Is.Not.Null, $"{mapName}/Course/Bridge missing");
             var depot = PointsUnder(map, "DepotSpawns");
             var docks = PointsUnder(map, "VanAnchors");
 

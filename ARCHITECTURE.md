@@ -5,14 +5,14 @@
 ## 1. 한눈에 보기
 
 - 엔진: Unity 6.5 (6000.5.7f1), URP 17.5, Netcode for GameObjects(NGO) 2.13, Input System 1.20, uGUI
-- 씬은 [`Assets/SlopCo/Scenes/Bootstrap.unity`](Assets/SlopCo/Scenes/Bootstrap.unity) 하나입니다. 타이틀·로비·맵 두 개·HUD가 모두 이 씬 안에 있고, 맵은 켜고 끄며 바꿉니다.
+- 씬은 [`Assets/SlopCo/Scenes/Bootstrap.unity`](Assets/SlopCo/Scenes/Bootstrap.unity) 하나입니다. 타이틀·로비·맵 네 개(디포·야드·항구·옥상)·HUD가 모두 이 씬 안에 있고, 맵은 켜고 끄며 바꿉니다.
 - 게임 코드는 런타임 어셈블리 하나(`SlopCo`), 테스트는 EditMode 어셈블리 하나(`SlopCo.Tests.EditMode`)입니다.
 
 | 폴더 (`Assets/SlopCo/Scripts/`) | 하는 일 |
 |---|---|
 | `Core/` | 상수, 설정, 서비스 로케이터, 현지화, 스폰 등록 목록(`LiveSet`) |
 | `Networking/` | 세션 시작·참가(`LocalNetworkSession`), 접속 승인과 참가 정책(`JoinPolicy`), LAN 빠른 매칭 |
-| `Gameplay/` | 라운드 상태 기계(`RoundManager`), 맵·장애물 배치(`MapManager`, `MapLayout`), 위험 요소, 할당량, 이탈 투표 |
+| `Gameplay/` | 라운드 상태 기계(`RoundManager`), 맵·장애물 배치(`MapManager`, `MapLayout`), 맵별 장애물 목록(`ObstacleSet`), 위험 요소, 할당량, 이탈 투표 |
 | `Cargo/` | 서버가 시뮬레이션하는 화물(`CargoItem`), 퓨즈(`CargoCondition`), 폭탄(`CargoBomb`), 함께 들기 계산 |
 | `Player/` | 이동, 잡기·던지기, 발차기, 봇 AI(`AiBrain`), 봇 NavMesh(`BotNavMesh`), 경로 추종 규칙(`BotPathMath`) |
 | `Items/`, `Audio/`, `UI/` | 아이템, 근접 보이스 챗, HUD·메뉴·디버그 오버레이 |
@@ -59,7 +59,7 @@ stateDiagram-v2
 
 ### 문제
 
-맵마다 장애물(상자·통·가구)을 시드에 따라 무작위로 놓습니다. 직접 플레이해 보니, 높은 도크 맵에서 장애물 두 개가 고가 통로의 유일한 길을 막는 배치가 있었습니다. 틈이 0.775m로 캐릭터 폭 0.8m보다 좁았고, 봇 세 명이 도크 아래에서 점프만 반복하다 폭탄이 터졌습니다. 사람도 지나가기 어려운 배치입니다(장애물 높이 0.87~1.13m, 점프 정점 0.69m).
+맵마다 장애물을 시드에 따라 무작위로 놓습니다. 디포·야드는 기본 도형 4종(상자·통·고깔·낮은 바리케이드), 항구·옥상은 맵별 장애물 목록(`ObstacleSet`)의 소품을 씁니다. 바닥 크기는 기본 도형이 기본 배율에서, 목록 소품은 가장 크게 굴려도 1.1m 이하이고, 어느 쪽이든 단단한 콜라이더를 가집니다. 직접 플레이해 보니, 높은 도크 맵에서 장애물 두 개가 고가 통로의 유일한 길을 막는 배치가 있었습니다. 틈이 0.775m로 캐릭터 폭 0.8m보다 좁았고, 봇 세 명이 도크 아래에서 점프만 반복하다 폭탄이 터졌습니다. 사람도 지나가기 어려운 배치입니다(장애물 높이 0.87~1.13m, 점프 정점 0.69m).
 
 호스트와 같은 설정으로 NavMesh를 구워 무작위 시드 500개를 검사하니 **61개(12.2%)**가 창고에서 트럭까지 갈 수 없었습니다.
 
@@ -89,11 +89,13 @@ sequenceDiagram
 | 항목 | 값 |
 |---|---|
 | 검사 전, 높은 도크 시드 500개 | 61개 막힘 (12.2%) |
-| 검사 후, 맵 두 개 × `RollMap` 300번, 봇과 같은 설정으로 따로 다시 구워 확인 | 막힘 0번 |
+| 검사 후, 디포·야드(측정 당시 맵 두 개) × `RollMap` 300번, 봇과 같은 설정으로 따로 다시 구워 확인 | 막힘 0번 |
 | 시드를 다시 뽑은 판 | 맵 0: 300번 중 4번, 맵 1: 300번 중 6번 |
 | `RollMap` 한 번 걸린 시간 | 평균 6.5ms, 최대 14ms (새 판을 시작할 때 호스트에서 한 번) |
 
 막혔던 실제 시드(맵 0, 1428223278)는 [`BotNavMeshTests.cs`](Assets/SlopCo/Tests/EditMode/BotNavMeshTests.cs)의 `ObstacleField_RouteCheck_MatchesPlay`가 실제 맵 배치를 만들어 그대로 재현합니다.
+
+나중에 더한 항구·옥상은 같은 파일의 `LayoutRoll_FindsADeliverableSeed`가 호스트와 같은 시드 고르기를 고정 시드 흐름으로 10번 돌려 지킵니다. 검사 없이 첫 시드만 본 막힘 수는 시드 1~300에서 항구 3개(1%), 옥상 0개였습니다.
 
 ## 5. 봇 길찾기
 
@@ -141,11 +143,12 @@ HUD 퓨즈 게이지는 매 프레임 모든 클라이언트에서, 쥐는 쥐�
 
 ## 8. 테스트
 
-EditMode 테스트 487개가 [`Assets/SlopCo/Tests/EditMode/`](Assets/SlopCo/Tests/EditMode)에 있습니다. 대부분은 엔진과 무관한 순수 규칙(할당량, 함께 들기 무게, 데일리 모디파이어, 참가 정책, 이탈 투표 집계 등)이고, 다음은 실제 엔진 기능을 씁니다.
+EditMode 테스트 508개가 [`Assets/SlopCo/Tests/EditMode/`](Assets/SlopCo/Tests/EditMode)에 있습니다. 대부분은 엔진과 무관한 순수 규칙(할당량, 함께 들기 무게, 데일리 모디파이어, 참가 정책, 이탈 투표 집계 등)이고, 다음은 실제 엔진 기능을 씁니다.
 
 | 테스트 | 확인하는 것 |
 |---|---|
-| [`BotNavMeshTests.cs`](Assets/SlopCo/Tests/EditMode/BotNavMeshTests.cs) | 상자를 놓고 실제로 NavMesh를 구워, 틈이 열리면 경로 있음·닫히면 없음, 도크 위 목표를 옆 바닥으로 착각하지 않음, 검사가 봇의 NavMesh를 건드리지 않음, 플레이에서 막혔던 시드 재현 |
+| [`BotNavMeshTests.cs`](Assets/SlopCo/Tests/EditMode/BotNavMeshTests.cs) | 상자를 놓고 실제로 NavMesh를 구워, 틈이 열리면 경로 있음·닫히면 없음, 도크 위 목표를 옆 바닥으로 착각하지 않음, 검사가 봇의 NavMesh를 건드리지 않음, 플레이에서 막혔던 시드 재현, 맵 네 개의 운반 경로, 항구·옥상 시드 굴림과 다리 외 우회로 없음 |
+| [`ObstacleSetTests.cs`](Assets/SlopCo/Tests/EditMode/ObstacleSetTests.cs) | 항구·옥상 장애물 목록의 소품 구성, 바닥 크기 1.1m 규칙, 단단한 콜라이더(리지드바디 없음), 슬롯 위에 서는 배치 |
 | [`MapLayoutTests.cs`](Assets/SlopCo/Tests/EditMode/MapLayoutTests.cs) | 시드 고르기 규칙, 배치 결정론 |
 | [`BotPathMathTests.cs`](Assets/SlopCo/Tests/EditMode/BotPathMathTests.cs) | 경로 모서리 진행, 재계산 조건, 프레임레이트와 무관한 막힘 판정, 봇 판단 상태 분류 |
 | [`RpcPermissionTests.cs`](Assets/SlopCo/Tests/EditMode/RpcPermissionTests.cs) | 서버행 RPC의 호출 권한 |
