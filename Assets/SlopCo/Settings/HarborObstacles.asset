@@ -1,0 +1,23 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 7e2a8c30c61e6244bb6f80ba886f0fed, type: 3}
+  m_Name: HarborObstacles
+  m_EditorClassIdentifier: SlopCo::SlopCo.Gameplay.ObstacleSet
+  entries:
+  - prefab: {fileID: 6823646249984302701, guid: 18fec122f0902314e8113498a9fbe3b8, type: 3}
+    footprint: 0.8
+  - prefab: {fileID: 1438827123082730834, guid: e419e8e51f82aea44a6b6e3c174d7eaf, type: 3}
+    footprint: 0.6
+  - prefab: {fileID: 2219679282304329279, guid: 36d0b5cfe216b03419c5bba1f10e4453, type: 3}
+    footprint: 0.7
+  - prefab: {fileID: 7686290142148148728, guid: db9fa68265d676e47a98328cf71c5317, type: 3}
+    footprint: 0.8

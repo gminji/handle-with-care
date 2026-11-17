@@ -1,0 +1,25 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 7e2a8c30c61e6244bb6f80ba886f0fed, type: 3}
+  m_Name: RooftopObstacles
+  m_EditorClassIdentifier: SlopCo::SlopCo.Gameplay.ObstacleSet
+  entries:
+  - prefab: {fileID: 5745078758789017452, guid: 93eb12a25f413c24b8760d49d2a5b3b7, type: 3}
+    footprint: 0.8
+  - prefab: {fileID: 8921301354799907153, guid: de72542775f78db449cb922e2cd15484, type: 3}
+    footprint: 0.6
+  - prefab: {fileID: 8894757584736369614, guid: 5b12f767c705fbb478685b142aff82ce, type: 3}
+    footprint: 0.5
+  - prefab: {fileID: 1322316689304679755, guid: de6f13e8e82c0a74a89c08a153737072, type: 3}
+    footprint: 0.8
+  - prefab: {fileID: 7446931332905038885, guid: a10be8f646224aa42bfeda71436ad629, type: 3}
+    footprint: 0.55

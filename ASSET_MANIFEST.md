@@ -22,6 +22,12 @@ Everything below lives under `Assets/SlopCo/Art/` and is referenced by the scene
 | **Delivery van** | [Kenney Car Kit](https://kenney.nl/assets/car-kit) | `car-kit/` | 51 | The truck at the `DeliveryZone` |
 | **Greybox** | [Kenney Prototype Textures](https://kenney.nl/assets/prototype-textures) | `prototype-textures/` | 8 | Course blockout materials (path / rail readability) |
 | **Audio** | [Kenney Impact](https://kenney.nl/assets/impact-sounds) + [Interface Sounds](https://kenney.nl/assets/interface-sounds) | `audio/kenney/` | 20 | UI click, grab cue, smash variety — see `audio/kenney/CREDITS.md` |
+| **Harbor/Rooftop obstacles & decor** | [Kenney City Kit (Industrial)](https://kenney.nl/assets/city-kit-industrial) | `city-kit-industrial/` | 6 | Harbor decor: shipping containers A/B/C, water tower, tank (models only, no prefabs) |
+| **Harbor/Rooftop obstacles & decor** | [Kenney Survival Kit](https://kenney.nl/assets/survival-kit) | `survival-kit/` | 5 | `Harbor_Drum`, `Harbor_CrateStack`, `Rooftop_DryingRack` |
+| **Harbor/Rooftop obstacles & decor** | [Kenney Factory Kit](https://kenney.nl/assets/factory-kit) | `factory-kit/` | 4 | `Rooftop_ACUnit`; decor: crane, large AC unit (`machine-fortified`) |
+| **Harbor/Rooftop obstacles & decor** | [Kenney Building Kit](https://kenney.nl/assets/building-kit) | `building-kit/` | 2 | `Rooftop_Vent` |
+| **Harbor/Rooftop obstacles & decor** | [Kenney City Kit (Suburban)](https://kenney.nl/assets/city-kit-suburban) | `city-kit-suburban/` | 2 | `Rooftop_PlantPot` (planter) |
+| **Harbor/Rooftop obstacles & decor** | [Kenney Retro Urban Kit](https://kenney.nl/assets/retro-urban-kit) | `retro-urban-kit/` | 6 | `Harbor_Pallet`, `Rooftop_TrashCan` (closed dumpster) |
 | **Surfaces & sky** | [PolyHaven](https://polyhaven.com) + [AmbientCG](https://ambientcg.com) | `cc0/` | 12 | PBR ground/brick/wood/plaster textures, cargo cardboard, skybox HDRI — see `cc0/CREDITS.md` |
 
 ## Prefab mapping
@@ -49,12 +55,30 @@ Prototype Textures set.
 > `Cargo_Piano` and `Cargo_Crate` are named for their intended props but currently use the sofa and
 > watermelon meshes. Harmless placeholders — rename or reskin when the final art pass happens.
 
+### Obstacle prefabs
+
+Static map obstacles live in `Assets/SlopCo/Prefabs/Obstacles/`: a root with solid `BoxCollider`s (no
+Rigidbody, no scripts) and a `Visual` child holding the model. The map's obstacle list
+(`Settings/HarborObstacles.asset`, `Settings/RooftopObstacles.asset`) picks one per slot and scales it so
+its longest side is `footprint` × the seeded size roll (up to ×1.35, so every footprint stays ≤ 0.8).
+Keep the list order fixed: the seeded layouts depend on it.
+
+| Prefab | Model | Pack | List | `footprint` |
+|---|---|---|---|---|
+| `Harbor_Pallet` | `pallet` | Retro Urban Kit | Harbor | 0.8 |
+| `Harbor_Drum` | `barrel` | Survival Kit | Harbor | 0.6 |
+| `Harbor_RopeCoil` | primitives (2 cylinders + core) + `CrateMat`/`DepotMat` — no CC0 rope model found | — | Harbor | 0.7 |
+| `Harbor_CrateStack` | `box-large` + `box` | Survival Kit | Harbor | 0.8 |
+| `Rooftop_ACUnit` | `machine-window` | Factory Kit | Rooftop | 0.8 |
+| `Rooftop_Vent` | `detail-pipe` | Building Kit | Rooftop | 0.6 |
+| `Rooftop_PlantPot` | `planter` | City Kit (Suburban) | Rooftop | 0.5 |
+| `Rooftop_DryingRack` | `campfire-stand` | Survival Kit | Rooftop | 0.8 |
+| `Rooftop_TrashCan` | `detail-dumpster-closed` | Retro Urban Kit | Rooftop | 0.55 |
+
 ## Considered, not imported
 
 These were scoped during planning but are **not** in the repo. Listed so the shortlist is not lost:
 Kenney [Blocky Characters](https://kenney.nl/assets/blocky-characters) (alternate skins),
-[Survival Kit](https://kenney.nl/assets/survival-kit) (prop variety),
-[City Kit](https://kenney.nl/assets/city-kit-suburban) (modular streets),
 [Platformer Kit](https://kenney.nl/assets/platformer-kit) (modular ramps/ledges),
 [Mini Arena](https://kenney.nl/assets/mini-arena) (alternate stage), and
 [Quaternius](https://quaternius.com) low-poly prop packs (decor scatter).

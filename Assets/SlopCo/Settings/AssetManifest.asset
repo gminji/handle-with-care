@@ -49,3 +49,27 @@ MonoBehaviour:
     url: https://ambientcg.com
     usage: Cardboard PBR material for cargo crates
     license: CC0 1.0
+  - packName: City Kit (Industrial)
+    url: https://kenney.nl/assets/city-kit-industrial
+    usage: 'Harbor decor: shipping containers, water tower, tank'
+    license: CC0 1.0
+  - packName: Survival Kit
+    url: https://kenney.nl/assets/survival-kit
+    usage: 'Harbor/Rooftop obstacles: drum, crate stack, drying rack'
+    license: CC0 1.0
+  - packName: Factory Kit
+    url: https://kenney.nl/assets/factory-kit
+    usage: Rooftop AC unit obstacle + decor (crane, large AC unit)
+    license: CC0 1.0
+  - packName: Building Kit
+    url: https://kenney.nl/assets/building-kit
+    usage: Rooftop vent obstacle
+    license: CC0 1.0
+  - packName: City Kit (Suburban)
+    url: https://kenney.nl/assets/city-kit-suburban
+    usage: Rooftop plant pot obstacle (planter)
+    license: CC0 1.0
+  - packName: Retro Urban Kit
+    url: https://kenney.nl/assets/retro-urban-kit
+    usage: Harbor pallet + Rooftop trash can (dumpster) obstacles
+    license: CC0 1.0
