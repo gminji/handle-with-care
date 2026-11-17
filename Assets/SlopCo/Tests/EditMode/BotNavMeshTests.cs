@@ -515,7 +515,7 @@ namespace SlopCo.Tests.EditMode
     }
 
     /// <summary>
-    /// Both shipped maps, opened from Bootstrap.unity: every player spawn must reach every depot spawn, and every
+    /// Every shipped map, opened from Bootstrap.unity: every player spawn must reach every depot spawn, and every
     /// depot spawn must reach every van dock — with the controller-sized agent, not the default one. This is the
     /// route the bots used to lose against the course walls. The raised dock (VanDock0) sits behind the course's
     /// last-yard ledge, so this is also what holds BotNavMesh.AgentClimb high enough to cross it. The bare course
@@ -598,6 +598,7 @@ namespace SlopCo.Tests.EditMode
 
         [TestCase("Map_0")]
         [TestCase("Map_1")]
+        [TestCase("Map_2")]
         public void EveryHaulLeg_IsConnected(string mapName)
         {
             var map = ActivateOnly(mapName);
@@ -659,13 +660,110 @@ namespace SlopCo.Tests.EditMode
             var docks = map.Find("VanAnchors");
             Assert.That(MapLayout.VanAnchorIndex(seed, docks.childCount), Is.EqualTo(0),
                 "precondition: these seeds park the van on the raised dock");
+            var mm = Manager();
+
+            WithFieldParent(parent =>
+            {
+                var field = MapManager.BuildObstacleField(parent, map.Find("ObstacleSlots"), seed, mm.ObstacleDensity, null,
+                                                           mm.ObstacleSetFor(map));
+                Assert.That(field, Is.Not.Null, $"{mapName} has no obstacle slots");
+                bool ok = BotNavMesh.RouteExists(map, PointsUnder(map, "DepotSpawns"), docks.GetChild(0).position);
+                Assert.That(ok, Is.EqualTo(deliverable), $"{mapName} seed {seed}");
+            });
+        }
+
+        // The harbor has no played seed to pin yet, so this runs the host's own roll (MapManager.RollLayout) on
+        // Map_2 ten times from a fixed stream of seeds: each roll must find a layout whose field leaves every depot
+        // spawn a route to the dock that seed picks. The total of seeds rolled shows how often the field cut the
+        // course — a slot layout that blocks often would still pass on retries, so watch that number.
+        [Test]
+        public void Map2_LayoutRoll_FindsADeliverableSeed()
+        {
+            var map = ActivateOnly("Map_2");
+            var mm = Manager();
+            var docks = map.Find("VanAnchors");
+            var depot = PointsUnder(map, "DepotSpawns");
+            var slots = map.Find("ObstacleSlots");
+            Assert.That(slots != null && slots.childCount > 0, Is.True, "Map_2 has no obstacle slots");
+            Assert.That(mm.ObstacleSetFor(map), Is.Not.Null, "Map_2 has no obstacle list");
+            Transform van = null;
+            foreach (var go in _scene.GetRootGameObjects())
+                if (go.name == "Van") van = go.transform;
+            Assert.That(van, Is.Not.Null, "Van missing from Bootstrap.unity");
+            Vector3 vanPos = van.position;
+            Quaternion vanRot = van.rotation;
+
+            var rng = new System.Random(20261117);
+            int rolled = 0;
+            try
+            {
+                WithFieldParent(parent =>
+                {
+                    // Same steps as MapManager.TryLayout / LayoutIsDeliverable: rebuild the field, park the van at
+                    // the seed's dock, check every depot spawn against that dock.
+                    bool Deliverable(int seed)
+                    {
+                        MapManager.BuildObstacleField(parent, slots, seed, mm.ObstacleDensity, null, mm.ObstacleSetFor(map));
+                        var dock = docks.GetChild(MapLayout.VanAnchorIndex(seed, docks.childCount));
+                        van.SetPositionAndRotation(dock.position, dock.rotation);
+                        return BotNavMesh.RouteExists(map, depot, dock.position);
+                    }
+
+                    for (int run = 0; run < 10; run++)
+                    {
+                        bool ok = MapLayout.TryPickSeed(() => rng.Next(1, int.MaxValue), Deliverable, MapManager.MaxLayoutTries,
+                                                        out int seed, out int tries);
+                        rolled += tries;
+                        Assert.That(ok, Is.True, $"roll {run}: no deliverable Map_2 layout in {tries} seeds (last {seed})");
+                    }
+                });
+            }
+            finally
+            {
+                van.SetPositionAndRotation(vanPos, vanRot);
+            }
+            TestContext.WriteLine($"Map_2: 10 rolls took {rolled} seeds in total");
+        }
+
+        // The harbor's north half (forecourt, warehouse, every van dock) must hang off the one narrow bridge. The
+        // sea pool and both land halves share Bootstrap's Ground at y = 0, so a gap in the perimeter walls would
+        // open a walk round the bridge that the haul-leg test above can't see.
+        [Test]
+        public void Map2_Bridge_IsTheOnlyWayNorth()
+        {
+            var map = ActivateOnly("Map_2");
+            var bridge = map.Find("Course/Bridge");
+            Assert.That(bridge, Is.Not.Null, "Map_2/Course/Bridge missing");
+            var depot = PointsUnder(map, "DepotSpawns");
+            var docks = PointsUnder(map, "VanAnchors");
+
+            bridge.gameObject.SetActive(false);
+            try
+            {
+                foreach (var dock in docks)
+                    Assert.That(BotNavMesh.RouteExists(map, depot, dock), Is.False, $"a route to {dock} skips the bridge");
+            }
+            finally
+            {
+                bridge.gameObject.SetActive(true);
+            }
+            foreach (var dock in docks)
+                Assert.That(BotNavMesh.RouteExists(map, depot, dock), Is.True, $"with the bridge back, {dock} must connect");
+        }
+
+        private MapManager Manager()
+        {
             MapManager mm = null;
             foreach (var go in _scene.GetRootGameObjects())
                 if (mm == null) mm = go.GetComponentInChildren<MapManager>(true);
             Assert.That(mm, Is.Not.Null, "MapManager missing from Bootstrap.unity");
+            return mm;
+        }
 
-            // Build the field outside Bootstrap, so the scene being edited is never touched: in the scratch scene
-            // the test runner made active, or — when Bootstrap itself is active — in a throwaway scene of our own.
+        // Build obstacle fields outside Bootstrap, so the scene being edited is never touched: in the scratch scene
+        // the test runner made active, or — when Bootstrap itself is active — in a throwaway scene of our own.
+        private void WithFieldParent(System.Action<Transform> body)
+        {
             var before = SceneManager.GetActiveScene();
             Scene temp = default;
             if (before == _scene)
@@ -677,11 +775,7 @@ namespace SlopCo.Tests.EditMode
             try
             {
                 parent = new GameObject("FieldParent");
-                var field = MapManager.BuildObstacleField(parent.transform, map.Find("ObstacleSlots"), seed, mm.ObstacleDensity, null,
-                                                           mm.ObstacleSetFor(map));
-                Assert.That(field, Is.Not.Null, $"{mapName} has no obstacle slots");
-                bool ok = BotNavMesh.RouteExists(map, PointsUnder(map, "DepotSpawns"), docks.GetChild(0).position);
-                Assert.That(ok, Is.EqualTo(deliverable), $"{mapName} seed {seed}");
+                body(parent.transform);
             }
             finally
             {
