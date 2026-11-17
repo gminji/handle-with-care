@@ -4,17 +4,18 @@ using System.Net.Sockets;
 using Unity.Netcode;
 using UnityEngine;
 using SlopCo.Core;
+using SlopCo.Gameplay;
 
 namespace SlopCo.Networking
 {
     /// <summary>
-    /// While this peer is the NGO server and the lobby is not full, periodically broadcasts a UDP beacon so
+    /// While this peer is the NGO server and would accept a newcomer, periodically broadcasts a UDP beacon so
     /// LAN quick-matchers (<see cref="LanMatchmaker"/>) can discover and auto-join it — no join code needed.
     /// Works for BOTH manual hosting and quick-match hosting (it keys off OnServerStarted, not the match flow).
     /// Place on the NetworkManager scene object.
     ///
-    /// NOTE: advertises while server + not full. Phase-gating (stop advertising once a round is in progress)
-    /// can be added when ConnectionApproval also rejects mid-round joins (its existing TODO).
+    /// Goes quiet while the lobby is full or a haul is in progress — the same <see cref="JoinPolicy"/> the
+    /// approval callback refuses with, so a quick-matcher never picks a host that would turn it away.
     /// </summary>
     public sealed class HostBeacon : MonoBehaviour
     {
@@ -70,7 +71,9 @@ namespace SlopCo.Networking
             if (nm == null || !nm.IsServer) return;
 
             int players = nm.ConnectedClientsIds.Count;
-            if (players >= GameConstants.MaxPlayers) return; // don't advertise a full lobby
+            var rm = ServiceLocator.Get<RoundManager>();
+            RoundPhase phase = rm != null ? rm.Phase.Value : RoundPhase.Lobby;
+            if (!JoinPolicy.ShouldAdvertise(players, GameConstants.MaxPlayers, phase)) return; // full, or mid-haul
 
             _timer += Time.unscaledDeltaTime;
             if (_timer < GameConstants.BeaconIntervalSeconds) return;

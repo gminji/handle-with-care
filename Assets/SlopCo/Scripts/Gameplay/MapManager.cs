@@ -115,6 +115,14 @@ namespace SlopCo.Gameplay
         public int MapCount => maps != null ? maps.Length : 0;
         public string MapNameKey(int i) => (maps != null && i >= 0 && i < maps.Length) ? maps[i].nameKey : string.Empty;
 
+        /// <summary>Root of the map currently in play (null before the first apply). The bot NavMesh is baked
+        /// from its colliders.</summary>
+        public Transform ActiveRoot { get; private set; }
+
+        /// <summary>Bumps on every apply — a new map, van dock or obstacle field. <see cref="SlopCo.Player.BotNavMesh"/>
+        /// rebakes when it moves.</summary>
+        public int LayoutVersion { get; private set; }
+
         public override void OnNetworkSpawn()
         {
             ServiceLocator.Register(this);
@@ -182,9 +190,11 @@ namespace SlopCo.Gameplay
             for (int i = 0; i < maps.Length; i++)
                 if (maps[i] != null && maps[i].root != null) maps[i].root.SetActive(i == idx);
 
+            LayoutVersion++;
             var m = maps[idx];
-            if (m == null || m.root == null) return;
+            if (m == null || m.root == null) { ActiveRoot = null; return; }
             var rootT = m.root.transform;
+            ActiveRoot = rootT;
 
             var vanAnchor = PickVanAnchor(rootT);
             if (van != null && vanAnchor != null)

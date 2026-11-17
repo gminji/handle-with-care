@@ -149,6 +149,9 @@ namespace SlopCo.Core
             { "lobby.hosting",   new[]{ "HOSTING", "호스팅 중", "ホスト中", "正在主持" } },
             { "lobby.connected", new[]{ "CONNECTED", "접속됨", "接続済み", "已连接" } },
             { "lobby.offline",   new[]{ "OFFLINE", "오프라인", "オフライン", "离线" } },
+            // Join refusals — the host sends the key (JoinPolicy) and the refused client shows it in the lobby.
+            { "join.reject.hauling", new[]{ "HAUL IN PROGRESS — JOIN AT PAYOUT", "운반 중 — 정산 때 참가할 수 있습니다", "運搬中 — 精算中に参加できます", "运货中 — 结算时可加入" } },
+            { "join.reject.full",    new[]{ "LOBBY FULL", "인원이 가득 찼습니다", "満員です", "房间已满" } },
 
             // ── Disconnect vote (a player dropped mid-run) ──
             { "dc.title",   new[]{ "A PLAYER DISCONNECTED", "플레이어 접속 끊김", "プレイヤーが切断しました", "有玩家掉线了" } },

@@ -1,11 +1,13 @@
 using Unity.Netcode;
 using UnityEngine;
 using SlopCo.Core;
+using SlopCo.Gameplay;
 
 namespace SlopCo.Networking
 {
     /// <summary>
-    /// NGO 2.x connection approval. Rejects connections once the lobby is full. Sets
+    /// NGO 2.x connection approval. Rejects connections once the lobby is full or while a haul is in progress
+    /// (<see cref="JoinPolicy"/>); the refusal reason is a localization key the client shows in the lobby. Sets
     /// CreatePlayerObject = false so PlayerSpawner is the single owner of player spawning
     /// (prevents double-spawn). Place on the same scene object family as the NetworkManager.
     /// </summary>
@@ -29,18 +31,13 @@ namespace SlopCo.Networking
         {
             var nm = NetworkManager.Singleton;
             int connected = nm != null ? nm.ConnectedClientsIds.Count : 0;
+            var rm = ServiceLocator.Get<RoundManager>();
+            RoundPhase phase = rm != null ? rm.Phase.Value : RoundPhase.Lobby;   // no round yet = still the lobby
+            bool hostSelf = request.ClientNetworkId == NetworkManager.ServerClientId;
 
-            if (connected >= GameConstants.MaxPlayers)
-            {
-                response.Approved = false;
-                response.CreatePlayerObject = false;
-                response.Reason = "Lobby is full.";
-                response.Pending = false;
-                return;
-            }
-
-            // TODO (phase 2): also reject mid-round joins (read RoundManager phase) for cleaner rounds.
-            response.Approved = true;
+            string reject = JoinPolicy.RejectReason(hostSelf, connected, GameConstants.MaxPlayers, phase);
+            response.Approved = reject == null;
+            if (reject != null) response.Reason = reject;
             response.CreatePlayerObject = false; // PlayerSpawner spawns players explicitly.
             response.Pending = false;
         }

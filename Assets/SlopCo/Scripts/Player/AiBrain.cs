@@ -1,5 +1,6 @@
 using Unity.Netcode;
 using UnityEngine;
+using UnityEngine.AI;
 using SlopCo.Core;
 using SlopCo.Cargo;
 using SlopCo.Gameplay;
@@ -17,6 +18,9 @@ namespace SlopCo.Player
     /// player prefab; <see cref="PlayerController"/> enables it for bots.
     /// Bots are spawned SERVER-OWNED (not as player objects), so "owner" here is always the server — that is
     /// what makes the server-truth reads below (NeedsMoreHands / IsHandleFree) legal.
+    /// Movement follows a NavMesh route (<see cref="BotNavMesh"/>, rules in <see cref="BotPathMath"/>) so bots
+    /// take the ramps and the gate instead of pressing into the course walls; the last stretch from the end of
+    /// the route to the handle or van is straight, as before.
     /// </summary>
     public sealed class AiBrain : MonoBehaviour
     {
@@ -26,6 +30,7 @@ namespace SlopCo.Player
 
         private NetworkObject _no;
         private PlayerCarryController _carry;
+        private PlayerController _controller;   // for the speed it is asking for (stall check)
         private DeliveryZone _van;
         private Vector3 _lastPos;
         private float _stuckTimer;
@@ -37,12 +42,25 @@ namespace SlopCo.Player
         // is exactly why it was chosen and must NOT be dropped for that reason.
         private bool _targetIsJoin;
 
+        // Route state. Corners come from NavMesh.CalculatePath; corner 0 is where the bot stood when it planned.
+        private const int MaxCorners = 32;
+        private BotNavMesh _nav;
+        private NavMeshPath _path;
+        private readonly Vector3[] _corners = new Vector3[MaxCorners];
+        private int _cornerCount;
+        private int _cornerIndex;
+        private bool _planned;
+        private int _plannedVersion;
+        private Vector3 _plannedGoal;
+        private float _sinceReplan;
+
         private ulong SelfId => _no != null ? _no.NetworkObjectId : 0UL;
 
         private void Awake()
         {
             _no = GetComponent<NetworkObject>();
             _carry = GetComponent<PlayerCarryController>();
+            _controller = GetComponent<PlayerController>();
         }
 
         private void Update()
@@ -56,6 +74,7 @@ namespace SlopCo.Player
 
             Vector3 pos = transform.position;
             Vector3 goal;
+            bool hasGoal = true;
 
             if (_carry != null && _carry.IsCarrying)
             {
@@ -92,21 +111,60 @@ namespace SlopCo.Player
                     float reach = GameConstants.CarryGrabRadius * 0.85f;
                     GrabHeld = new Vector2(h.x - pos.x, h.z - pos.z).sqrMagnitude < reach * reach;
                 }
-                else { goal = pos; GrabHeld = false; }
+                else { goal = pos; GrabHeld = false; hasGoal = false; }
             }
 
-            Vector2 flat = new Vector2(goal.x - pos.x, goal.z - pos.z);
+            Vector3 steer = hasGoal ? NextWaypoint(pos, goal) : goal;
+            Vector2 flat = new Vector2(steer.x - pos.x, steer.z - pos.z);
             Move = flat.sqrMagnitude > 0.04f ? flat.normalized : Vector2.zero;
 
-            // Unstuck: if barely moving while we have somewhere to be, hop and re-pick a target.
+            // Unstuck: if barely moving while we have somewhere to be, hop, re-pick a target and re-plan —
+            // the route may run through someone standing in a doorway or a cargo that came to rest on it.
             WantJump = false;
             if (Move != Vector2.zero)
             {
-                if ((pos - _lastPos).sqrMagnitude < 0.0004f) _stuckTimer += Time.deltaTime;
-                else _stuckTimer = 0f;
-                if (_stuckTimer > 0.8f) { WantJump = true; _stuckTimer = 0f; _target = null; }
+                float asked = _controller != null ? _controller.PlanarVelocity.magnitude : 0f;
+                _stuckTimer = BotPathMath.StepStallClock(_stuckTimer, _lastPos, pos, asked, Time.deltaTime);
+                if (_stuckTimer > BotPathMath.StallSeconds) { WantJump = true; _stuckTimer = 0f; _target = null; _planned = false; }
             }
             _lastPos = pos;
+        }
+
+        /// <summary>Where to steer this frame: the next corner of the NavMesh route to <paramref name="goal"/>, or
+        /// the goal itself once the route is used up. Falls back to the goal (straight-line steering) while no
+        /// mesh exists yet or when no route can be found, so a bot never stands still for want of a path.</summary>
+        private Vector3 NextWaypoint(Vector3 pos, Vector3 goal)
+        {
+            if (_nav == null) _nav = BotNavMesh.Get();
+            if (!_nav.Ready) return goal;
+
+            _sinceReplan += Time.deltaTime;
+            if (BotPathMath.NeedsReplan(_planned, _plannedVersion, _nav.Version, _plannedGoal, goal, _sinceReplan))
+                Replan(pos, goal);
+
+            _cornerIndex = BotPathMath.AdvanceCorner(_corners, _cornerCount, _cornerIndex, pos, BotPathMath.CornerReach);
+            return _cornerIndex < _cornerCount ? _corners[_cornerIndex] : goal;
+        }
+
+        private void Replan(Vector3 pos, Vector3 goal)
+        {
+            _planned = true;
+            _plannedVersion = _nav.Version;
+            _plannedGoal = goal;
+            _sinceReplan = 0f;
+            _cornerCount = 0;
+            _cornerIndex = 0;
+
+            if (_path == null) _path = new NavMeshPath();
+            if (!NavMesh.SamplePosition(pos, out var from, BotNavMesh.SnapRadius, NavMesh.AllAreas)) return;
+            if (!NavMesh.SamplePosition(goal, out var to, BotNavMesh.SnapRadius, NavMesh.AllAreas)) return;
+            if (!NavMesh.CalculatePath(from.position, to.position, NavMesh.AllAreas, _path)) return;
+            if (_path.status == NavMeshPathStatus.PathInvalid) return;
+
+            // A partial route (goal on an island — e.g. cargo resting on top of an obstacle) still gets the bot
+            // as close as the mesh allows; the straight final stretch and the unstuck hop do the rest.
+            _cornerCount = _path.GetCornersNonAlloc(_corners);
+            _cornerIndex = 1;   // corner 0 is the spot the bot planned from
         }
 
         private Vector3 VanPos(Vector3 fallback)

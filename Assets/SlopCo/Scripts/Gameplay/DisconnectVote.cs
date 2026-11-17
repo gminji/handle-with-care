@@ -41,36 +41,53 @@ namespace SlopCo.Gameplay
 
         private readonly Dictionary<ulong, int> _ballots = new();
 
+        // SERVER. Clients that actually made it into the session. NGO raises OnClientDisconnectCallback on the
+        // server for a connection it REFUSED at approval too (full lobby, mid-haul join — see
+        // SlopCo.Networking.JoinPolicy). That peer was never part of the crew, and pausing for it would let
+        // anyone freeze a haul just by trying to join it.
+        private readonly HashSet<ulong> _crew = new();
+
         public override void OnNetworkSpawn()
         {
             ServiceLocator.Register(this);
             Paused.OnValueChanged += HandlePausedChanged;
             GameFrozen = Paused.Value;
             if (IsServer && NetworkManager.Singleton != null)
-                NetworkManager.Singleton.OnClientDisconnectCallback += HandleClientDisconnect;
+            {
+                var nm = NetworkManager.Singleton;
+                foreach (ulong id in nm.ConnectedClientsIds) _crew.Add(id);
+                nm.OnClientConnectedCallback += HandleClientConnected;
+                nm.OnClientDisconnectCallback += HandleClientDisconnect;
+            }
         }
 
         public override void OnNetworkDespawn()
         {
             Paused.OnValueChanged -= HandlePausedChanged;
             if (IsServer && NetworkManager.Singleton != null)
+            {
+                NetworkManager.Singleton.OnClientConnectedCallback -= HandleClientConnected;
                 NetworkManager.Singleton.OnClientDisconnectCallback -= HandleClientDisconnect;
+            }
+            _crew.Clear();
             GameFrozen = false;
             if (ServiceLocator.Get<DisconnectVote>() == this) ServiceLocator.Unregister<DisconnectVote>();
         }
 
         private void HandlePausedChanged(bool _, bool next) => GameFrozen = next;
 
-        // SERVER. Someone left. Only a mid-round departure by another client is worth stopping for.
+        private void HandleClientConnected(ulong clientId) => _crew.Add(clientId);
+
+        // SERVER. Someone left. Only a mid-round departure by a crew member is worth stopping for
+        // (DisconnectRules.IsDeparture).
         private void HandleClientDisconnect(ulong clientId)
         {
             if (!IsServer) return;
-            if (clientId == NetworkManager.ServerClientId) return;      // the host leaving tears the session down anyway
+            bool wasInSession = _crew.Remove(clientId);
 
             var rm = ServiceLocator.Get<RoundManager>();
             if (rm == null) return;
-            var phase = rm.Phase.Value;
-            if (phase == RoundPhase.Lobby || phase == RoundPhase.GameOver) return;   // nothing in progress to pause
+            if (!DisconnectRules.IsDeparture(wasInSession, clientId == NetworkManager.ServerClientId, rm.Phase.Value)) return;
 
             DroppedCount.Value++;
             _ballots.Remove(clientId);

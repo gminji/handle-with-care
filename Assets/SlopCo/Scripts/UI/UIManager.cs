@@ -259,7 +259,10 @@ namespace SlopCo.UI
 
             if (connected)
             {
-                _lobbyIntent = false;                                  // in a session now
+                // Only once we are really IN a session. StartClient makes "connected" true while the join is
+                // still pending; dropping the intent that early sent a refused or failed join back to the main
+                // menu, where the lobby's status line (the refusal reason — LobbyUI) is not on screen.
+                if (nm.IsServer || nm.IsConnectedClient) _lobbyIntent = false;
                 _screen = inRound ? Screen.InGame : Screen.Lobby;
             }
             else if (_lobbyIntent)
@@ -276,7 +279,8 @@ namespace SlopCo.UI
                 else if (_controls) _controls = false;
                 else if (_upgrades) _upgrades = false;
                 else if (_mapSelect) { _mapSelect = false; _pending = PendingMode.None; }
-                else if (_lobbyIntent) { _lobbyIntent = false; _screen = Screen.MainMenu; } // back out of online lobby
+                // Not while a join is still pending: "connected" would put the lobby straight back next frame.
+                else if (_lobbyIntent && !connected) { _lobbyIntent = false; _screen = Screen.MainMenu; } // back out of online lobby
                 else if (connected) _pause = !_pause;
             }
             if (!connected) _pause = false; // never pause outside a session
